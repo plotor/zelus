@@ -285,6 +285,21 @@ public interface SystemConstant {
     public static final Integer     DIMENSION                       = 300;
 
     /** 停用词列表 */
-    public static final Set<String> STOPWORDS                       = ResourceLoader.loadStopwords("stopwords-en-default.txt");
+    public static final Set<String> STOPWORDS                       = ResourceLoader
+            .loadStopwords("stopwords-en-default.txt");
+
+    /** 排除的标点 */
+    public static final Set<String> EXCLUDE_PUNCTUATION             = new HashSet<String>() {
+
+        private static final long serialVersionUID = 8560383953434971371L;
+
+        {
+            add("-LRB-");
+            add("-RRB-");
+            add("\"");
+            add("\'");
+            add(":");
+        }
+    };
 
 }

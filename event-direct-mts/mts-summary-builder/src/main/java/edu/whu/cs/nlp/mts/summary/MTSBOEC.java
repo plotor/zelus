@@ -34,6 +34,7 @@ import edu.whu.cs.nlp.mts.extraction.graph.EventsExtractBasedOnGraphV2;
 public class MTSBOEC implements SystemConstant{
 
     private static final Logger log = Logger.getLogger(MTSBOEC.class);
+
     public static void main(String[] args) {
 
         if(args.length == 0){

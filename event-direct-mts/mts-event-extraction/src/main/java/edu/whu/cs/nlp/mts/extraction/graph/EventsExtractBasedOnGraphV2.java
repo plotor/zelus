@@ -869,7 +869,7 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map
                                     eventWithPhrase.getLeftPhrases().set(0, word);
                                     break;
                                 }
-                                if(word.getName().equals(word.getPos())) {
+                                if(!EXCLUDE_PUNCTUATION.contains(word.getName()) && word.getName().equals(word.getPos())) {
                                     // 标点的pos等于其本身
                                     break;
                                 }
@@ -883,7 +883,7 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map
                                     eventWithPhrase.getLeftPhrases().set(0, word);
                                     break;
                                 }
-                                if(word.getName().equals(word.getPos())) {
+                                if(!EXCLUDE_PUNCTUATION.contains(word.getName()) && word.getName().equals(word.getPos())) {
                                     // 标点的pos等于其本身
                                     break;
                                 }
@@ -928,7 +928,7 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map
                                     eventWithPhrase.getRightPhrases().set(0, word);
                                     break;
                                 }
-                                if(word.getName().equals(word.getPos())) {
+                                if(!EXCLUDE_PUNCTUATION.contains(word.getName()) && word.getName().equals(word.getPos())) {
                                     // 当前为标点，标点的pos等于本身
                                     break;
                                 }
@@ -941,7 +941,7 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map
                                     eventWithPhrase.getRightPhrases().set(0, word);
                                     break;
                                 }
-                                if(word.getName().equals(word.getPos())) {
+                                if(!EXCLUDE_PUNCTUATION.contains(word.getName()) && word.getName().equals(word.getPos())) {
                                     // 当前为标点，标点的pos等于本身
                                     break;
                                 }
