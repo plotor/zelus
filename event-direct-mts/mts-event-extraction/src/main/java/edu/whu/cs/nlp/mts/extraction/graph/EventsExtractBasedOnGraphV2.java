@@ -657,13 +657,9 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map
 
             for (EventWithPhrase eventWithPhrase : events) {
                 // 谓语中第一个单词的序号
-                int firstVerbIndex = eventWithPhrase.getMiddlePhrases().get(0).getNumInLine();
+                int leftVerbIndex = eventWithPhrase.getMiddlePhrases().get(0).getNumInLine();
                 // 谓语中第二个单词的序号
-                int secondVerbIndex = firstVerbIndex;
-                if(eventWithPhrase.getMiddlePhrases().size() == 2) {
-                    // 考虑谓语中存在neg的情形
-                    secondVerbIndex = eventWithPhrase.getMiddlePhrases().get(1).getNumInLine();
-                }
+                int rightVerbIndex = eventWithPhrase.getMiddlePhrases().get(eventWithPhrase.getMiddlePhrases().size() - 1).getNumInLine();
 
                 List<Word> leftPhrase = eventWithPhrase.getLeftPhrases();
                 List<Word> rightPhrase = eventWithPhrase.getRightPhrases();
@@ -679,8 +675,8 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map
                             if(leftWord.getNumInLine() >= phrase.getLeftIndex()
                                     && leftWord.getNumInLine() <= phrase.getRightIndex()
                                     && (phrase.getRightIndex() - phrase.getLeftIndex()) > 0) {
-                                if(firstVerbIndex > phrase.getLeftIndex()) {
-                                    leftPhrase = new ArrayList<Word>(words.subList(phrase.getLeftIndex(), Math.min(firstVerbIndex, phrase.getRightIndex() + 1)));
+                                if(leftVerbIndex > phrase.getLeftIndex()) {
+                                    leftPhrase = new ArrayList<Word>(words.subList(phrase.getLeftIndex(), Math.min(leftVerbIndex, phrase.getRightIndex() + 1)));
                                 } else {
                                     leftPhrase = new ArrayList<Word>(words.subList(phrase.getLeftIndex(), phrase.getRightIndex() + 1));
                                 }
@@ -695,8 +691,8 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map
                             if(rightWord.getNumInLine() >= phrase.getLeftIndex()
                                     && rightWord.getNumInLine() <= phrase.getRightIndex()
                                     && (phrase.getRightIndex() - phrase.getLeftIndex()) > 0) {
-                                if(phrase.getRightIndex() > secondVerbIndex) {
-                                    rightPhrase = new ArrayList<Word>(words.subList(Math.max(secondVerbIndex + 1, phrase.getLeftIndex()), phrase.getRightIndex() + 1));
+                                if(phrase.getRightIndex() > rightVerbIndex) {
+                                    rightPhrase = new ArrayList<Word>(words.subList(Math.max(rightVerbIndex + 1, phrase.getLeftIndex()), phrase.getRightIndex() + 1));
                                 } else {
                                     rightPhrase = new ArrayList<Word>(words.subList(phrase.getLeftIndex(), phrase.getRightIndex() + 1));
                                 }
@@ -800,7 +796,7 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map
                     continue;
                 }
 
-                if(t_event.getMiddlePhrases().size() > 1) {
+                if(b_event.getMiddlePhrases().size() > 1) {
                     // 过滤掉谓语为短语的事件
                     continue;
                 }
@@ -847,13 +843,9 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map
             EventWithPhrase eventWithPhrase = eventWithPhrases.get(k);
 
             // 谓语中第一个单词的序号
-            int firstVerbIndex = eventWithPhrase.getMiddlePhrases().get(0).getNumInLine();
+            int leftVerbIndex = eventWithPhrase.getMiddlePhrases().get(0).getNumInLine();
             // 谓语中第二个单词的序号
-            int secondVerbIndex = firstVerbIndex;
-            if(eventWithPhrase.getMiddlePhrases().size() == 2) {
-                // 考虑谓语中存在neg的情形
-                secondVerbIndex = eventWithPhrase.getMiddlePhrases().get(1).getNumInLine();
-            }
+            int rightVerbIndex = eventWithPhrase.getMiddlePhrases().get(eventWithPhrase.getMiddlePhrases().size() - 1).getNumInLine();
 
             if(CollectionUtils.isNotEmpty(eventWithPhrase.getLeftPhrases())) {
                 // 存在主语
@@ -862,7 +854,7 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map
                     Word leftWord = eventWithPhrase.getLeftPhrases().get(0);
                     if(leftWord.getSentenceNum() == sentNum) {
                         if("DT".equals(leftWord.getPos())) {
-                            for(int n = leftWord.getNumInLine() + 1; n < firstVerbIndex; n++) {
+                            for(int n = leftWord.getNumInLine() + 1; n < leftVerbIndex; n++) {
                                 Word word = words.get(n);
                                 if(POS_NOUN.contains(word.getPos()) || !"O".equals(word.getNer())) {
                                     // 利用名词或命名实体来替换限定词
@@ -903,7 +895,7 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map
                 }
             } else {
                 // 主语缺失，向前找标点范围内的最近的名词或命名实体
-                for(int n = firstVerbIndex - 1; n > 0; n--) {
+                for(int n = leftVerbIndex - 1; n > 0; n--) {
                     Word word = words.get(n);
                     if(POS_NOUN.contains(word.getPos()) || !"O".equals(word.getNer())) {
                         eventWithPhrase.getLeftPhrases().add(word);
@@ -934,7 +926,7 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map
                                 }
                             }
                         } else if("WDT".equals(rightWord.getPos())) {
-                            for(int n = rightWord.getNumInLine() - 1; n > secondVerbIndex; n--) {
+                            for(int n = rightWord.getNumInLine() - 1; n > rightVerbIndex; n--) {
                                 Word word = words.get(n);
                                 if(POS_NOUN.contains(word.getPos()) || !"O".equals(word.getNer())) {
                                     // 利用名词或命名实体来替换限定词
@@ -948,7 +940,7 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map
                             }
                         } else if(POS_PRP.contains(rightWord.getPos())) {
                             // 往前寻找最近的人名来替换当前词
-                            for(int n = rightWord.getNumInLine() - 1; n > secondVerbIndex; n--) {
+                            for(int n = rightWord.getNumInLine() - 1; n > rightVerbIndex; n--) {
                                 Word word = words.get(n);
                                 if("person".equalsIgnoreCase(word.getNer())) {
                                     eventWithPhrase.getRightPhrases().set(0, word);
@@ -961,7 +953,7 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map
                 }
             } else {
                 // 宾语缺失，向后找标点范围内最近的名词或命名实体
-                for(int n = secondVerbIndex + 1; n < words.size(); n++) {
+                for(int n = rightVerbIndex + 1; n < words.size(); n++) {
                     Word word = words.get(n);
                     if(POS_NOUN.contains(word.getPos()) || !"O".equals(word.getNer())) {
                         eventWithPhrase.getRightPhrases().add(word);
