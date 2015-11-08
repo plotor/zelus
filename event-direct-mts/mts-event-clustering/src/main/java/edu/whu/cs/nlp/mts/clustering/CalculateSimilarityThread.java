@@ -9,6 +9,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -70,12 +74,17 @@ public class CalculateSimilarityThread implements Callable<Boolean>, SystemConst
                     //对事件进行编号，然后封装成对象存储
                     for (EventWithPhrase eventWithPhrase : event.getValue()) {
 
-                        NumedEventWithPhrase eventWithPhraseToId = new NumedEventWithPhrase();
-                        eventWithPhraseToId.setNum(num);
-                        eventWithPhraseToId.setEvent(eventWithPhrase);
+                        Double[] eventVec = this.vectorOperator.eventToVecPlus(eventWithPhrase);
+                        if(eventVec == null) {
+                            log.warn("The event[" + eventWithPhrase + "]'s vector is null, ignore it!");
+                            continue;
+                        }
+                        NumedEventWithPhrase numedEventWithPhrase = new NumedEventWithPhrase();
+                        numedEventWithPhrase.setNum(num);
+                        numedEventWithPhrase.setEvent(eventWithPhrase);
                         // 事件对应的向量
-                        eventWithPhraseToId.setVec(this.vectorOperator.eventToVec(eventWithPhrase));
-                        eventWithNums.put(num, eventWithPhraseToId);
+                        numedEventWithPhrase.setVec(eventVec);
+                        eventWithNums.put(num, numedEventWithPhrase);
                         ++num;
 
                     }
@@ -108,6 +117,8 @@ public class CalculateSimilarityThread implements Callable<Boolean>, SystemConst
                 log.error("写文件出错：" + workDir + "/" + DIR_NODES + "/" + topicName + ".node", e);
             }
 
+        } else {
+            log.error("Can't find any event in[" + this.topicDir + "]");
         }
 
         //如果存放文件路径不存在，则创建
@@ -138,6 +149,10 @@ public class CalculateSimilarityThread implements Callable<Boolean>, SystemConst
                         int intVal = (int) (approx * 1000);
                         FileUtils.writeStringToFile(intEdgeFile, (i + 1) + "\t" + (j + 1) + "\t" + intVal + LINE_SPLITER, DEFAULT_CHARSET, true);
                         /*FileUtils.writeStringToFile(intEdgeFile, (j + 1) + "\t" + (i + 1) + "\t" + intVal + LINE_SPLITER, DEFAULT_CHARSET, true);*/
+                    } else {
+
+                        log.warn("There is an error when calculate similarity[approx=" + approx + "] between events[" + eventWithNums.get(i) + "] and [" + eventWithNums.get(j) + "]");
+
                     }
                 } catch (Exception e) {
 
@@ -148,6 +163,12 @@ public class CalculateSimilarityThread implements Callable<Boolean>, SystemConst
         }
 
         return true;
+    }
+
+    public static void main(String[] args) throws InterruptedException, ExecutionException {
+        ExecutorService es = Executors.newSingleThreadExecutor();
+        Future<Boolean> future = es.submit(new CalculateSimilarityThread("E:/workspace/test/serializable-events/D0709B", "db_cache_vec", "localhost-3306-vec"));
+        future.get();
     }
 
 }

@@ -82,7 +82,7 @@ public class VectorOperator implements SystemConstant{
      * @param rightVec
      * @return
      */
-    public Double[] eventToVec(Float[] leftVec, Float[] middleVec, Float[] rightVec) {
+    public Double[] wordVecToEventVec(Float[] leftVec, Float[] middleVec, Float[] rightVec) {
 
         if(leftVec == null || middleVec == null || rightVec == null) {
             return null;
@@ -228,7 +228,7 @@ public class VectorOperator implements SystemConstant{
             Float[] middleVec = this.phraseVector(eventWithPhrase.getMiddlePhrases());
             Float[] rightVec = this.phraseVector(eventWithPhrase.getRightPhrases());
 
-            eventVec = this.eventToVec(leftVec, middleVec, rightVec);
+            eventVec = this.wordVecToEventVec(leftVec, middleVec, rightVec);
 
         } else if(EventType.RIGHT_MISSING.equals(eventWithPhrase.eventType())) {
 
@@ -238,7 +238,7 @@ public class VectorOperator implements SystemConstant{
             Float[] rightVec = new Float[SystemConstant.DIMENSION];
             Arrays.fill(rightVec, 1.0f);
 
-            eventVec = this.eventToVec(leftVec, middleVec, rightVec);
+            eventVec = this.wordVecToEventVec(leftVec, middleVec, rightVec);
 
         } else if(EventType.LEFT_MISSING.equals(eventWithPhrase.eventType())){
 
@@ -248,7 +248,7 @@ public class VectorOperator implements SystemConstant{
             Float[] middleVec = this.phraseVector(eventWithPhrase.getMiddlePhrases());
             Float[] rightVec = this.phraseVector(eventWithPhrase.getRightPhrases());
 
-            eventVec = this.eventToVec(leftVec, middleVec, rightVec);
+            eventVec = this.wordVecToEventVec(leftVec, middleVec, rightVec);
 
         } else {
 
@@ -257,6 +257,37 @@ public class VectorOperator implements SystemConstant{
         }
 
         return eventVec;
+
+    }
+
+    /**
+     * 计算事件向量<br>
+     * 相对于eventToVec的区别在于，如果某个短语的向量不存在，则随机生成一个向量，而不是用1代替
+     * @param eventWithPhrase
+     * @return
+     */
+    public Double[] eventToVecPlus(EventWithPhrase eventWithPhrase) {
+
+        if(EventType.ERROR.equals(eventWithPhrase.eventType())) {
+            this.log.error("不支持该事件类型：" + eventWithPhrase);
+            return null;
+        }
+
+        Float[] leftVec = this.phraseVector(eventWithPhrase.getLeftPhrases());
+        Float[] middleVec = this.phraseVector(eventWithPhrase.getMiddlePhrases());
+        Float[] rightVec = this.phraseVector(eventWithPhrase.getRightPhrases());
+
+        if(leftVec == null) {
+            leftVec = this.randomWordVec();
+        }
+        if(middleVec == null) {
+            middleVec = this.randomWordVec();
+        }
+        if(rightVec == null) {
+            rightVec = this.randomWordVec();
+        }
+
+        return this.wordVecToEventVec(leftVec, middleVec, rightVec);
 
     }
 
@@ -291,6 +322,20 @@ public class VectorOperator implements SystemConstant{
 
         return value;
 
+    }
+
+    /**
+     * 随机生成一个{@value SystemConstant.DIMENSION}维的向量，每一维的值在-1.5~1.5之间
+     *
+     * @return
+     */
+    private Float[] randomWordVec(){
+        Float[] vec = new Float[DIMENSION];
+        Random random = new Random(System.currentTimeMillis());
+        for(int i = 0; i < DIMENSION; i++) {
+            vec[i] = random.nextFloat() * 3.0f - 1.5f;
+        }
+        return vec;
     }
 
     /**
@@ -491,6 +536,10 @@ public class VectorOperator implements SystemConstant{
                         }
                         count++;
                     }
+                } else {
+
+                    this.log.warn("Can't find vector for word:" + word);
+
                 }
             } catch (SQLException e) {
                 this.log.error("Get vector error, word: " + word, e);
@@ -498,6 +547,7 @@ public class VectorOperator implements SystemConstant{
         }
 
         if(count == 0) {
+            this.log.warn("Can't find vector for phrase:" + phrase);
             return null;
         }
 

@@ -1,5 +1,7 @@
 package edu.whu.cs.nlp.mts.base.domain;
 
+import java.util.Arrays;
+
 /**
  * 封装已编号的事件，及其向量
  *
@@ -23,6 +25,11 @@ public class NumedEventWithPhrase {
         this.num = num;
         this.event = event;
         this.vec = vec;
+    }
+
+    @Override
+    public String toString() {
+        return "NumedEventWithPhrase [num=" + this.num + ", event=" + this.event + ", vec=" + Arrays.toString(this.vec) + "]";
     }
 
     public Integer getNum() {
