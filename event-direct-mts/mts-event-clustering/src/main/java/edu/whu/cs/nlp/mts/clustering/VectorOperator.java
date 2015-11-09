@@ -14,7 +14,6 @@ import edu.whu.cs.nlp.mts.base.domain.EventType;
 import edu.whu.cs.nlp.mts.base.domain.EventWithPhrase;
 import edu.whu.cs.nlp.mts.base.domain.Vector;
 import edu.whu.cs.nlp.mts.base.domain.Word;
-import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
 import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
 
 /**
@@ -224,17 +223,17 @@ public class VectorOperator implements SystemConstant{
 
         if(EventType.TERNARY.equals(eventWithPhrase.eventType())) {
             //主-谓-宾结构
-            Float[] leftVec = this.phraseVector(eventWithPhrase.getLeftPhrases());
-            Float[] middleVec = this.phraseVector(eventWithPhrase.getMiddlePhrases());
-            Float[] rightVec = this.phraseVector(eventWithPhrase.getRightPhrases());
+            Float[] leftVec = this.phraseVector(eventWithPhrase.getLeftPhrases(), true);
+            Float[] middleVec = this.phraseVector(eventWithPhrase.getMiddlePhrases(), false);
+            Float[] rightVec = this.phraseVector(eventWithPhrase.getRightPhrases(), true);
 
             eventVec = this.wordVecToEventVec(leftVec, middleVec, rightVec);
 
         } else if(EventType.RIGHT_MISSING.equals(eventWithPhrase.eventType())) {
 
             //主-谓，将宾语的向量全部用1代替
-            Float[] leftVec = this.phraseVector(eventWithPhrase.getLeftPhrases());
-            Float[] middleVec = this.phraseVector(eventWithPhrase.getMiddlePhrases());
+            Float[] leftVec = this.phraseVector(eventWithPhrase.getLeftPhrases(), true);
+            Float[] middleVec = this.phraseVector(eventWithPhrase.getMiddlePhrases(), false);
             Float[] rightVec = new Float[SystemConstant.DIMENSION];
             Arrays.fill(rightVec, 1.0f);
 
@@ -245,8 +244,8 @@ public class VectorOperator implements SystemConstant{
             //谓-宾，将主语的向量全部用1代替
             Float[] leftVec = new Float[SystemConstant.DIMENSION];
             Arrays.fill(leftVec, 1.0f);
-            Float[] middleVec = this.phraseVector(eventWithPhrase.getMiddlePhrases());
-            Float[] rightVec = this.phraseVector(eventWithPhrase.getRightPhrases());
+            Float[] middleVec = this.phraseVector(eventWithPhrase.getMiddlePhrases(), false);
+            Float[] rightVec = this.phraseVector(eventWithPhrase.getRightPhrases(), true);
 
             eventVec = this.wordVecToEventVec(leftVec, middleVec, rightVec);
 
@@ -273,18 +272,31 @@ public class VectorOperator implements SystemConstant{
             return null;
         }
 
-        Float[] leftVec = this.phraseVector(eventWithPhrase.getLeftPhrases());
-        Float[] middleVec = this.phraseVector(eventWithPhrase.getMiddlePhrases());
-        Float[] rightVec = this.phraseVector(eventWithPhrase.getRightPhrases());
+        Float[] leftVec = this.phraseVector(eventWithPhrase.getLeftPhrases(), true);
+        Float[] middleVec = this.phraseVector(eventWithPhrase.getMiddlePhrases(), false);
+        Float[] rightVec = this.phraseVector(eventWithPhrase.getRightPhrases(), true);
+
+        int randomCount = 0;
 
         if(leftVec == null) {
             leftVec = this.randomWordVec();
+            randomCount++;
+            this.log.info("The left vector is null, build a random vector:" + Arrays.toString(leftVec));
         }
         if(middleVec == null) {
             middleVec = this.randomWordVec();
+            randomCount++;
+            this.log.info("The middle vector is null, build a random vector:" + Arrays.toString(middleVec));
         }
         if(rightVec == null) {
             rightVec = this.randomWordVec();
+            randomCount++;
+            this.log.info("The right vector is null, build a random vector:" + Arrays.toString(rightVec));
+        }
+
+        if(randomCount > 1) {
+            // 对于一个事件，如果存在两次以上的随机向量生成，则忽略该事件
+            return null;
         }
 
         return this.wordVecToEventVec(leftVec, middleVec, rightVec);
@@ -493,9 +505,10 @@ public class VectorOperator implements SystemConstant{
      * 计算一个短语的向量
      *
      * @param phrase
+     * @param ignoreStopwords
      * @return
      */
-    private Float[] phraseVector(List<Word> phrase) {
+    private Float[] phraseVector(List<Word> phrase, boolean ignoreStopwords) {
 
         Float[] phraseVec = null;
 
@@ -513,13 +526,21 @@ public class VectorOperator implements SystemConstant{
         Arrays.fill(phraseVec, 0.0f);  // 初始以0填充
         int count = 0;
         for (Word word : phrase) {
-            if(STOPWORDS.contains(word.getLemma())) {
+
+            if(word.getName().equals(word.getPos())) {
+                // 跳过标点符号
+                continue;
+            }
+
+            if(ignoreStopwords && STOPWORDS.contains(word.getLemma())) {
                 // 跳过停用词
                 continue;
             }
+
             try {
-                List<Vector> vecs = this.ehCacheUtil.getVec(word);
+                /*List<Vector> vecs = this.ehCacheUtil.getVec(word);
                 if(CollectionUtils.isNotEmpty(vecs)) {
+                    this.log.info(">>" + word + "\t" + vecs.size());
                     int min = Integer.MAX_VALUE;
                     Float[] vec = null;
                     for (Vector vector : vecs) {
@@ -535,10 +556,18 @@ public class VectorOperator implements SystemConstant{
                             phraseVec[i] += vec[i];
                         }
                         count++;
+                    }*/
+
+                Vector vector = this.ehCacheUtil.getMostSimilarVec(word);
+                if(vector != null) {
+                    Float[] vec = vector.floatVecs();
+                    for(int i = 0; i < DIMENSION; i++) {
+                        phraseVec[i] += vec[i];
                     }
+                    count++;
                 } else {
 
-                    this.log.warn("Can't find vector for word:" + word);
+                    this.log.warn("[ignoreStopwords=" + ignoreStopwords + "] Can't find vector for word:" + word);
 
                 }
             } catch (SQLException e) {
@@ -547,7 +576,7 @@ public class VectorOperator implements SystemConstant{
         }
 
         if(count == 0) {
-            this.log.warn("Can't find vector for phrase:" + phrase);
+            this.log.warn("[ignoreStopwords=" + ignoreStopwords + "] Can't find vector for phrase:" + phrase);
             return null;
         }
 

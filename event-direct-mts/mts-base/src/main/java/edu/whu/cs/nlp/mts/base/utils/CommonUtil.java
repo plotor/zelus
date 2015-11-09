@@ -158,12 +158,12 @@ public class CommonUtil implements SystemConstant{
         if(str1.charAt(0) == str2.charAt(0)) {
             dis = 0;
         } else {
-            dis = 1;
+            dis = Math.abs(str1.charAt(0) - str2.charAt(0));
         }
 
         for(int i = 1; i < str1.length(); i++) {
             if(str1.charAt(i) != str2.charAt(i)) {
-                dis += 2;
+                dis += Math.abs(str1.charAt(i) - str2.charAt(i)) * 2;
             }
         }
 

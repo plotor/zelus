@@ -15,6 +15,20 @@
     <property name="maxIdleTime">60</property>
   </named-config>
   
+  <named-config name="192.168.3.223-3306-vec">    
+    <property name="driverClass">${jdbc.driver}</property>
+    <property name="jdbcUrl">${jdbc.url}</property>
+    <property name="user">${jdbc.username}</property>
+    <property name="password">${jdbc.password}</property>     
+    <property name="acquireIncrement">5</property>
+    <property name="initialPoolSize">10</property>
+    <property name="acquireRetryAttempts">10</property>
+    <property name="acquireRetryDelay">3000</property>
+    <property name="minPoolSize">1</property>
+    <property name="maxPoolSize">100</property>
+    <property name="maxIdleTime">60</property>
+  </named-config>
+  
   <named-config name="localhost-3306-rouge_eval">    
     <property name="driverClass">com.mysql.jdbc.Driver</property>
     <property name="jdbcUrl">jdbc:mysql://localhost:3306/rouge_eval?characterEncoding=utf8&amp;autoReconnect=true&amp;failOverReadOnly=false&amp;zeroDateTimeBehavior=convertToNull</property>

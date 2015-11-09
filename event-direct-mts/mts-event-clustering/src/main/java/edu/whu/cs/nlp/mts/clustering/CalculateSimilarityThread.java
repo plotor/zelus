@@ -118,7 +118,9 @@ public class CalculateSimilarityThread implements Callable<Boolean>, SystemConst
             }
 
         } else {
+
             log.error("Can't find any event in[" + this.topicDir + "]");
+
         }
 
         //如果存放文件路径不存在，则创建
@@ -140,7 +142,7 @@ public class CalculateSimilarityThread implements Callable<Boolean>, SystemConst
                 try {
                     // 计算向量的余弦值
                     double approx = this.vectorOperator.cosineValue(eventWithNums.get(i).getVec(), eventWithNums.get(j).getVec());
-                    if (approx >= 0 && approx <= 1) {
+                    if (approx >= 0.0D && approx <= 1.1D) {
                         // 当前节点之间有边
                         approx = Float.parseFloat(DECIMAL_FORMAT.format(approx));
                         FileUtils.writeStringToFile(edgeFile, (i + 1) + "\t" + (j + 1) + "\t" + approx + LINE_SPLITER, DEFAULT_CHARSET, true);
@@ -154,6 +156,7 @@ public class CalculateSimilarityThread implements Callable<Boolean>, SystemConst
                         log.warn("There is an error when calculate similarity[approx=" + approx + "] between events[" + eventWithNums.get(i) + "] and [" + eventWithNums.get(j) + "]");
 
                     }
+
                 } catch (Exception e) {
 
                     log.error("计算事件相似度出错，事件1：" + eventWithNums.get(i).getEvent() + "， 事件2：" + eventWithNums.get(j).getEvent(), e);
@@ -167,8 +170,12 @@ public class CalculateSimilarityThread implements Callable<Boolean>, SystemConst
 
     public static void main(String[] args) throws InterruptedException, ExecutionException {
         ExecutorService es = Executors.newSingleThreadExecutor();
-        Future<Boolean> future = es.submit(new CalculateSimilarityThread("E:/workspace/test/serializable-events/D0709B", "db_cache_vec", "localhost-3306-vec"));
-        future.get();
+        Future<Boolean> future = es.submit(new CalculateSimilarityThread("E:/workspace/test/serializable-events/D0732H", "db_cache_vec", "localhost-3306-vec"));
+        if(future.get()){
+            System.out.println("success!");
+        } else {
+            System.out.println("failed!");
+        }
     }
 
 }

@@ -26,7 +26,7 @@
             <id>wiki</id>
             <properties>
                 <jdbc.driver>com.mysql.jdbc.Driver</jdbc.driver>
-                <jdbc.url>jdbc:mysql://localhost:3306/vec_wiki?characterEncoding=utf8&amp;autoReconnect=true&amp;failOverReadOnly=false&amp;zeroDateTimeBehavior=convertToNull</jdbc.url>
+                <jdbc.url>jdbc:mysql://localhost:3306/user_vec?characterEncoding=utf8&amp;autoReconnect=true&amp;failOverReadOnly=false&amp;zeroDateTimeBehavior=convertToNull</jdbc.url>
                 <jdbc.username>root</jdbc.username>
                 <jdbc.password>693559wzc</jdbc.password>
             </properties>
