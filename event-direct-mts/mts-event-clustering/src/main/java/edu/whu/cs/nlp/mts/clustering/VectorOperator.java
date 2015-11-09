@@ -278,16 +278,20 @@ public class VectorOperator implements SystemConstant{
 
         int randomCount = 0;
 
+        if(middleVec == null) {
+            // 对于谓语，如果不存在向量，则直接忽略该事件
+            //middleVec = this.randomWordVec();
+            //randomCount++;
+            this.log.warn("The middle vector is null, ignore this event:" + eventWithPhrase);
+            return null;
+        }
+
         if(leftVec == null) {
             leftVec = this.randomWordVec();
             randomCount++;
             this.log.info("The left vector is null, build a random vector:" + Arrays.toString(leftVec));
         }
-        if(middleVec == null) {
-            middleVec = this.randomWordVec();
-            randomCount++;
-            this.log.info("The middle vector is null, build a random vector:" + Arrays.toString(middleVec));
-        }
+
         if(rightVec == null) {
             rightVec = this.randomWordVec();
             randomCount++;
