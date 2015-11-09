@@ -17,22 +17,18 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>mts-base</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>mts-event-extraction</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>mts-event-clustering</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>mts-msc</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <!-- log4j -->

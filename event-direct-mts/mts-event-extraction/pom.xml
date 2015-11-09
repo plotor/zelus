@@ -17,13 +17,11 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>mts-base</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <!-- 工程依赖 -->
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>mts-pretreatment</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <!-- log4j -->
