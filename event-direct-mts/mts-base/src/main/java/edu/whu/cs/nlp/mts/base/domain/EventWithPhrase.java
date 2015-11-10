@@ -13,22 +13,24 @@ import org.apache.commons.collections.CollectionUtils;
  * @version 2.0
  *
  */
-public class EventWithPhrase extends Event implements Serializable{
+public class EventWithPhrase extends Event implements Serializable {
 
     private static final long serialVersionUID = -7370833867494031137L;
 
-    private final List<Word> leftPhrases;   // 主语
-    private final List<Word> middlePhrases; // 谓语
-    private final List<Word> rightPhrases;  // 宾语
-    private final EventType  eventType;     // 事件类型
-    private String     filename;      // 事件所属的文件名称
+    private List<Word>        leftPhrases;                             // 主语
+    private List<Word>        middlePhrases;                           // 谓语
+    private List<Word>        rightPhrases;                            // 宾语
+    private EventType         eventType;                               // 事件类型
+    private Integer           sentNum;                                 // 事件所在句子行号
+    private String            filename;                                // 事件所属的文件名称
 
-    public EventWithPhrase(List<Word> leftPhrases, List<Word> middlePhrases, List<Word> rightPhrases, String filename) {
+    public EventWithPhrase(List<Word> leftPhrases, List<Word> middlePhrases, List<Word> rightPhrases, Integer sentNum, String filename) {
         super();
         this.leftPhrases = leftPhrases;
         this.middlePhrases = middlePhrases;
         this.rightPhrases = rightPhrases;
         this.eventType = this.eventType();
+        this.sentNum = sentNum;
         this.filename = filename;
     }
 
@@ -39,19 +41,15 @@ public class EventWithPhrase extends Event implements Serializable{
      */
     @Override
     public EventType eventType() {
-        if (CollectionUtils.isNotEmpty(this.leftPhrases)
-                && CollectionUtils.isNotEmpty(this.middlePhrases)
-                && CollectionUtils.isNotEmpty(this.rightPhrases)) {
+        if (CollectionUtils.isNotEmpty(this.leftPhrases) && CollectionUtils.isNotEmpty(this.middlePhrases) && CollectionUtils.isNotEmpty(this.rightPhrases)) {
             // 三元事件
             return EventType.TERNARY;
 
-        } else if (CollectionUtils.isNotEmpty(this.leftPhrases)
-                && CollectionUtils.isNotEmpty(this.middlePhrases)) {
+        } else if (CollectionUtils.isNotEmpty(this.leftPhrases) && CollectionUtils.isNotEmpty(this.middlePhrases)) {
             // 宾语缺失
             return EventType.RIGHT_MISSING;
 
-        } else if (CollectionUtils.isNotEmpty(this.middlePhrases)
-                && CollectionUtils.isNotEmpty(this.rightPhrases)) {
+        } else if (CollectionUtils.isNotEmpty(this.middlePhrases) && CollectionUtils.isNotEmpty(this.rightPhrases)) {
             // 主语缺失
             return EventType.LEFT_MISSING;
 
@@ -67,40 +65,16 @@ public class EventWithPhrase extends Event implements Serializable{
      */
     public boolean isPalindromicEvent() {
         boolean isPalindromic = false;
-        if(this.leftPhrases.size() == this.rightPhrases.size()) {
+        if (this.leftPhrases.size() == this.rightPhrases.size()) {
             isPalindromic = true;
-            for(int i = 0; i < this.leftPhrases.size(); i++) {
-                if(!this.leftPhrases.get(i).equals(this.rightPhrases.get(i))) {
+            for (int i = 0; i < this.leftPhrases.size(); i++) {
+                if (!this.leftPhrases.get(i).equals(this.rightPhrases.get(i))) {
                     isPalindromic = false;
                     break;
                 }
             }
         }
         return isPalindromic;
-    }
-
-    public String getFilename() {
-        return this.filename;
-    }
-
-    public void setFilename(String filename) {
-        this.filename = filename;
-    }
-
-    public List<Word> getLeftPhrases() {
-        return this.leftPhrases;
-    }
-
-    public List<Word> getMiddlePhrases() {
-        return this.middlePhrases;
-    }
-
-    public List<Word> getRightPhrases() {
-        return this.rightPhrases;
-    }
-
-    public EventType getEventType() {
-        return this.eventType;
     }
 
     /**
@@ -113,7 +87,7 @@ public class EventWithPhrase extends Event implements Serializable{
         StringBuilder result = new StringBuilder();
         final String SPLITER = "_";
         StringBuilder sb_left = new StringBuilder();
-        if(CollectionUtils.isNotEmpty(this.leftPhrases)) {
+        if (CollectionUtils.isNotEmpty(this.leftPhrases)) {
             for (Word word : this.leftPhrases) {
                 sb_left.append(word.getLemma() + SPLITER);
             }
@@ -121,7 +95,7 @@ public class EventWithPhrase extends Event implements Serializable{
         }
         result.append(WORD_CONNECTOR_IN_EVENTS);
         StringBuilder sb_middle = new StringBuilder();
-        if(CollectionUtils.isNotEmpty(this.middlePhrases)) {
+        if (CollectionUtils.isNotEmpty(this.middlePhrases)) {
             for (Word word : this.middlePhrases) {
                 sb_middle.append(word.getLemma() + SPLITER);
             }
@@ -129,7 +103,7 @@ public class EventWithPhrase extends Event implements Serializable{
         }
         result.append(WORD_CONNECTOR_IN_EVENTS);
         StringBuilder sb_right = new StringBuilder();
-        if(CollectionUtils.isNotEmpty(this.rightPhrases)) {
+        if (CollectionUtils.isNotEmpty(this.rightPhrases)) {
             for (Word word : this.rightPhrases) {
                 sb_right.append(word.getLemma() + SPLITER);
             }
@@ -140,9 +114,55 @@ public class EventWithPhrase extends Event implements Serializable{
 
     @Override
     public String toString() {
-        return  (CollectionUtils.isEmpty(this.leftPhrases) ? "" : this.leftPhrases.toString()) + WORD_CONNECTOR_IN_EVENTS
-                + (CollectionUtils.isEmpty(this.middlePhrases) ? "" : this.middlePhrases.toString()) + WORD_CONNECTOR_IN_EVENTS
-                + (CollectionUtils.isEmpty(this.rightPhrases) ? "" : this.rightPhrases.toString()) + FILENAME_REST_LEFT + this.filename + FILENAME_REST_RIGHT;
+        return (CollectionUtils.isEmpty(this.leftPhrases) ? "" : this.leftPhrases.toString()) + WORD_CONNECTOR_IN_EVENTS + (CollectionUtils.isEmpty(this.middlePhrases) ? "" : this.middlePhrases.toString()) + WORD_CONNECTOR_IN_EVENTS + (CollectionUtils.isEmpty(this.rightPhrases) ? "" : this.rightPhrases.toString()) + FILENAME_REST_LEFT + this.filename + FILENAME_REST_RIGHT;
+    }
+
+    public List<Word> getLeftPhrases() {
+        return this.leftPhrases;
+    }
+
+    public void setLeftPhrases(List<Word> leftPhrases) {
+        this.leftPhrases = leftPhrases;
+    }
+
+    public List<Word> getMiddlePhrases() {
+        return this.middlePhrases;
+    }
+
+    public void setMiddlePhrases(List<Word> middlePhrases) {
+        this.middlePhrases = middlePhrases;
+    }
+
+    public List<Word> getRightPhrases() {
+        return this.rightPhrases;
+    }
+
+    public void setRightPhrases(List<Word> rightPhrases) {
+        this.rightPhrases = rightPhrases;
+    }
+
+    public EventType getEventType() {
+        return this.eventType;
+    }
+
+    public void setEventType(EventType eventType) {
+        this.eventType = eventType;
+    }
+
+    public Integer getSentNum() {
+        return this.sentNum;
+    }
+
+    public void setSentNum(Integer sentNum) {
+        this.sentNum = sentNum;
+    }
+
+    public String getFilename() {
+        return this.filename;
+    }
+
+    public void setFilename(String filename) {
+        this.filename = filename;
     }
 
 }

@@ -265,7 +265,7 @@ public class SentenceExtractThread implements Callable<Boolean>, SystemConstant{
                             this.log.error(CommonUtil.cutLastLineSpliter(tmp.toString()) + "\n" +
                                     event + "\t" + (middleWord.getSentenceNum() - 1) + "\t" + sentence);
                         }else{
-                            //对当前子句进行同义词替换
+                            //对当前子句进行对象化
                             subSentence = new ArrayList<Word>();
                             final String[] wordsInSubSent = subSentenceStr.split("\\s+");
                             int num = 0;

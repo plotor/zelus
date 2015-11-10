@@ -42,8 +42,10 @@ public interface SystemConstant {
     /** 目录名：依存分析 */
     public final static String      DIR_PARSE_TEXT                  = "text_parse";
 
+    public static final String      DIR_SYNTACTICTREES_OBJ          = "syntactic-trees";
+
     /** 目录名：依存分析 */
-    public final static String      DIR_PARSE_OBJ                  = "obj_parse";
+    public final static String      DIR_PARSE_OBJ                   = "obj_parse";
 
     /** 目录名：依存分析（简版） */
     public static final String      DIR_PARSESIMPLIFY               = "text_parse-simplify";

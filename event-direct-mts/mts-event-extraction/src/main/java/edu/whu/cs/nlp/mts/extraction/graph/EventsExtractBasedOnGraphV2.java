@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 
 import edu.stanford.nlp.dcoref.CorefChain;
 import edu.stanford.nlp.dcoref.CorefChain.CorefMention;
+import edu.stanford.nlp.trees.Tree;
 import edu.whu.cs.nlp.mts.base.biz.ModelLoader;
 import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.domain.ChunkPhrase;
@@ -115,6 +116,15 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                 /*FileUtils.writeStringToFile(
                         FileUtils.getFile(parentPath + "/" + DIR_SEGDETAIL_TEXT + "/pos", file.getName()), segedTextPOS,
                         DEFAULT_CHARSET);*/
+
+                List<Tree> syntacticTrees = (List<Tree>)coreNlpResults.get(StanfordNLPTools.KEY_SYNTACTICTREES);
+                File treeFile = new File(parentPath + "/" + OBJ + "/" + DIR_SYNTACTICTREES_OBJ, file.getName() + ".obj");
+                try {
+                    SerializeUtil.writeObj(syntacticTrees, treeFile);
+                } catch (IOException e) {
+                    this.log.error("Serialize file error:" + treeFile.getAbsolutePath(), e);
+                    throw e;
+                }
 
                 // 获取对句子中单词进行对象化后的文本
                 @SuppressWarnings("unchecked")
@@ -217,7 +227,7 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                             }
                             middlePhrase.add(middleWord);
                             eventWithPhraseInSentence.add(
-                                    new EventWithPhrase(leftPhrase, middlePhrase, rightPhrase, event.getFilename()));
+                                    new EventWithPhrase(leftPhrase, middlePhrase, rightPhrase, middleWord.getSentenceNum(), event.getFilename()));
                         }
                         eventsAfterCR.put(sentNum, eventWithPhraseInSentence);
                     }
@@ -550,8 +560,7 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
 
                                 Word rightWord = wordsInSentence.get(object);
 
-                                eventsInSentence
-                                .add(new EventWithWord(leftWord, negWord, middleWord, rightWord, filename));
+                                eventsInSentence.add(new EventWithWord(leftWord, negWord, middleWord, rightWord, filename));
 
                             }
 
@@ -569,8 +578,7 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                                 /**
                                  * 如果存在依存关系cop，则用cop关系将二元事件补全为三元事件
                                  */
-                                eventsInSentence
-                                .add(new EventWithWord(leftWord, negWord, copWord, middleWord, filename));
+                                eventsInSentence.add(new EventWithWord(leftWord, negWord, copWord, middleWord, filename));
                             } else {
                                 /**
                                  * 不存在cop关系的词
@@ -591,8 +599,7 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                                 /**
                                  * 用前缀词做补全主语
                                  */
-                                eventsInSentence
-                                .add(new EventWithWord(prepWord, negWord, middleWord, rightWord, filename));
+                                eventsInSentence.add(new EventWithWord(prepWord, negWord, middleWord, rightWord, filename));
                             } else {
                                 /**
                                  * 不存在符合要求的前缀词
@@ -699,8 +706,7 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                         }
                     }
 
-                    eventsInSentence.add(new EventWithPhrase(leftPhrase, eventWithPhrase.getMiddlePhrases(),
-                            rightPhrase, eventWithPhrase.getFilename()));
+                    eventsInSentence.add(new EventWithPhrase(leftPhrase, eventWithPhrase.getMiddlePhrases(), rightPhrase, eventWithPhrase.getSentNum(), eventWithPhrase.getFilename()));
 
                 } else {
 
@@ -809,8 +815,7 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                      */
                     t_event.getMiddlePhrases().add(t_event_right_word);
                     // 组合成新的事件
-                    newEvent = new EventWithPhrase(t_event.getLeftPhrases(), t_event.getMiddlePhrases(),
-                            b_event.getRightPhrases(), b_event.getFilename());
+                    newEvent = new EventWithPhrase(t_event.getLeftPhrases(), t_event.getMiddlePhrases(), b_event.getRightPhrases(), t_event.getSentNum(), b_event.getFilename());
                     break;
                 }
             }
