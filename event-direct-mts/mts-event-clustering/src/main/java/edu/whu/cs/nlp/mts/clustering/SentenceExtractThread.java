@@ -29,11 +29,11 @@ import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
 import edu.stanford.nlp.process.Tokenizer;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreebankLanguagePack;
+import edu.whu.cs.nlp.mts.base.biz.FileLoader;
 import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.domain.Word;
 import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
 import edu.whu.cs.nlp.mts.base.utils.Encipher;
-import edu.whu.cs.nlp.mts.base.utils.FileUtil;
 import edu.whu.cs.nlp.mts.base.utils.WordNetUtil;
 
 /**
@@ -81,7 +81,6 @@ public class SentenceExtractThread implements Callable<Boolean>, SystemConstant{
 
                     @Override
                     public int compare(Integer key_1, Integer key_2) {
-                        // TODO Auto-generated method stub
                         return key_2 - key_1;
                     }
 
@@ -201,7 +200,7 @@ public class SentenceExtractThread implements Callable<Boolean>, SystemConstant{
                     //加载正文
                     try {
                         textList = CommonUtil.str2List(
-                                FileUtil.read(this.textDir + "/" + topicName + "/" + DIR_SEG_TEXT + "/" + filename, DEFAULT_CHARSET));
+                                FileLoader.read(this.textDir + "/" + topicName + "/" + DIR_SEG_TEXT + "/" + filename, DEFAULT_CHARSET));
                     } catch (final IOException e) {
                         this.log.error("加载文件失败：" + this.textDir + "/" + topicName + "/" + DIR_SEG_TEXT + "/" + filename, e);
                         //e.printStackTrace();
@@ -210,7 +209,7 @@ public class SentenceExtractThread implements Callable<Boolean>, SystemConstant{
                 if(detailTextList == null){
                     try {
                         detailTextList =
-                                FileUtil.loadText(this.textDir + "/" + topicName + "/" + DIR_SEGDETAIL_TEXT + "/" + filename, DEFAULT_CHARSET);
+                                FileLoader.loadText(this.textDir + "/" + topicName + "/" + DIR_SEGDETAIL_TEXT + "/" + filename, DEFAULT_CHARSET);
                     } catch (final IOException e) {
                         this.log.error("加载文件失败：" + this.textDir + "/" + topicName + "/" + DIR_SEGDETAIL_TEXT + "/" + filename, e);
                         //e.printStackTrace();
@@ -394,16 +393,16 @@ public class SentenceExtractThread implements Callable<Boolean>, SystemConstant{
             final String filename = this.filename_cluster_read.replace(".read", ".sentences");
             if(extractedSentenceLemmaGroupByCluster.length() > 0){
                 final String eslgbc = CommonUtil.cutLastLineSpliter(extractedSentenceLemmaGroupByCluster.toString());
-                FileUtil.write(this.extractedSentencesSaveDir + "/lemma/" + filename, eslgbc, DEFAULT_CHARSET);
+                FileLoader.write(this.extractedSentencesSaveDir + "/lemma/" + filename, eslgbc, DEFAULT_CHARSET);
             }
             if (extractedSentenceGroupByCluster.length() > 0) {
                 final String esgbc = CommonUtil.cutLastLineSpliter(extractedSentenceGroupByCluster.toString());
-                FileUtil.write(
+                FileLoader.write(
                         this.extractedSentencesSaveDir + "/" + filename, esgbc, DEFAULT_CHARSET);
             }
             if (taggesSentenceGroupByCluster.length() > 0) {
                 final String tsgbc = CommonUtil.cutLastLineSpliter(taggesSentenceGroupByCluster.toString());
-                FileUtil.write(this.extractedSentencesSaveDir + "/" + DIR_TAGGED + "/" + filename, tsgbc, DEFAULT_CHARSET);
+                FileLoader.write(this.extractedSentencesSaveDir + "/" + DIR_TAGGED + "/" + filename, tsgbc, DEFAULT_CHARSET);
             }
             success = true;
         } catch (IOException | NoSuchAlgorithmException e) {

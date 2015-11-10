@@ -26,10 +26,10 @@ import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
+import edu.whu.cs.nlp.mts.base.biz.FileLoader;
 import edu.whu.cs.nlp.mts.base.biz.ModelLoader;
 import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
-import edu.whu.cs.nlp.mts.base.utils.FileUtil;
 
 /**
  * 对文件进行预处理
@@ -194,7 +194,7 @@ public class Pretreatment implements SystemConstant {
                 }
                 if (edgeInfos.length() > 0) {
                     final String edgeInfosStr = CommonUtil.cutLastLineSpliter(edgeInfos.toString());
-                    FileUtil.write(edgeDir + "/" + DIR_CW_PRETREAT + "/" + filename, edgeInfosStr, DEFAULT_CHARSET);
+                    FileLoader.write(edgeDir + "/" + DIR_CW_PRETREAT + "/" + filename, edgeInfosStr, DEFAULT_CHARSET);
                 }
             } finally {
                 if (br != null) {
@@ -211,7 +211,7 @@ public class Pretreatment implements SystemConstant {
      */
     public static void main(String[] args) throws IOException {
         final Pretreatment pret = new Pretreatment();
-        final String text = FileUtil.read("F:/test/text/D0745J/APW19981217.0770", Charset.forName("UTF-8"));
+        final String text = FileLoader.read("F:/test/text/D0745J/APW19981217.0770", Charset.forName("UTF-8"));
         System.out.println(pret.coreferenceResolution(text));
     }
 

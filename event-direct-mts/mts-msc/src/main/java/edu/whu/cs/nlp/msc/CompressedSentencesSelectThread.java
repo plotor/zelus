@@ -16,11 +16,11 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import edu.whu.cs.nlp.mts.base.biz.FileLoader;
 import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.domain.AttributeInClassForSentenceSilimarity;
 import edu.whu.cs.nlp.mts.base.domain.SentNumSimiPair;
 import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
-import edu.whu.cs.nlp.mts.base.utils.FileUtil;
 
 /**
  * 对压缩处理后的句子集合按照TF-IDF值来选取
@@ -65,7 +65,6 @@ public class CompressedSentencesSelectThread implements Runnable, SystemConstant
 
     @Override
     public void run() {
-        // TODO Auto-generated method stub
         this.log.info(Thread.currentThread() + "is running..." + this.compressedFilePath);
         BufferedReader br = null;
         try {
@@ -347,7 +346,7 @@ public class CompressedSentencesSelectThread implements Runnable, SystemConstant
                 }
                 // System.out.println("字数：" + wordsCountInSummary);
             }
-            FileUtil.write(this.summaryFilePath, CommonUtil.cutLastLineSpliter(sb_summary.toString()), DEFAULT_CHARSET);
+            FileLoader.write(this.summaryFilePath, CommonUtil.cutLastLineSpliter(sb_summary.toString()), DEFAULT_CHARSET);
         } catch (final IOException e) {
             // TODO Auto-generated catch block
             this.log.error("", e);

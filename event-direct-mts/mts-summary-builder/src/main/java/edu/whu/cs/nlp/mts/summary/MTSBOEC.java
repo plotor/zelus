@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.domain.CWRunParam;
 import edu.whu.cs.nlp.mts.base.domain.EventWithPhrase;
+import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
 import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
 import edu.whu.cs.nlp.mts.clustering.CalculateSimilarityThread;
 import edu.whu.cs.nlp.mts.clustering.ClusterByChineseWhispers;
@@ -156,6 +157,7 @@ public class MTSBOEC implements SystemConstant{
                 } catch (InterruptedException | ExecutionException e) {
                     log.error("There is an exception when calculate events similarity!", e);
                 }finally{
+                    EhCacheUtil.close(); // 关闭缓存
                     executorService.shutdown();
                 }
             }
@@ -164,7 +166,7 @@ public class MTSBOEC implements SystemConstant{
         }
 
         /**
-         * 对事件进行聚类，同时按类别抽取时间所在子句
+         * 对事件进行聚类，同时按类别抽取事件所在子句
          */
         if("y".equalsIgnoreCase(properties.getProperty("isEventCluster"))){
             log.info(">> events clusting & sub sentences extracting");

@@ -1,5 +1,6 @@
 package edu.whu.cs.nlp.mts.base.domain;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**
@@ -8,7 +9,9 @@ import java.util.Arrays;
  * @author ZhenchaoWang 2015-11-4 13:16:50
  *
  */
-public class NumedEventWithPhrase {
+public class NumedEventWithPhrase implements Serializable{
+
+    private static final long serialVersionUID = 3111357660285939043L;
 
     private Integer         num;
 

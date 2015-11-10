@@ -8,6 +8,7 @@ import java.util.List;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
+import org.apache.log4j.Logger;
 
 import edu.whu.cs.nlp.mts.base.domain.Vector;
 import edu.whu.cs.nlp.mts.base.domain.Word;
@@ -23,6 +24,8 @@ import net.sf.ehcache.Element;
  */
 public class EhCacheUtil {
 
+    private static Logger log = Logger.getLogger(EhCacheUtil.class);
+
     private static CacheManager cacheManager;
     private final String        cacheName;
     private final String        datasource;
@@ -31,6 +34,9 @@ public class EhCacheUtil {
         this.cacheName = cacheName;
         this.datasource = datasource;
         cacheManager = CacheManager.getInstance();
+        if(cacheManager != null) {
+            log.info("EhCache started!");
+        }
     }
 
     /**
@@ -202,6 +208,16 @@ public class EhCacheUtil {
     }
 
     /**
+     * 关闭缓存
+     */
+    public static void close() {
+        if(cacheManager != null) {
+            cacheManager.shutdown();
+            log.info("EhCache closed!");
+        }
+    }
+
+    /**
      * 获取与查询词距离最近的向量
      *
      * @param queryKey
@@ -225,7 +241,7 @@ public class EhCacheUtil {
     }
 
     public static void main(String[] args) throws SQLException {
-        EhCacheUtil ehCacheUtil = new EhCacheUtil("db_cache_vec", "localhost-3306-vec");
+        EhCacheUtil ehCacheUtil = new EhCacheUtil("db_cache_vec", "local");
         Word word = new Word();
         word.setName("Be");
         word.setLemma("be");
@@ -241,6 +257,7 @@ public class EhCacheUtil {
         if(vec != null) {
             System.out.println(vec.getWord() + "\t" + vec.getVec());
         }
+        EhCacheUtil.close();
     }
 
 }

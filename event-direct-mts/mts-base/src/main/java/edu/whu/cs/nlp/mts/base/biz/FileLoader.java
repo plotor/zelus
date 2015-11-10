@@ -1,4 +1,4 @@
-package edu.whu.cs.nlp.mts.base.utils;
+package edu.whu.cs.nlp.mts.base.biz;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -16,18 +16,18 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
-import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.domain.EventWithWord;
 import edu.whu.cs.nlp.mts.base.domain.Word;
+import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
 
 /**
  * 文件操作相关类
  * @author Apache_xiaochao
  *
  */
-public class FileUtil implements SystemConstant{
+public class FileLoader implements SystemConstant{
 
-    private static Logger log = Logger.getLogger(FileUtil.class);
+    private static Logger log = Logger.getLogger(FileLoader.class);
 
     /**
      * 写文件函数，自动创建写路径<br>

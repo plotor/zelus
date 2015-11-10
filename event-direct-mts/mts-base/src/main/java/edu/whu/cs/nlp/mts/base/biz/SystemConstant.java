@@ -21,6 +21,12 @@ public interface SystemConstant {
     /** 一个单词中所有属性的连接符，用于打印时进行组织 */
     public final static String      WORD_ATTRBUTE_CONNECTOR         = "__";
 
+    /** 文本结果上层路径 */
+    public static final String      TEXT                            = "text";
+
+    /** 序列化文件上层路径 */
+    public static final String      OBJ                             = "obj";
+
     /** 目录名：原文本 */
     public final static String      DIR_TEXT                        = "text";
 
@@ -30,8 +36,14 @@ public interface SystemConstant {
     /** 目录名：句子切分（详细） */
     public final static String      DIR_SEGDETAIL_TEXT              = "text_seg-detail";
 
+    /** 目录名：存放序列化的词集合 */
+    public static final String      DIR_WORDS_OBJ                   = "words";
+
     /** 目录名：依存分析 */
     public final static String      DIR_PARSE_TEXT                  = "text_parse";
+
+    /** 目录名：依存分析 */
+    public final static String      DIR_PARSE_OBJ                  = "obj_parse";
 
     /** 目录名：依存分析（简版） */
     public static final String      DIR_PARSESIMPLIFY               = "text_parse-simplify";
@@ -285,8 +297,7 @@ public interface SystemConstant {
     public static final Integer     DIMENSION                       = 300;
 
     /** 停用词列表 */
-    public static final Set<String> STOPWORDS                       = ResourceLoader
-            .loadStopwords("stopwords-en-default.txt");
+    public static final Set<String> STOPWORDS                       = ResourceLoader.loadStopwords("stopwords-en-default.txt");
 
     /** 排除的标点 */
     public static final Set<String> EXCLUDE_PUNCTUATION             = new HashSet<String>() {

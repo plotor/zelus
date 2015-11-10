@@ -28,6 +28,7 @@ import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.CoreMap;
+import edu.whu.cs.nlp.mts.base.biz.FileLoader;
 import edu.whu.cs.nlp.mts.base.biz.ModelLoader;
 import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.domain.EventType;
@@ -35,7 +36,6 @@ import edu.whu.cs.nlp.mts.base.domain.EventWithWord;
 import edu.whu.cs.nlp.mts.base.domain.ParseItem;
 import edu.whu.cs.nlp.mts.base.domain.Word;
 import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
-import edu.whu.cs.nlp.mts.base.utils.FileUtil;
 import edu.whu.cs.nlp.mts.pretreatment.Pretreatment;
 
 /**
@@ -530,11 +530,11 @@ public class EventsExtractBasedOnGraph implements SystemConstant, Callable<Boole
             // 加载文件
             this.log.info(Thread.currentThread().getId() + "正在操作文件：" + this.textDir + "/" + filename);
             try {
-                String text = FileUtil.read(this.textDir + "/" + filename, DEFAULT_CHARSET);
+                String text = FileLoader.read(this.textDir + "/" + filename, DEFAULT_CHARSET);
 
                 // 对文本进行句子切分和指代消解
                 final Map<String, String> preTreatResult = pretreatment.coreferenceResolution(text);
-                FileUtil.write(this.textDir + "/" + DIR_TEXT + "/" + filename,
+                FileLoader.write(this.textDir + "/" + DIR_TEXT + "/" + filename,
                         preTreatResult.get(Pretreatment.KEY_SEG_TEXT), DEFAULT_CHARSET);
                 text = preTreatResult.get(Pretreatment.KEY_CR_TEXT);
 
@@ -543,16 +543,16 @@ public class EventsExtractBasedOnGraph implements SystemConstant, Callable<Boole
 
                 // 获取句子切分后的文本
                 final String segedtext = (String) coreNlpResults.get("segedText");
-                FileUtil.write(this.textDir + "/" + DIR_SEG_TEXT + "/" + filename, segedtext, DEFAULT_CHARSET);
+                FileLoader.write(this.textDir + "/" + DIR_SEG_TEXT + "/" + filename, segedtext, DEFAULT_CHARSET);
 
                 // 获取句子切分后的文本详细信息
                 final String segedTextDetail = (String) coreNlpResults.get("segedTextDetail");
-                FileUtil.write(this.textDir + "/" + DIR_SEGDETAIL_TEXT + "/" + filename, segedTextDetail,
+                FileLoader.write(this.textDir + "/" + DIR_SEGDETAIL_TEXT + "/" + filename, segedTextDetail,
                         DEFAULT_CHARSET);
 
                 // 获取句子切分后的带有词性的文本信息
                 final String segedTextPOS = (String) coreNlpResults.get("segedTextPOS");
-                FileUtil.write(this.textDir + "/" + DIR_SEGDETAIL_TEXT + "/pos/" + filename, segedTextPOS,
+                FileLoader.write(this.textDir + "/" + DIR_SEGDETAIL_TEXT + "/pos/" + filename, segedTextPOS,
                         DEFAULT_CHARSET);
 
                 // 获取对句子中单词进行对象化后的文本，将字符串表示成Word对象
@@ -571,13 +571,13 @@ public class EventsExtractBasedOnGraph implements SystemConstant, Callable<Boole
                     sb_words_pos.append(sb_pos.toString().trim() + LINE_SPLITER);
                 }
                 // 词和词性分开按行存储
-                FileUtil.write(this.textDir + "/" + DIR_SEGDETAIL_TEXT + "/pos2/" + filename,
+                FileLoader.write(this.textDir + "/" + DIR_SEGDETAIL_TEXT + "/pos2/" + filename,
                         CommonUtil.cutLastLineSpliter(sb_words_pos.toString()), DEFAULT_CHARSET);
 
                 // 获取依存分析结果
                 @SuppressWarnings("unchecked")
                 final List<List<ParseItem>> parseItemList = (List<List<ParseItem>>) coreNlpResults.get("parseItems");
-                FileUtil.write(this.textDir + "/" + DIR_PARSE_TEXT + "/" + filename,
+                FileLoader.write(this.textDir + "/" + DIR_PARSE_TEXT + "/" + filename,
                         CommonUtil.lists2String(parseItemList), DEFAULT_CHARSET);
 
                 // 记录简版的依存分析结果
@@ -588,7 +588,7 @@ public class EventsExtractBasedOnGraph implements SystemConstant, Callable<Boole
                     }
                     simplifyParsedResult.append(LINE_SPLITER);
                 }
-                FileUtil.write(this.textDir + "/" + DIR_PARSESIMPLIFY + "/" + filename,
+                FileLoader.write(this.textDir + "/" + DIR_PARSESIMPLIFY + "/" + filename,
                         CommonUtil.cutLastLineSpliter(simplifyParsedResult.toString()), DEFAULT_CHARSET);
 
                 // 对当前文本进行事件抽取
@@ -602,9 +602,9 @@ public class EventsExtractBasedOnGraph implements SystemConstant, Callable<Boole
                     sb_simplify_events
                     .append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
                 }
-                FileUtil.write(this.textDir + "/" + DIR_EVENTS + "/" + filename,
+                FileLoader.write(this.textDir + "/" + DIR_EVENTS + "/" + filename,
                         CommonUtil.cutLastLineSpliter(sb_events.toString()), DEFAULT_CHARSET);
-                FileUtil.write(this.textDir + "/" + DIR_EVENTSSIMPLIFY + "/" + filename,
+                FileLoader.write(this.textDir + "/" + DIR_EVENTSSIMPLIFY + "/" + filename,
                         CommonUtil.cutLastLineSpliter(sb_simplify_events.toString()), DEFAULT_CHARSET);
 
             } catch (final IOException e) {
