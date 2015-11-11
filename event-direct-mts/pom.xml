@@ -26,6 +26,7 @@
             <id>server</id>
             <properties>
                 <c3p0.datasource>server</c3p0.datasource>
+                <dict.path>/usr/local/WordNet-3.0/dict</dict.path>
                 <workdir>/home/experiment</workdir>
                 <corpusdir>/home/experiment/corpus/duc2007/news</corpusdir>
             </properties>
@@ -34,6 +35,7 @@
             <id>local</id>
             <properties>
                 <c3p0.datasource>local</c3p0.datasource>
+                <dict.path>D:/Program Files (x86)/WordNet/2.1/dict</dict.path>
                 <workdir>E:/workspace/test</workdir>
                 <corpusdir>E:/workspace/test/corpus</corpusdir>
             </properties>

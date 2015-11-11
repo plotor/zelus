@@ -145,8 +145,12 @@ public class CalculateSimilarityThread implements Callable<Boolean>, SystemConst
 
                     approx = Float.parseFloat(DECIMAL_FORMAT.format(approx));
 
-                    if(approx <= 0.0f) {
-                        log.warn("There is an error when calculate distence between [" + eventWithNums.get(i) + "] and [" + eventWithNums.get(j) + "], ignore it!");
+                    if(approx < 0.0f) {
+                        log.warn("[approx=" + approx + "]There is an error when calculate distence between [" + eventWithNums.get(i) + "] and [" + eventWithNums.get(j) + "], ignore it!");
+                        continue;
+                    }
+
+                    if(approx == 0.0f) {
                         continue;
                     }
 

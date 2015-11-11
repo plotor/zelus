@@ -57,7 +57,7 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
     /**wordnet词典文件所在路径*/
     private final String wordnetDataPath;
     /** 允许入边的阈值 */
-    private final Float  EDGE_WEIGHT_THRESHOLD = 1.5f;
+    private final Float  EDGE_WEIGHT_THRESHOLD = 1.39f;
 
     public ChineseWhispersCluster(String topicDir, String nodeFilePath, String edgeFilePath, String wordnetDataPath) {
         super();

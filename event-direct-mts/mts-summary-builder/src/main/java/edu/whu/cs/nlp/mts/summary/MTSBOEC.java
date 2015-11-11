@@ -30,6 +30,7 @@ import edu.whu.cs.nlp.mts.extraction.graph.EventsExtractBasedOnGraphV2;
 
 /**
  * 驱动类
+ *
  * @author ZhenchaoWang 2015-10-20 10:55:06
  *
  */

@@ -27,6 +27,7 @@ import edu.whu.cs.nlp.mts.pretreatment.Pretreatment;
  * @author Apache_xiaochao
  *
  */
+@Deprecated
 public class ClusterByChineseWhispers implements SystemConstant{
 
     private final Logger log = Logger.getLogger(this.getClass());

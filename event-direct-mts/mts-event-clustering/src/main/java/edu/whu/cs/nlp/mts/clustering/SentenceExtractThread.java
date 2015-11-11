@@ -41,6 +41,7 @@ import edu.whu.cs.nlp.mts.base.utils.WordNetUtil;
  * @author Apache_xiaochao
  *
  */
+@Deprecated
 public class SentenceExtractThread implements Callable<Boolean>, SystemConstant{
 
     private final Logger log = Logger.getLogger(this.getClass());
@@ -345,7 +346,8 @@ public class SentenceExtractThread implements Callable<Boolean>, SystemConstant{
                         //对当前句子进行同义词替换
                         for(int i = 0; i < subSentence.size(); ++i){
                             final Word word = subSentence.get(i);
-                            subSentence.set(i, WordNetUtil.getSynonyms(this.dict, word, selectedSynonymsWords));
+                            // FIXME 下面这行注释掉，用于通过maven编译2015-11-11 19:26:01
+                            //subSentence.set(i, WordNetUtil.getSynonyms(this.dict, word, selectedSynonymsWords));
                         }
                         final String subSentStrAfter = this.words2Sentence(subSentence);
                         try {
