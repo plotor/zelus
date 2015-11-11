@@ -2,7 +2,11 @@ package edu.whu.cs.nlp.mts.base.utils;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.log4j.Logger;
 
 import edu.mit.jwi.Dictionary;
 import edu.mit.jwi.IDictionary;
@@ -21,7 +25,9 @@ import edu.whu.cs.nlp.mts.base.domain.Word;
  */
 public class WordNetUtil implements SystemConstant{
 
-    private volatile static IDictionary dict;
+    private static Logger log = Logger.getLogger(WordNetUtil.class);
+
+    private static ConcurrentHashMap<String, IDictionary> dicts = new ConcurrentHashMap<String, IDictionary>();
 
     /**
      * 打开词典
@@ -30,16 +36,17 @@ public class WordNetUtil implements SystemConstant{
      * @throws IOException
      */
     public static IDictionary openDictionary(String dictPath) throws IOException{
-        if(dict == null){
+        if(dicts.get(dictPath) == null){
             synchronized (WordNetUtil.class) {
-                if(dict == null){
-                    final URL url=new URL("file", null, dictPath);
-                    dict = new Dictionary(url);
+                if(dicts.get(dictPath) == null){
+                    URL url=new URL("file", null, dictPath);
+                    IDictionary dict = new Dictionary(url);
                     dict.open();//打开词典
+                    dicts.put(dictPath, dict);
                 }
             }
         }
-        return dict;
+        return dicts.get(dictPath);
     }
 
     /**
@@ -50,46 +57,46 @@ public class WordNetUtil implements SystemConstant{
      * @param selectedSynonymsWords 文章中已经选择的同义词集合
      * @return
      */
-    public synchronized static Word getSynonyms(IDictionary dict, Word word, Set<String> selectedSynonymsWords){
-        Word result = word;
-        if(selectedSynonymsWords != null){
-            IIndexWord idxWord = null;
-            if(POS_NOUN.contains(word.getPos())){
-                idxWord = dict.getIndexWord(word.getLemma(), POS.NOUN);
-            }else if(POS_VERB.contains(word.getPos())){
-                idxWord = dict.getIndexWord(word.getLemma(), POS.VERB);
-            }else if(POS_ADVERB.contains(word.getPos())){
-                idxWord = dict.getIndexWord(word.getLemma(), POS.ADVERB);
-            }else if(POS_ADJ.contains(word.getPos())){
-                idxWord = dict.getIndexWord(word.getLemma(), POS.ADJECTIVE);
+    public synchronized static List<Word> getSynonyms(IDictionary dict, Word word){
+
+        List<Word> synonymsWords = new ArrayList<Word>();
+
+        IIndexWord idxWord = null;
+        if(POS_NOUN.contains(word.getPos())){
+            idxWord = dict.getIndexWord(word.getLemma(), POS.NOUN);
+        }else if(POS_VERB.contains(word.getPos())){
+            idxWord = dict.getIndexWord(word.getLemma(), POS.VERB);
+        }else if(POS_ADVERB.contains(word.getPos())){
+            idxWord = dict.getIndexWord(word.getLemma(), POS.ADVERB);
+        }else if(POS_ADJ.contains(word.getPos())){
+            idxWord = dict.getIndexWord(word.getLemma(), POS.ADJECTIVE);
+        }
+
+        if(idxWord == null) {
+            return synonymsWords;
+        }
+
+        IWordID wordID = idxWord.getWordIDs().get(0); // 1st meaning
+        IWord iword = dict.getWord(wordID);
+        ISynset synset = iword.getSynset (); //ISynset是一个词的同义词集的接口
+
+        for(IWord w : synset.getWords()){
+
+            Word synonymsWord = null;
+            try {
+                synonymsWord = (Word) word.clone();
+                synonymsWord.setName(w.getLemma());
+                synonymsWord.setLemma(w.getLemma());
+            } catch (CloneNotSupportedException e) {
+                log.error("Clone word[" + word + "] error!", e);
+            }
+            if(null != synonymsWord) {
+                synonymsWords.add(synonymsWord);
             }
 
-            if(idxWord != null){
-                final IWordID wordID = idxWord.getWordIDs().get(0); // 1st meaning
-                final IWord iword = dict.getWord(wordID);
-                final ISynset synset = iword.getSynset (); //ISynset是一个词的同义词集的接口
-                // iterate over words associated with the synset
-                boolean flag = false;
-                //System.out.print("当前词：" + word.getName() + "->");
-                for(final IWord w : synset.getWords()){
-                    //System.out.print(w.getLemma() + "\t");
-                    //如果之前选中的词中已经有当前词的同义词，则用选中的词替换当前词
-                    if(selectedSynonymsWords.contains(w.getLemma())){
-                        result.setName(w.getLemma());
-                        result.setLemma(w.getLemma());
-                        flag = true;
-                        break;
-                    }
-                }
-                //System.out.println();
-                if(!flag){
-                    //当前词的同义词之前没有出现过，所以将当前词填入已经选中的同义词集合
-                    selectedSynonymsWords.add(result.getLemma());
-                    result.setName(result.getLemma());  //用原型替换当前词
-                }
-            }
         }
-        return result;
+
+        return synonymsWords;
     }
 
 }

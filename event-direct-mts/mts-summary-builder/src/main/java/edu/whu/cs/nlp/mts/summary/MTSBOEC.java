@@ -2,6 +2,7 @@ package edu.whu.cs.nlp.mts.summary;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,9 +22,11 @@ import org.apache.log4j.Logger;
 import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.domain.CWRunParam;
 import edu.whu.cs.nlp.mts.base.domain.EventWithPhrase;
+import edu.whu.cs.nlp.mts.base.domain.Word;
 import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
 import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
 import edu.whu.cs.nlp.mts.clustering.CalculateSimilarityThread;
+import edu.whu.cs.nlp.mts.clustering.ChineseWhispersCluster;
 import edu.whu.cs.nlp.mts.clustering.ClusterByChineseWhispers;
 import edu.whu.cs.nlp.mts.extraction.graph.EventsExtractBasedOnGraphV2;
 
@@ -169,23 +172,42 @@ public class MTSBOEC implements SystemConstant{
          * 对事件进行聚类，同时按类别抽取事件所在子句
          */
         if("y".equalsIgnoreCase(properties.getProperty("isEventCluster"))){
-            log.info(">> events clusting & sub sentences extracting");
-            final String nodesDir = workDir + "/" + DIR_NODES;
-            final String edgeDir = workDir + "/" + DIR_EDGES;
-            final String clustResultDir = workDir + "/" + DIR_EVENTS_CLUST;
-            final String sentencesSaveDir = workDir + "/" + DIR_SUB_SENTENCES_EXTRACTED;
-            final String moduleFilePath = workDir + "/en-pos-maxent.bin";
-            final String dictPath = properties.getProperty("dictPath");
-            final float edgeSelectedWeight = 3.2f;  //边阈值增加权重
-            boolean isPret = true;
-            boolean isClust = true;
-            if("n".equalsIgnoreCase(properties.getProperty("isPret"))){
-                isPret = false;
+            log.info("Starting events clusting & sub sentences extracting...");
+            String nodesDir = workDir + "/" + DIR_NODES;
+            String edgeDir = workDir + "/" + DIR_EDGES;
+            String clustResultDir = workDir + "/" + DIR_EVENTS_CLUST;
+            String sentencesSaveDir = workDir + "/" + DIR_SUB_SENTENCES_EXTRACTED;
+            String moduleFilePath = workDir + "/en-pos-maxent.bin";
+            String dictPath = properties.getProperty("dictPath");
+            float edgeSelectedWeight = 3.2f;  //边阈值增加权重
+
+            File nodeFile = new File(workDir + "/" + DIR_NODES);
+            File[] nodes = nodeFile.listFiles(new FilenameFilter() {
+
+                @Override
+                public boolean accept(File dir, String name) {
+                    if(name.endsWith(".node.obj")) {
+                        return true;
+                    }
+                    return false;
+                }
+            });
+
+            ExecutorService es = Executors.newFixedThreadPool(threadNum);
+            List<Callable<Map<Integer, List<List<Word>>>>> tasks = new ArrayList<Callable<Map<Integer, List<List<Word>>>>>();
+            for (File file : nodes) {
+                String nodePath = file.getAbsolutePath();
+                String edgePath = workDir + "/" + DIR_EDGES + "/" + file.getName().replace("node", "edge");
+                String topicPath = textDir + "/" + file.getName().substring(0, file.getName().indexOf("."));
+                tasks.add(new ChineseWhispersCluster(topicPath, nodePath, edgePath, dictPath));
             }
-            if("n".equalsIgnoreCase(properties.getProperty("isClust"))){
-                isClust = false;
+
+            List<Future<Map<Integer, List<List<Word>>>>> futures = es.invokeAll(tasks);
+            for (Future<Map<Integer, List<List<Word>>>> future : futures) {
+                Map<Integer, List<List<Word>>> clustedSentencesInTopic = future.get();
             }
-            final ClusterByChineseWhispers cluster =
+
+            ClusterByChineseWhispers cluster =
                     new ClusterByChineseWhispers(
                             nodesDir, edgeDir, clustResultDir, textDir,
                             sentencesSaveDir, moduleFilePath, threadNum, edgeSelectedWeight, isPret, isClust, dictPath);
