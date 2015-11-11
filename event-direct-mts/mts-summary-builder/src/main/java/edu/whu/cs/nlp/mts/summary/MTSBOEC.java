@@ -20,14 +20,12 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
 import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
-import edu.whu.cs.nlp.mts.base.domain.CWRunParam;
 import edu.whu.cs.nlp.mts.base.domain.EventWithPhrase;
 import edu.whu.cs.nlp.mts.base.domain.Word;
 import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
 import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
 import edu.whu.cs.nlp.mts.clustering.CalculateSimilarityThread;
 import edu.whu.cs.nlp.mts.clustering.ChineseWhispersCluster;
-import edu.whu.cs.nlp.mts.clustering.ClusterByChineseWhispers;
 import edu.whu.cs.nlp.mts.extraction.graph.EventsExtractBasedOnGraphV2;
 
 /**
@@ -172,14 +170,10 @@ public class MTSBOEC implements SystemConstant{
          * 对事件进行聚类，同时按类别抽取事件所在子句
          */
         if("y".equalsIgnoreCase(properties.getProperty("isEventCluster"))){
+
             log.info("Starting events clusting & sub sentences extracting...");
-            String nodesDir = workDir + "/" + DIR_NODES;
-            String edgeDir = workDir + "/" + DIR_EDGES;
-            String clustResultDir = workDir + "/" + DIR_EVENTS_CLUST;
-            String sentencesSaveDir = workDir + "/" + DIR_SUB_SENTENCES_EXTRACTED;
-            String moduleFilePath = workDir + "/en-pos-maxent.bin";
+
             String dictPath = properties.getProperty("dictPath");
-            float edgeSelectedWeight = 3.2f;  //边阈值增加权重
 
             File nodeFile = new File(workDir + "/" + DIR_NODES);
             File[] nodes = nodeFile.listFiles(new FilenameFilter() {
@@ -193,40 +187,34 @@ public class MTSBOEC implements SystemConstant{
                 }
             });
 
-            ExecutorService es = Executors.newFixedThreadPool(threadNum);
-            List<Callable<Map<Integer, List<List<Word>>>>> tasks = new ArrayList<Callable<Map<Integer, List<List<Word>>>>>();
-            for (File file : nodes) {
-                String nodePath = file.getAbsolutePath();
-                String edgePath = workDir + "/" + DIR_EDGES + "/" + file.getName().replace("node", "edge");
-                String topicPath = textDir + "/" + file.getName().substring(0, file.getName().indexOf("."));
-                tasks.add(new ChineseWhispersCluster(topicPath, nodePath, edgePath, dictPath));
+            ExecutorService es = null;
+            try{
+
+                es = Executors.newFixedThreadPool(threadNum);
+                List<Callable<Map<Integer, List<List<Word>>>>> tasks = new ArrayList<Callable<Map<Integer, List<List<Word>>>>>();
+                for (File file : nodes) {
+                    String nodePath = file.getAbsolutePath();
+                    String edgePath = workDir + "/" + DIR_EDGES + "/" + file.getName().replace("node", "edge");
+                    String topicPath = textDir + "/" + file.getName().substring(0, file.getName().indexOf("."));
+                    tasks.add(new ChineseWhispersCluster(topicPath, nodePath, edgePath, dictPath));
+                }
+
+                List<Future<Map<Integer, List<List<Word>>>>> futures = es.invokeAll(tasks);
+                for (Future<Map<Integer, List<List<Word>>>> future : futures) {
+                    future.get();
+                }
+
+            } catch(Throwable e) {
+
+                log.error("Event cluster & Sentence Extract error!", e);
+
+            } finally {
+                if(es != null) {
+                    es.shutdown();
+                }
             }
 
-            List<Future<Map<Integer, List<List<Word>>>>> futures = es.invokeAll(tasks);
-            for (Future<Map<Integer, List<List<Word>>>> future : futures) {
-                Map<Integer, List<List<Word>>> clustedSentencesInTopic = future.get();
-            }
-
-            ClusterByChineseWhispers cluster =
-                    new ClusterByChineseWhispers(
-                            nodesDir, edgeDir, clustResultDir, textDir,
-                            sentencesSaveDir, moduleFilePath, threadNum, edgeSelectedWeight, isPret, isClust, dictPath);
-            try {
-                //对事件进行聚类
-                //构建口哨算法运行参数
-                final CWRunParam cwRunParam = new CWRunParam();
-                cwRunParam.setJarPath(properties.getProperty("cwjarPath"));
-                cwRunParam.setKeepClassRate(0.0f);
-                cwRunParam.setMutation_rate(0.21f);
-                cwRunParam.setIterationCount(100);
-                cluster.doCluster(cwRunParam);
-                //获取事件对应的句子
-                cluster.clusterSentencesByEvents();
-            } catch (IOException | InterruptedException e) {
-                log.error("There is an exception when calculate events clusting!", e);
-            }
-
-        }else{
+        } else {
             log.info("Events clusting is not enabled!");
         }
 
