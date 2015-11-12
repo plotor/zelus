@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
+import edu.whu.cs.nlp.msc.KeySentencesSelector;
 import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.domain.EventWithPhrase;
 import edu.whu.cs.nlp.mts.base.domain.Word;
@@ -217,6 +219,53 @@ public class MTSBOEC implements SystemConstant{
 
         } else {
             log.info("Events clusting is not enabled!");
+        }
+
+        /**
+         * 摘要生成
+         */
+        if("y".equalsIgnoreCase(properties.getProperty("isBuildSummary"))) {
+
+            // 加载question文件
+            Properties prop = new Properties();
+            try {
+                prop.load(new InputStreamReader(MTSBOEC.class.getClassLoader().getResourceAsStream("questions.properties")));
+            } catch (IOException e) {
+                log.error("Load question file error!", e);
+                //e.printStackTrace();
+            }
+
+            ExecutorService es = null;
+            try{
+                es = Executors.newFixedThreadPool(threadNum);
+                File compressFiles = new File(workDir + "/" + DIR_SENTENCES_COMPRESSION);
+                List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
+                EhCacheUtil ehCacheUtil = new EhCacheUtil(properties.getProperty("cacheName"), properties.getProperty("datasource"));
+                for (File file : compressFiles.listFiles()) {
+                    tasks.add(new KeySentencesSelector(prop.getProperty(file.getName()) , file.getAbsolutePath(), ehCacheUtil));
+                }
+
+                List<Future<Boolean>> futures = es.invokeAll(tasks);
+                for (Future<Boolean> future : futures) {
+                    if(!future.get()) {
+                        throw new Exception();
+                    }
+                }
+
+                EhCacheUtil.close();
+
+            } catch (Throwable e) {
+
+                log.error("Build summary error!", e);
+
+            } finally {
+                if(es != null) {
+                    es.shutdown();
+                }
+            }
+
+        } else {
+            log.info("Build summary is not enabled!");
         }
 
     }

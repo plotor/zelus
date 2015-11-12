@@ -126,7 +126,7 @@ public class EhCacheUtil {
      * @return
      * @throws SQLException
      */
-    public synchronized Vector getMostSimilarVec(Word word) throws SQLException {
+    public synchronized Vector getMostSimilarVec(Word word) throws Exception {
 
         Vector vector = null;
 
@@ -135,7 +135,14 @@ public class EhCacheUtil {
         }
 
         // 获取指定word对应的词向量
-        Cache cache = cacheManager.getCache(this.cacheName);
+        Cache cache = null;
+        try{
+            cache = cacheManager.getCache(this.cacheName);
+        } catch(Exception e) {
+            log.error("Can't get cache by name[" + this.cacheName + "]", e);
+            throw e;
+        }
+
         Element element = cache.get(word.getName().toLowerCase());
         if (element != null) {
 
@@ -240,7 +247,7 @@ public class EhCacheUtil {
         return vec;
     }
 
-    public static void main(String[] args) throws SQLException {
+    public static void main(String[] args) throws Exception {
         EhCacheUtil ehCacheUtil = new EhCacheUtil("db_cache_vec", "local");
         Word word = new Word();
         word.setName("Be");

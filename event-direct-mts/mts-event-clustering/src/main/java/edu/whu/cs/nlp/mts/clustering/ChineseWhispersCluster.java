@@ -194,7 +194,7 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
         StringBuilder sbClustedSentences = new StringBuilder();
         StringBuilder taggedClustedSentences = new StringBuilder();
         for (Entry<Integer, List<List<Word>>> entry : clusterSubSentence.entrySet()) {
-            if(CollectionUtils.isEmpty(entry.getValue())) {
+            if(CollectionUtils.isEmpty(entry.getValue()) || entry.getValue().size() < 5) {
                 continue;
             }
             sbClustedSentences.append("classes_" + entry.getKey() + ":" + LINE_SPLITER);
@@ -204,7 +204,7 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
                 StringBuilder tagged = new StringBuilder();
                 for (Word word : words) {
                     inner.append(word.getName() + " ");
-                    tagged.append(word.getName() + "/" + word.getPos() + " ");
+                    tagged.append(word.getName() + "/" + (word.getPos().equals(word.getName()) ? "PUNCT" : word.getPos()) + " ");
                 }
                 sbClustedSentences.append(inner.toString().trim() + LINE_SPLITER);
                 taggedClustedSentences.append(tagged.toString().trim() + LINE_SPLITER);

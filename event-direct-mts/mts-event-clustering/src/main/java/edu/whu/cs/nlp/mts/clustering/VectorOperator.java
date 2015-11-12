@@ -609,7 +609,7 @@ public class VectorOperator implements SystemConstant{
                     this.log.warn("[ignoreStopwords=" + ignoreStopwords + "] Can't find vector for word:" + word);
 
                 }
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 this.log.error("Get vector error, word: " + word, e);
             }
         }

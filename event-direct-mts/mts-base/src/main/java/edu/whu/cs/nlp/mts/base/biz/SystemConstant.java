@@ -99,10 +99,13 @@ public interface SystemConstant {
     public final static String      DIR_CW_PRETREAT                 = "cw_pretreat";
 
     /** 目录名：多语句压缩 */
-    public final static String      DIR_SENTENCES_COMPRESSION       = "sentences-compression";
+    public final static String      DIR_SENTENCES_COMPRESSION       = "compressed-results";
 
     /** 目录名：chunk处理得到的短语集合（简版） */
     public static final String      DIR_CHUNKSIMPILY                = "chunk-simpily";
+
+    /** 目录名：摘要结果 */
+    public static final String      DIR_SUMMARIES                   = "summaries";
 
     /** 事件中词之间的连接符 */
     public final static String      WORD_CONNECTOR_IN_EVENTS        = "#";
@@ -312,6 +315,86 @@ public interface SystemConstant {
             add("\"");
             add("\'");
             add(":");
+        }
+    };
+
+    /** 英文标点集 */
+    public static final Set<String> PUNCT_EN                        = new HashSet<String>() {
+
+        private static final long serialVersionUID = -5498481342248064994L;
+
+        {
+            add("≠");
+            add("≡");
+            add("≤");
+            add("≥");
+            add("\"\"");
+            add("≮");
+            add("≯");
+            add("＜");
+            add("＝");
+            add("＞");
+            add("\"");
+            add("#");
+            add("△");
+            add("!");
+            add("&");
+            add("'");
+            add("...");
+            add("%");
+            add("*");
+            add("+");
+            add("≈");
+            add("(");
+            add(")");
+            add("§");
+            add(".");
+            add("/");
+            add(",");
+            add("≌");
+            add("-");
+            add("//");
+            add(";");
+            add(":");
+            add("°");
+            add("±");
+            add("?");
+            add("[]");
+            add("∠");
+            add("⊥");
+            add("→");
+            add("∩");
+            add("∪");
+            add("∫");
+            add("∵");
+            add("∴");
+            add("∷");
+            add("℃");
+            add("‖");
+            add("]");
+            add("\\");
+            add("～");
+            add("×");
+            add("()");
+            add("○");
+            add("[");
+            add("〃");
+            add("⌒");
+            add("--");
+            add("‰");
+            add("″");
+            add("′");
+            add("∑");
+            add("⊙");
+            add("~");
+            add("∞");
+            add("÷");
+            add("∝");
+            add("}");
+            add("|");
+            add("π");
+            add("{");
+            add("√");
         }
     };
 
