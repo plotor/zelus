@@ -192,25 +192,36 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
 
         // 持久化聚类的句子文件
         StringBuilder sbClustedSentences = new StringBuilder();
+        StringBuilder taggedClustedSentences = new StringBuilder();
         for (Entry<Integer, List<List<Word>>> entry : clusterSubSentence.entrySet()) {
             sbClustedSentences.append("classes_" + entry.getKey() + ":" + LINE_SPLITER);
+            taggedClustedSentences.append("classes_" + entry.getKey() + ":" + LINE_SPLITER);
             for (List<Word> words : entry.getValue()) {
                 StringBuilder inner = new StringBuilder();
+                StringBuilder tagged = new StringBuilder();
                 for (Word word : words) {
                     inner.append(word.getName() + " ");
+                    tagged.append(word.getName() + "/" + word.getPos() + " ");
                 }
                 sbClustedSentences.append(inner.toString().trim() + LINE_SPLITER);
+                taggedClustedSentences.append(tagged.toString().trim() + LINE_SPLITER);
             }
         }
         String workDir = this.nodeFilePath.substring(0, this.nodeFilePath.indexOf(DIR_NODES));
         String filename = this.nodeFilePath.substring(Math.max(this.nodeFilePath.lastIndexOf("/"), this.nodeFilePath.lastIndexOf("\\"))).replace("node.obj", "txt");
-        File file = FileUtils.getFile(workDir + "/" + DIR_SUB_SENTENCES_EXTRACTED, filename);
+        File extractedSentences = FileUtils.getFile(workDir + "/" + DIR_SUB_SENTENCES_EXTRACTED, filename);
+        File taggedExtractedSentences = FileUtils.getFile(workDir + "/" + DIR_SUB_SENTENCES_EXTRACTED + "/tagged/", filename);
         try{
-            this.log.info("Saving clusted sentences to file[" + file.getAbsolutePath() + "]");
-            FileUtils.writeStringToFile(file, CommonUtil.cutLastLineSpliter(sbClustedSentences.toString()), DEFAULT_CHARSET);
-            this.log.info("Save clusted sentences to file [" + file.getAbsolutePath() + "] success!");
+            this.log.info("Saving clusted sentences to file[" + extractedSentences.getAbsolutePath() + "]");
+
+            FileUtils.writeStringToFile(extractedSentences, CommonUtil.cutLastLineSpliter(sbClustedSentences.toString()), DEFAULT_CHARSET);
+
+            FileUtils.writeStringToFile(taggedExtractedSentences, CommonUtil.cutLastLineSpliter(taggedClustedSentences.toString()), DEFAULT_CHARSET);
+
+            this.log.info("Save clusted sentences to file [" + extractedSentences.getAbsolutePath() + "] succeed!");
+
         } catch(IOException e) {
-            this.log.error("Save clusted sentences to file[" + file.getAbsolutePath() + "] error!", e);
+            this.log.error("Save clusted sentences to file[" + extractedSentences.getAbsolutePath() + "] error!", e);
         }
 
         // FIXME 暂时不返回同义词替换的结果，替换的效果不好，需要优化，2015-11-11 16:34:36
