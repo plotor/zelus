@@ -1,5 +1,6 @@
 package edu.whu.cs.nlp.msc;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,6 +25,7 @@ import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.domain.Vector;
 import edu.whu.cs.nlp.mts.base.domain.Word;
 import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
+import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
 
 /**
  * 从压缩输出语句集合中选择关键句构建摘要
@@ -31,7 +33,7 @@ import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
  * @author ZhenchaoWang 2015-11-12 15:43:50
  *
  */
-public class KeySentencesSelector implements Callable<Boolean>, SystemConstant {
+public class SentenceReRanker implements Callable<Boolean>, SystemConstant {
 
     private final Logger log = Logger.getLogger(this.getClass());
 
@@ -42,7 +44,7 @@ public class KeySentencesSelector implements Callable<Boolean>, SystemConstant {
 
     private final EhCacheUtil ehCacheUtil;
 
-    public KeySentencesSelector(String question, String compressSentencesPath, EhCacheUtil ehCacheUtil) {
+    public SentenceReRanker(String question, String compressSentencesPath, EhCacheUtil ehCacheUtil) {
         super();
         this.question = question;
         this.compressSentencesPath = compressSentencesPath;
@@ -101,7 +103,18 @@ public class KeySentencesSelector implements Callable<Boolean>, SystemConstant {
             return false;
         }
 
-        Map<String, List<CompressUnit>> rankedClustedCompressUnits = new HashMap<String, List<CompressUnit>>();
+        Map<String, List<CompressUnit>> rerankedClustedCompressUnits = new HashMap<String, List<CompressUnit>>();
+        /*存放重排序后的聚类句子集合，key为当前类的大小，按大小从大到小排序*/
+        /*Map<Integer, List<CompressUnit>> rerankedClustedCompressUnits = new TreeMap<Integer, List<CompressUnit>>(new Comparator<Integer>() {
+
+            @Override
+            public int compare(Integer key1, Integer key2) {
+
+                return key2 - key1;
+            }
+
+        });*/
+
         for (Entry<String, List<CompressUnit>> entry : clustedCompressUnits.entrySet()) {
 
             List<CompressUnit> compressUnits = new ArrayList<CompressUnit>();
@@ -117,22 +130,69 @@ public class KeySentencesSelector implements Callable<Boolean>, SystemConstant {
             }
 
             if(CollectionUtils.isNotEmpty(compressUnits)) {
-                rankedClustedCompressUnits.put(entry.getKey(), compressUnits);
+                // 对句子按照得分从大到小进行排序
+                Collections.sort(compressUnits);
+                rerankedClustedCompressUnits.put(entry.getKey(), compressUnits);
             }
+
         }
 
-        /*for (Entry<String, List<CompressUnit>> entry : rankedClustedCompressUnits.entrySet()) {
+        String dir = this.compressSentencesPath.substring(0, this.compressSentencesPath.indexOf(DIR_SENTENCES_COMPRESSION));
+        String filename = this.compressSentencesPath.substring(Math.max(this.compressSentencesPath.lastIndexOf("\\"), this.compressSentencesPath.lastIndexOf("/")));
+
+        // 序列化reranked后的结果
+        File objFile = FileUtils.getFile(dir + "/" + DIR_RERANKED_SENTENCES_COMPRESSION + "/obj", filename);
+        try{
+
+            SerializeUtil.writeObj(rerankedClustedCompressUnits, objFile);
+
+        } catch(IOException e){
+
+            this.log.error("Serialize file[" + objFile.getAbsolutePath() + "] error!", e);
+            throw e;
+
+        }
+
+        // 以文本形式进行保存
+        StringBuilder sbRerankedClustedCompressUnits = new StringBuilder();
+        for (Entry<String, List<CompressUnit>> entry : rerankedClustedCompressUnits.entrySet()) {
+
+            if(CollectionUtils.isEmpty(entry.getValue())) {
+                continue;
+            }
+
+            sbRerankedClustedCompressUnits.append(entry.getKey() + LINE_SPLITER);
+            for (CompressUnit unit : entry.getValue()) {
+                sbRerankedClustedCompressUnits.append(unit + LINE_SPLITER);
+            }
+
+        }
+
+        File textFile = FileUtils.getFile(dir + "/" + DIR_RERANKED_SENTENCES_COMPRESSION + "/text", filename);
+        try{
+            FileUtils.writeStringToFile(textFile, sbRerankedClustedCompressUnits.toString(), DEFAULT_CHARSET);
+        } catch(IOException e) {
+
+            this.log.error("Save file[" + textFile.getAbsolutePath() + "] error!", e);
+            throw e;
+
+        }
+
+
+        // 打印到控制台
+        /*for (Entry<Integer, List<CompressUnit>> entry : rerankedClustedCompressUnits.entrySet()) {
             System.out.println(entry.getKey() + ":");
             Collections.sort(entry.getValue());
             for (CompressUnit compressUnit : entry.getValue()) {
                 System.out.println(compressUnit);
             }
         }*/
-        StringBuilder summary = new StringBuilder();
+
+        /*StringBuilder summary = new StringBuilder();
         int num = 0;
         int count = 0;
         while(count < MAX_SUMMARY_WORDS_COUNT) {
-            for (Entry<String, List<CompressUnit>> entry : rankedClustedCompressUnits.entrySet()) {
+            for (Entry<String, List<CompressUnit>> entry : rerankedClustedCompressUnits.entrySet()) {
                 // 按分数从大到小进行排序
                 if(num >= entry.getValue().size()) {
                     continue;
@@ -154,7 +214,7 @@ public class KeySentencesSelector implements Callable<Boolean>, SystemConstant {
             }
             num++;
         }
-
+        this.log.info("Build summary iterator times:" + num + "\t[" + this.compressSentencesPath + "]");
 
         String dir = this.compressSentencesPath.substring(0, this.compressSentencesPath.indexOf(DIR_SENTENCES_COMPRESSION));
         String filename = this.compressSentencesPath.substring(Math.max(this.compressSentencesPath.lastIndexOf("\\"), this.compressSentencesPath.lastIndexOf("/")));
@@ -164,7 +224,7 @@ public class KeySentencesSelector implements Callable<Boolean>, SystemConstant {
         } catch(IOException e) {
             this.log.error("Save summary[" + filename + "] error!", e);
             throw e;
-        }
+        }*/
 
 
         return true;
@@ -260,12 +320,7 @@ public class KeySentencesSelector implements Callable<Boolean>, SystemConstant {
     public static void main(String[] args) throws Exception {
         ExecutorService es = Executors.newSingleThreadExecutor();
         EhCacheUtil ehCacheUtil = new EhCacheUtil("db_cache_vec", "local");
-        //Word word = new Word();
-        //word.setName("is");
-        //word.setLemma("be");
-        //word.setNer("O");
-        //System.out.println(ehCacheUtil.getMostSimilarVec(word).getVec());
-        Future<Boolean> future = es.submit(new KeySentencesSelector("Describe the activities of Morris Dees and the Southern Poverty Law Center.", "E:/workspace/test/compressed-results/D0701A", ehCacheUtil));
+        Future<Boolean> future = es.submit(new SentenceReRanker("Describe the activities of Morris Dees and the Southern Poverty Law Center.", "E:/workspace/test/compressed-results/D0701A", ehCacheUtil));
         future.get();
         es.shutdown();
         EhCacheUtil.close();

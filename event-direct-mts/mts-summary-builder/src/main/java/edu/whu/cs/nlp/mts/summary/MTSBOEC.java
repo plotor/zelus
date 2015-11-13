@@ -20,7 +20,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
-import edu.whu.cs.nlp.msc.KeySentencesSelector;
+import edu.whu.cs.nlp.msc.SentenceReRanker;
 import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.domain.EventWithPhrase;
 import edu.whu.cs.nlp.mts.base.domain.Word;
@@ -242,7 +242,7 @@ public class MTSBOEC implements SystemConstant{
                 List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
                 EhCacheUtil ehCacheUtil = new EhCacheUtil(properties.getProperty("cacheName"), properties.getProperty("datasource"));
                 for (File file : compressFiles.listFiles()) {
-                    tasks.add(new KeySentencesSelector(prop.getProperty(file.getName()) , file.getAbsolutePath(), ehCacheUtil));
+                    tasks.add(new SentenceReRanker(prop.getProperty(file.getName()) , file.getAbsolutePath(), ehCacheUtil));
                 }
 
                 List<Future<Boolean>> futures = es.invokeAll(tasks);
