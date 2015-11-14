@@ -2,6 +2,10 @@ package edu.whu.cs.nlp.msc.domain;
 
 import java.io.Serializable;
 
+import org.apache.commons.lang.StringUtils;
+
+import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
+
 /**
  * 压缩输出语句单元
  *
@@ -26,6 +30,31 @@ public class CompressUnit implements Comparable<CompressUnit>, Serializable {
     @Override
     public String toString() {
         return this.score + "#" + this.sentence;
+    }
+
+    /**
+     * 当前句子单词数，不包含标点
+     *
+     * @return
+     */
+    public int wordsCount() {
+
+        int count = 0;
+
+        if(StringUtils.isBlank(this.sentence)) {
+            return count;
+        }
+
+        String[] strs = this.sentence.split("\\s+");
+        for(int i = 0; i < strs.length; i++) {
+            if(SystemConstant.PUNCT_EN.contains(strs[i])) {
+                continue;
+            }
+            count++;
+        }
+
+        return count;
+
     }
 
     public float getScore() {
