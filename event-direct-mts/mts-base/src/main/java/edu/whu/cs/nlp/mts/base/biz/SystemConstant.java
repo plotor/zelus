@@ -95,6 +95,9 @@ public interface SystemConstant {
     /** 目录名：子句抽取 */
     public final static String      DIR_SUB_SENTENCES_EXTRACTED        = "sub-sentences";
 
+    /** 目录名：事件权值 */
+    public final static String      DIR_EVENT_WEIGHT                   = "event-weights";
+
     /** 目录名：口哨算法预处理 */
     public final static String      DIR_CW_PRETREAT                    = "cw_pretreat";
 
@@ -401,7 +404,7 @@ public interface SystemConstant {
         }
     };
 
-    /**最大迭代次数*/
-    public static final int MAX_ITERATIONS = 5;
+    /** 最大迭代次数 */
+    public static final int         MAX_ITERATIONS                     = 5;
 
 }

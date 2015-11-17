@@ -72,7 +72,9 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
 
         Map<Integer, List<List<Word>>> clustedSentence = new HashMap<Integer, List<List<Word>>>();
 
-        // 加载node文件
+        /**
+         * 加载node文件
+         */
         this.log.info("[" + Thread.currentThread().getName() + "]Loading serilized file:" + this.nodeFilePath);
         @SuppressWarnings("unchecked")
         Map<Integer, NumedEventWithPhrase> eventWithNums = (Map<Integer, NumedEventWithPhrase>) SerializeUtil.readObj(this.nodeFilePath);
@@ -81,7 +83,9 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
             throw new IOException("Can't load any node data from [" + this.nodeFilePath + "]");
         }
 
-        // 加载edge文件
+        /**
+         * 加载edge文件
+         */
         this.log.info("[" + Thread.currentThread().getName() + "]Loading serilized file:" + this.edgeFilePath);
         @SuppressWarnings("unchecked")
         List<CWEdge> cwEdges = (List<CWEdge>) SerializeUtil.readObj(this.edgeFilePath);
@@ -90,7 +94,9 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
             throw new IOException("Can't load any edge data from [" + this.edgeFilePath + "]");
         }
 
-        // 构建事件图
+        /**
+         * 构建事件图
+         */
         Graph<Integer, Float> graph = new ArrayBackedGraph<Float>(eventWithNums.size(), eventWithNums.size());
         // 添加结点
         for (Entry<Integer, NumedEventWithPhrase> entry : eventWithNums.entrySet()) {
@@ -109,13 +115,17 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
             }
         }
 
-        // 采用口哨算法进行聚类
+        /**
+         * 采用口哨算法进行聚类
+         */
         this.log.info("Chinese Whispers clusting...[" + this.topicDir + "]");
         CW<Integer> cw = new CW<Integer>();
         Map<Integer, Set<Integer>> clusterEvents = cw.findClusters(graph);
         this.log.info("Chinese Whispers clust finished[" + this.topicDir + "]");
 
-        // 加载当前主题下所有的文本
+        /**
+         * 加载当前主题下所有的文本
+         */
         File objWordsDir = new File(this.topicDir + "/" + OBJ + "/" + DIR_WORDS_OBJ);
         File[] objfiles = objWordsDir.listFiles();
         Map<String, List<List<Word>>> texts = new HashMap<String, List<List<Word>>>(25);
@@ -130,7 +140,9 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
             }
         }
 
-        // 加载当前主题下所有文本中句子的句法分析树
+        /**
+         * 加载当前主题下所有文本中句子的句法分析树
+         */
         File objSyntacticTreesDir = new File(this.topicDir + "/" + OBJ + "/" + DIR_SYNTACTICTREES_OBJ);
         File[] objSyntacticTreefiles = objSyntacticTreesDir.listFiles();
         Map<String, List<Tree>> syntacticTrees = new HashMap<String, List<Tree>>(25);
@@ -145,25 +157,51 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
             }
         }
 
-        // 同义词替换中，存放当前已经选择的词的指纹信息
+        /**
+         * 子句映射，同义词替换
+         */
+        // 同义词替换，存放当前已经选择的词的指纹信息
         Set<String> selectedWordsKey = new HashSet<String>();
-
         Map<Integer, List<List<Word>>> clusterSubSentence = new HashMap<Integer, List<List<Word>>>();
         Map<Integer, List<List<Word>>> clusterSubSentenceAfterSynonymReplacement = new HashMap<Integer, List<List<Word>>>();
+        Map<Integer, List<String>> clusterEventWeihts = new HashMap<Integer, List<String>>();
+
         //获取当前句子所有的子句集合
         for (Entry<Integer, Set<Integer>> entry : clusterEvents.entrySet()) {
+
+            if(CollectionUtils.isEmpty(entry.getValue())) {
+                continue;
+            }
+
+            List<Double[]> vectorsInCluster = new ArrayList<Double[]>();
+            for (Integer eventNum : entry.getValue()) {
+                NumedEventWithPhrase numedEventWithPhrase =  eventWithNums.get(eventNum);
+                vectorsInCluster.add(numedEventWithPhrase.getVec());
+            }
+
+            // 计算向量中心
+            Double[] centralVec = VectorOperator.centralVector(vectorsInCluster);
+            if(centralVec == null) {
+                this.log.error("[" + entry.getKey() + "]Calculate central vector error!");
+                continue;
+            }
 
             Integer clusterId = entry.getKey();
             List<List<Word>> subSentences = new ArrayList<List<Word>>();
             List<List<Word>> subSynSentences = new ArrayList<List<Word>>();
-
+            List<String> eventWeights = new ArrayList<String>();
             for (Integer eventId : entry.getValue()) {
 
-                EventWithPhrase eventWithPhrase = eventWithNums.get(eventId).getEvent();
+                NumedEventWithPhrase numedEventWithPhrase = eventWithNums.get(eventId);
+
+                EventWithPhrase eventWithPhrase = numedEventWithPhrase.getEvent();
+
+                // 计算当前事件到向量中心的距离
+                double eventWeight = VectorOperator.cosineDistence(centralVec, numedEventWithPhrase.getVec());
+                eventWeights.add(eventWeight + "\t" + eventWithPhrase.toShortString() + "\t" + eventWithPhrase);
 
                 // 获取当前事件所属句子的句法树
                 Tree tree = syntacticTrees.get(eventWithPhrase.getFilename()).get(eventWithPhrase.getSentNum() - 1);
-
                 // 利用句法树来获得子句集合
                 List<String> subSentList = new ArrayList<String>();
                 this.subSentences(tree, subSentList);
@@ -182,19 +220,24 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
                     subSynSentences.add(subSynObjSentence);
                 }
 
+
             }
 
+            clusterEventWeihts.put(clusterId, eventWeights);
             clusterSubSentence.put(clusterId, subSentences);
             clusterSubSentenceAfterSynonymReplacement.put(clusterId, subSynSentences);
 
         }
 
 
-        // 持久化聚类的句子文件
+        /**
+         * 持久化聚类的句子集合
+         */
         StringBuilder sbClustedSentences = new StringBuilder();
         StringBuilder taggedClustedSentences = new StringBuilder();
         for (Entry<Integer, List<List<Word>>> entry : clusterSubSentence.entrySet()) {
             if(CollectionUtils.isEmpty(entry.getValue()) || entry.getValue().size() < 5) {
+                // 跳过小于5个句子的类
                 continue;
             }
             sbClustedSentences.append("classes_" + entry.getKey() + ":" + LINE_SPLITER);
@@ -210,10 +253,12 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
                 taggedClustedSentences.append(tagged.toString().trim() + LINE_SPLITER);
             }
         }
+
         String workDir = this.nodeFilePath.substring(0, this.nodeFilePath.indexOf(DIR_NODES));
         String filename = this.nodeFilePath.substring(Math.max(this.nodeFilePath.lastIndexOf("/"), this.nodeFilePath.lastIndexOf("\\"))).replace("node.obj", "txt");
         File extractedSentences = FileUtils.getFile(workDir + "/" + DIR_SUB_SENTENCES_EXTRACTED, filename);
         File taggedExtractedSentences = FileUtils.getFile(workDir + "/" + DIR_SUB_SENTENCES_EXTRACTED + "/tagged/", filename);
+
         try{
             this.log.info("Saving clusted sentences to file[" + extractedSentences.getAbsolutePath() + "]");
 
@@ -224,7 +269,38 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
             this.log.info("Save clusted sentences to file [" + extractedSentences.getAbsolutePath() + "] succeed!");
 
         } catch(IOException e) {
+
             this.log.error("Save clusted sentences to file[" + extractedSentences.getAbsolutePath() + "] error!", e);
+
+        }
+
+        /**
+         * 持久化事件的权值
+         */
+        StringBuilder sbEventWeights = new StringBuilder();
+        for (Entry<Integer, List<String>> entry : clusterEventWeihts.entrySet()) {
+            if(CollectionUtils.isEmpty(entry.getValue()) || entry.getValue().size() < 5) {
+                // 跳过小于5个句子的类
+                continue;
+            }
+            sbEventWeights.append("classes_" + entry.getKey() + ":" + LINE_SPLITER);
+            for (String eventWeight : entry.getValue()) {
+                sbEventWeights.append(eventWeight + LINE_SPLITER);
+            }
+        }
+
+        File eventsWeightFile = FileUtils.getFile(workDir + "/" + DIR_EVENT_WEIGHT, filename);
+        try{
+            this.log.info("Saving clusted sentences to file[" + eventsWeightFile.getAbsolutePath() + "]");
+
+            FileUtils.writeStringToFile(eventsWeightFile, CommonUtil.cutLastLineSpliter(sbEventWeights.toString()), DEFAULT_CHARSET);
+
+            this.log.info("Save clusted sentences to file [" + eventsWeightFile.getAbsolutePath() + "] succeed!");
+
+        } catch(IOException e) {
+
+            this.log.error("Save clusted sentences to file[" + eventsWeightFile.getAbsolutePath() + "] error!", e);
+
         }
 
         // FIXME 暂时不返回同义词替换的结果，替换的效果不好，需要优化，2015-11-11 16:34:36
@@ -341,7 +417,7 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
      * @param words
      * @return
      */
-    public List<Word> sentenceObjectified(String strSentence, List<Word> words) {
+    private List<Word> sentenceObjectified(String strSentence, List<Word> words) {
         List<Word> objSentence = new ArrayList<Word>();
         if(StringUtils.isBlank(strSentence)) {
             return objSentence;

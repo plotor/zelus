@@ -315,7 +315,7 @@ public class VectorOperator implements SystemConstant{
      * @param vec2
      * @return
      */
-    public double cosineDistence(Double[] vec1, Double[] vec2) {
+    public static double cosineDistence(Double[] vec1, Double[] vec2) {
 
         double value = -1;
 
@@ -373,6 +373,36 @@ public class VectorOperator implements SystemConstant{
     public double standardizedEuclideanDistance(Double[] vec1, Double[] vec2) {
         // TODO 完成标准欧式距离的计算，2015-11-10 11:14:28
         return 0;
+    }
+
+    /**
+     * 计算输入向量集合的中心向量
+     *
+     * @param vectors
+     * @return
+     */
+    public static Double[] centralVector(List<Double[]> vectors) {
+
+        Double[] cv = null;
+
+        if(CollectionUtils.isEmpty(vectors)) {
+            return cv;
+        }
+
+        cv = new Double[DIMENSION];
+        Arrays.fill(cv, 0.0D);
+        for (Double[] vec : vectors) {
+            for(int i = 0; i < DIMENSION; i++) {
+                cv[i] += vec[i];
+            }
+        }
+
+        for(int i = 0; i < DIMENSION; i++) {
+            cv[i] /= vectors.size();
+        }
+
+        return cv;
+
     }
 
     /**
