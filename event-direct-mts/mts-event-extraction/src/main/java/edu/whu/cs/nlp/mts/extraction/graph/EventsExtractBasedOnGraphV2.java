@@ -37,9 +37,11 @@ import edu.whu.cs.nlp.mts.base.domain.EventType;
 import edu.whu.cs.nlp.mts.base.domain.EventWithPhrase;
 import edu.whu.cs.nlp.mts.base.domain.EventWithWord;
 import edu.whu.cs.nlp.mts.base.domain.ParseItem;
+import edu.whu.cs.nlp.mts.base.domain.Vector;
 import edu.whu.cs.nlp.mts.base.domain.Word;
 import edu.whu.cs.nlp.mts.base.nlp.StanfordNLPTools;
 import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
+import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
 import edu.whu.cs.nlp.mts.base.utils.Encipher;
 import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
 import opennlp.tools.chunker.ChunkerME;
@@ -55,13 +57,21 @@ import opennlp.tools.util.Span;
  * @author ZhenchaoWang 2015-10-26 19:38:22
  *
  */
-public class EventsExtractBasedOnGraphV2
-implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhrase>>>> {
+public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhrase>>>> {
 
-    private final Logger          log                = Logger.getLogger(this.getClass());
+    private final Logger log = Logger.getLogger(this.getClass());
 
     /** 输入文件所在目录 */
-    private final String          textDir;
+    private final String textDir;
+
+    /** 工作目录 */
+    private final String workDir;
+
+    /** 专题名 */
+    private final String topicName;
+
+    /**词向量获取器*/
+    private final EhCacheUtil ehCacheUtil;
 
     /**
      * 构造函数
@@ -69,8 +79,11 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
      * @param textDir
      *            输入文件目录
      */
-    public EventsExtractBasedOnGraphV2(String textDir) {
+    public EventsExtractBasedOnGraphV2(String textDir, String workDir, EhCacheUtil ehCacheUtil) {
         this.textDir = textDir;
+        this.workDir = workDir;
+        this.topicName = textDir.substring(Math.max(textDir.lastIndexOf("\\"), textDir.lastIndexOf("/")));
+        this.ehCacheUtil = ehCacheUtil;
     }
 
     @Override
@@ -80,6 +93,9 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
 
         /* 一个topic下的事件集合，按照文件进行组织，key为文件名 */
         Map<String, Map<Integer, List<EventWithPhrase>>> result = new HashMap<String, Map<Integer, List<EventWithPhrase>>>();
+
+        /* 一个topic下所有词的向量字典 */
+        Map<String, Vector> wordvecsInTopic = new HashMap<String, Vector>();
 
         // 获取指定文件夹下的所有文件
         Collection<File> files = FileUtils.listFiles(FileUtils.getFile(this.textDir), null, false);
@@ -99,25 +115,36 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                 Map<String, Object> coreNlpResults = StanfordNLPTools.coreOperate(text);
 
                 // 获取句子切分后的文本
-                //String segedtext = (String) coreNlpResults.get(KEY_SEGED_TEXT);
+                // String segedtext = (String)
+                // coreNlpResults.get(KEY_SEGED_TEXT);
                 /* 中间结果记录：记录句子切分后的文本 */
-                /*FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + DIR_SEG_TEXT, file.getName()),
-                        segedtext, DEFAULT_CHARSET);*/
+                /*
+                 * FileUtils.writeStringToFile(FileUtils.getFile(parentPath +
+                 * "/" + DIR_SEG_TEXT, file.getName()), segedtext,
+                 * DEFAULT_CHARSET);
+                 */
 
                 // 获取句子切分后的文本详细信息
-                //String segedTextDetail = (String) coreNlpResults.get(KEY_SEGED_DETAIL_TEXT);
+                // String segedTextDetail = (String)
+                // coreNlpResults.get(KEY_SEGED_DETAIL_TEXT);
                 /* 中间结果记录：记录句子切分后的文本详细信息 */
-                /*FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + DIR_SEGDETAIL_TEXT, file.getName()),
-                        segedTextDetail, DEFAULT_CHARSET);*/
+                /*
+                 * FileUtils.writeStringToFile(FileUtils.getFile(parentPath +
+                 * "/" + DIR_SEGDETAIL_TEXT, file.getName()), segedTextDetail,
+                 * DEFAULT_CHARSET);
+                 */
 
                 // 获取句子切分后的带有词性的文本信息
-                //String segedTextPOS = (String) coreNlpResults.get(KEY_SEGED_POS_TEXT);
+                // String segedTextPOS = (String)
+                // coreNlpResults.get(KEY_SEGED_POS_TEXT);
                 /* 中间结果记录：记录句子切分后的带有词性的文本信息 */
-                /*FileUtils.writeStringToFile(
-                        FileUtils.getFile(parentPath + "/" + DIR_SEGDETAIL_TEXT + "/pos", file.getName()), segedTextPOS,
-                        DEFAULT_CHARSET);*/
+                /*
+                 * FileUtils.writeStringToFile( FileUtils.getFile(parentPath +
+                 * "/" + DIR_SEGDETAIL_TEXT + "/pos", file.getName()),
+                 * segedTextPOS, DEFAULT_CHARSET);
+                 */
 
-                List<Tree> syntacticTrees = (List<Tree>)coreNlpResults.get(StanfordNLPTools.KEY_SYNTACTICTREES);
+                List<Tree> syntacticTrees = (List<Tree>) coreNlpResults.get(StanfordNLPTools.KEY_SYNTACTICTREES);
                 File treeFile = new File(parentPath + "/" + OBJ + "/" + DIR_SYNTACTICTREES_OBJ, file.getName() + ".obj");
                 try {
                     SerializeUtil.writeObj(syntacticTrees, treeFile);
@@ -139,6 +166,30 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                     throw e;
                 }
 
+                /*
+                 * 构建当前主题下每个词的词向量字典
+                 */
+                for (List<Word> wordsInSent : words) {
+                    for (Word word : wordsInSent) {
+                        String key = word.getName() + "/" + word.getPos();
+                        if(wordvecsInTopic.containsKey(key)) {
+                            continue;
+                        }
+                        // 获取当前词的词向量
+                        Vector vector = this.ehCacheUtil.getMostSimilarVec(word);
+                        if(null != vector) {
+                            wordvecsInTopic.put(key, vector);
+                        }
+                    }
+                }
+
+
+                File wordVectorDict = new File(this.workDir + "/" + DIR_WORDS_VECTOR + "/" + this.topicName + ".obj");
+
+                if(wordVectorDict.exists()) {
+
+                }
+
                 // 以文本形式存储词集合
                 StringBuilder sb_words_pos = new StringBuilder();
                 for (List<Word> list : words) {
@@ -152,9 +203,7 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                     sb_words_pos.append(sb_pos.toString().trim() + LINE_SPLITER);
                 }
                 /* 中间结果记录：词和词性分开按行存储 */
-                FileUtils.writeStringToFile(
-                        FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_SEGDETAIL_TEXT + "/pos2/", file.getName()),
-                        CommonUtil.cutLastLineSpliter(sb_words_pos.toString()), DEFAULT_CHARSET);
+                FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_SEGDETAIL_TEXT + "/pos2/", file.getName()), CommonUtil.cutLastLineSpliter(sb_words_pos.toString()), DEFAULT_CHARSET);
 
                 // 获取依存分析结果
                 @SuppressWarnings("unchecked")
@@ -168,8 +217,7 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                     throw e;
                 }
                 // 以文本形式存储依存分析对
-                FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_PARSE_TEXT, file.getName()),
-                        CommonUtil.lists2String(parseItemList), DEFAULT_CHARSET);
+                FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_PARSE_TEXT, file.getName()), CommonUtil.lists2String(parseItemList), DEFAULT_CHARSET);
 
                 /* 中间结果记录：记录依存分析简版结果 */
                 StringBuilder simplifyParsedResult = new StringBuilder();
@@ -178,8 +226,7 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                         simplifyParsedResult.append(parseItem.toShortString() + "\t");
                     simplifyParsedResult.append(LINE_SPLITER);
                 }
-                FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_PARSESIMPLIFY, file.getName()),
-                        CommonUtil.cutLastLineSpliter(simplifyParsedResult.toString()), DEFAULT_CHARSET);
+                FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_PARSESIMPLIFY, file.getName()), CommonUtil.cutLastLineSpliter(simplifyParsedResult.toString()), DEFAULT_CHARSET);
 
                 // 对当前文本进行事件抽取
                 Map<Integer, List<EventWithWord>> events = this.extract(parseItemList, words, file.getName());
@@ -189,18 +236,15 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                 for (Entry<Integer, List<EventWithWord>> entry : events.entrySet()) {
                     String eventsInSentence = CommonUtil.list2String(entry.getValue());
                     sb_events.append(entry.getKey() + "\t" + eventsInSentence + LINE_SPLITER);
-                    sb_simplify_events
-                    .append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
+                    sb_simplify_events.append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
                 }
-                FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_EVENTS, file.getName()),
-                        CommonUtil.cutLastLineSpliter(sb_events.toString()), DEFAULT_CHARSET);
-                FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_EVENTSSIMPLIFY, file.getName()),
-                        CommonUtil.cutLastLineSpliter(sb_simplify_events.toString()), DEFAULT_CHARSET);
+                FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_EVENTS, file.getName()), CommonUtil.cutLastLineSpliter(sb_events.toString()), DEFAULT_CHARSET);
+                FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_EVENTSSIMPLIFY, file.getName()), CommonUtil.cutLastLineSpliter(sb_simplify_events.toString()), DEFAULT_CHARSET);
 
                 /**
                  * 指代消解
                  */
-                Map<String, CoreferenceElement> crChains = this.cr((Map<Integer, CorefChain>)coreNlpResults.get(StanfordNLPTools.KEY_COREFCHAIN_GRAPH));
+                Map<String, CoreferenceElement> crChains = this.cr((Map<Integer, CorefChain>) coreNlpResults.get(StanfordNLPTools.KEY_COREFCHAIN_GRAPH));
                 /* 存放指代消解之后的事件，按行组织 */
                 Map<Integer, List<EventWithPhrase>> eventsAfterCR = new TreeMap<Integer, List<EventWithPhrase>>();
                 try {
@@ -226,8 +270,7 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                                 middlePhrase.add(negWord);
                             }
                             middlePhrase.add(middleWord);
-                            eventWithPhraseInSentence.add(
-                                    new EventWithPhrase(leftPhrase, middlePhrase, rightPhrase, middleWord.getSentenceNum(), event.getFilename()));
+                            eventWithPhraseInSentence.add(new EventWithPhrase(leftPhrase, middlePhrase, rightPhrase, middleWord.getSentenceNum(), event.getFilename()));
                         }
                         eventsAfterCR.put(sentNum, eventWithPhraseInSentence);
                     }
@@ -236,16 +279,11 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                     StringBuilder sb_events_phrase = new StringBuilder();
                     StringBuilder sb_simplify_events_phrase = new StringBuilder();
                     for (Entry<Integer, List<EventWithPhrase>> entry : eventsAfterCR.entrySet()) {
-                        sb_events_phrase.append(
-                                entry.getKey() + "\t" + CommonUtil.list2String(entry.getValue()) + LINE_SPLITER);
-                        sb_simplify_events_phrase
-                        .append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
+                        sb_events_phrase.append(entry.getKey() + "\t" + CommonUtil.list2String(entry.getValue()) + LINE_SPLITER);
+                        sb_simplify_events_phrase.append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
                     }
-                    FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_EVENTS, file.getName()),
-                            CommonUtil.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
-                    FileUtils.writeStringToFile(
-                            FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_EVENTSSIMPLIFY, file.getName()),
-                            CommonUtil.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_EVENTS, file.getName()), CommonUtil.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_EVENTSSIMPLIFY, file.getName()), CommonUtil.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
 
                 } catch (Throwable e) {
 
@@ -262,24 +300,18 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                 try {
 
                     for (Entry<Integer, List<EventWithPhrase>> entry : eventsAfterCR.entrySet()) {
-                        eventsAfterCRAndRP.put(entry.getKey(),
-                                this.eventRepair(entry.getValue(), words.get(entry.getKey() - 1), entry.getKey()));
+                        eventsAfterCRAndRP.put(entry.getKey(), this.eventRepair(entry.getValue(), words.get(entry.getKey() - 1), entry.getKey()));
                     }
 
                     /* 中间结果记录：保存经过短语扩充之后的事件 */
                     StringBuilder sb_events_phrase = new StringBuilder();
                     StringBuilder sb_simplify_events_phrase = new StringBuilder();
                     for (Entry<Integer, List<EventWithPhrase>> entry : eventsAfterCRAndRP.entrySet()) {
-                        sb_events_phrase.append(
-                                entry.getKey() + "\t" + CommonUtil.list2String(entry.getValue()) + LINE_SPLITER);
-                        sb_simplify_events_phrase
-                        .append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
+                        sb_events_phrase.append(entry.getKey() + "\t" + CommonUtil.list2String(entry.getValue()) + LINE_SPLITER);
+                        sb_simplify_events_phrase.append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
                     }
-                    FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_RP_EVENTS, file.getName()),
-                            CommonUtil.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
-                    FileUtils.writeStringToFile(
-                            FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_RP_EVENTSSIMPLIFY, file.getName()),
-                            CommonUtil.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_RP_EVENTS, file.getName()), CommonUtil.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_RP_EVENTSSIMPLIFY, file.getName()), CommonUtil.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
 
                 } catch (Throwable e) {
 
@@ -296,8 +328,7 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
 
                     for (Entry<Integer, List<EventWithPhrase>> entry : eventsAfterCRAndRP.entrySet()) {
                         Integer sentNum = entry.getKey();
-                        List<EventWithPhrase> eventWithPhrases = this.phraseExpansion(entry.getValue(),
-                                words.get(sentNum - 1));
+                        List<EventWithPhrase> eventWithPhrases = this.phraseExpansion(entry.getValue(), words.get(sentNum - 1));
                         eventsAfterCRAndRPAndPE.put(sentNum, eventWithPhrases);
                     }
 
@@ -305,17 +336,11 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                     StringBuilder sb_events_phrase = new StringBuilder();
                     StringBuilder sb_simplify_events_phrase = new StringBuilder();
                     for (Entry<Integer, List<EventWithPhrase>> entry : eventsAfterCRAndRPAndPE.entrySet()) {
-                        sb_events_phrase.append(
-                                entry.getKey() + "\t" + CommonUtil.list2String(entry.getValue()) + LINE_SPLITER);
-                        sb_simplify_events_phrase
-                        .append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
+                        sb_events_phrase.append(entry.getKey() + "\t" + CommonUtil.list2String(entry.getValue()) + LINE_SPLITER);
+                        sb_simplify_events_phrase.append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
                     }
-                    FileUtils.writeStringToFile(
-                            FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_RP_PE_EVENTS, file.getName()),
-                            CommonUtil.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
-                    FileUtils.writeStringToFile(
-                            FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_RP_PE_EVENTSSIMPLIFY, file.getName()),
-                            CommonUtil.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_RP_PE_EVENTS, file.getName()), CommonUtil.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_RP_PE_EVENTSSIMPLIFY, file.getName()), CommonUtil.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
 
                 } catch (Throwable e) {
 
@@ -343,17 +368,11 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                     StringBuilder sb_events_phrase = new StringBuilder();
                     StringBuilder sb_simplify_events_phrase = new StringBuilder();
                     for (Entry<Integer, List<EventWithPhrase>> entry : eventsAfterCRAndRPAndPEAndEF.entrySet()) {
-                        sb_events_phrase.append(
-                                entry.getKey() + "\t" + CommonUtil.list2String(entry.getValue()) + LINE_SPLITER);
-                        sb_simplify_events_phrase
-                        .append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
+                        sb_events_phrase.append(entry.getKey() + "\t" + CommonUtil.list2String(entry.getValue()) + LINE_SPLITER);
+                        sb_simplify_events_phrase.append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
                     }
-                    FileUtils.writeStringToFile(
-                            FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_RP_PE_EF_EVENTS, file.getName()),
-                            CommonUtil.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
-                    FileUtils.writeStringToFile(
-                            FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_RP_PE_EF_EVENTSSIMPLIFY, file.getName()),
-                            CommonUtil.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_RP_PE_EF_EVENTS, file.getName()), CommonUtil.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_RP_PE_EF_EVENTSSIMPLIFY, file.getName()), CommonUtil.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
                     result.put(file.getParentFile().getName() + "/" + file.getName(), eventsAfterCRAndRPAndPEAndEF);
 
                 } catch (Throwable e) {
@@ -371,6 +390,21 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
             }
         }
 
+        /*
+         * 序列化词向量字典
+         */
+        File wordvecFile = FileUtils.getFile(this.workDir + "/" + DIR_WORDS_VECTOR, this.topicName + ".obj");
+        try{
+
+            SerializeUtil.writeObj(wordvecsInTopic, wordvecFile);
+
+        } catch(IOException e) {
+
+            this.log.error("Serialize word vector file[" + wordvecFile.getAbsolutePath() + "] error!", e);
+            throw e;
+        }
+
+
         return result;
 
     }
@@ -383,8 +417,7 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
      * @param words
      * @return
      */
-    private List<Word> changeToCorefWord(Word inWord, Map<String, CoreferenceElement> crChains,
-            List<List<Word>> words) {
+    private List<Word> changeToCorefWord(Word inWord, Map<String, CoreferenceElement> crChains, List<List<Word>> words) {
 
         List<Word> phrase = new ArrayList<Word>();
 
@@ -394,8 +427,7 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
 
         try {
 
-            String key = Encipher.MD5(
-                    inWord.getName() + inWord.getSentenceNum() + inWord.getNumInLine() + (inWord.getNumInLine() + 1));
+            String key = Encipher.MD5(inWord.getName() + inWord.getSentenceNum() + inWord.getNumInLine() + (inWord.getNumInLine() + 1));
             CoreferenceElement corefElement = crChains.get(key);
             if (corefElement != null) {
                 CoreferenceElement ref = corefElement.getRef();
@@ -430,8 +462,7 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
 
         String[][] edges = new String[wordsCount][wordsCount]; // 存放图的边信息
         for (ParseItem parseItem : parseItems)
-            edges[parseItem.getLeftWord().getNumInLine()][parseItem.getRightWord().getNumInLine()] = parseItem
-            .getDependencyType();
+            edges[parseItem.getLeftWord().getNumInLine()][parseItem.getRightWord().getNumInLine()] = parseItem.getDependencyType();
 
         return edges;
 
@@ -442,13 +473,14 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
      * 以指代链中最先出现的指代作为被指代的词（短语)<br>
      * key:MD5(element + sentNum + startIndex + endIndex)
      *
-     * @param graph 指代链
+     * @param graph
+     *            指代链
      * @return
      */
     private Map<String, CoreferenceElement> cr(Map<Integer, CorefChain> graph) {
 
         Map<String, CoreferenceElement> result = new HashMap<String, CoreferenceElement>();
-        if(MapUtils.isEmpty(graph)) {
+        if (MapUtils.isEmpty(graph)) {
             return result;
         }
 
@@ -460,20 +492,24 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
             if (entry.getValue().getMentionsInTextualOrder().size() > 1) {
 
                 CorefMention firstElement = entry.getValue().getMentionsInTextualOrder().get(0);
-                /*以第一个词（短语）作为被指代的词（短语）*/
-                CoreferenceElement ref = new CoreferenceElement(
-                        firstElement.mentionSpan, firstElement.corefClusterID,
-                        firstElement.startIndex, firstElement.endIndex, firstElement.sentNum, null);
+                /* 以第一个词（短语）作为被指代的词（短语） */
+                CoreferenceElement ref = new CoreferenceElement(firstElement.mentionSpan, firstElement.corefClusterID, firstElement.startIndex, firstElement.endIndex, firstElement.sentNum, null);
                 for (int k = 1; k < entry.getValue().getMentionsInTextualOrder().size(); k++) {
 
                     CorefMention mention = entry.getValue().getMentionsInTextualOrder().get(k);
 
                     if (mention != null) {
-                        CoreferenceElement element = new CoreferenceElement(
-                                mention.mentionSpan, mention.corefClusterID, mention.startIndex, mention.endIndex, mention.sentNum, ref);
+                        CoreferenceElement element = new CoreferenceElement(mention.mentionSpan, mention.corefClusterID, mention.startIndex, mention.endIndex, mention.sentNum, ref);
                         try {
                             result.put(Encipher.MD5(element.getElement() + element.getSentNum() + element.getStartIndex() + element.getEndIndex()), element);
-                            //System.out.println(Encipher.MD5(element.getElement() + element.getSentNum() + element.getStartIndex() + element.getEndIndex()) + "\t" + element.getElement() + "\t" + element.getSentNum() + "\t" + element.getStartIndex() + "\t" + element.getEndIndex() + "\t->\t" + element.getRef().getElement());
+                            // System.out.println(Encipher.MD5(element.getElement()
+                            // + element.getSentNum() + element.getStartIndex()
+                            // + element.getEndIndex()) + "\t" +
+                            // element.getElement() + "\t" +
+                            // element.getSentNum() + "\t" +
+                            // element.getStartIndex() + "\t" +
+                            // element.getEndIndex() + "\t->\t" +
+                            // element.getRef().getElement());
                         } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
 
                             this.log.error("MD5 encode error!", e);
@@ -650,16 +686,13 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
 
             }
 
-            FileUtils.writeStringToFile(
-                    FileUtils.getFile(this.textDir + "/" + TEXT + "/" + DIR_CHUNKSIMPILY, events.get(0).getFilename()),
-                    sb_chunk.toString() + LINE_SPLITER, DEFAULT_CHARSET, true);
+            FileUtils.writeStringToFile(FileUtils.getFile(this.textDir + "/" + TEXT + "/" + DIR_CHUNKSIMPILY, events.get(0).getFilename()), sb_chunk.toString() + LINE_SPLITER, DEFAULT_CHARSET, true);
 
             for (EventWithPhrase eventWithPhrase : events) {
                 // 谓语中第一个单词的序号
                 int leftVerbIndex = eventWithPhrase.getMiddlePhrases().get(0).getNumInLine();
                 // 谓语中第二个单词的序号
-                int rightVerbIndex = eventWithPhrase.getMiddlePhrases()
-                        .get(eventWithPhrase.getMiddlePhrases().size() - 1).getNumInLine();
+                int rightVerbIndex = eventWithPhrase.getMiddlePhrases().get(eventWithPhrase.getMiddlePhrases().size() - 1).getNumInLine();
 
                 List<Word> leftPhrase = eventWithPhrase.getLeftPhrases();
                 List<Word> rightPhrase = eventWithPhrase.getRightPhrases();
@@ -672,15 +705,11 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                         // 主语扩充
                         Word leftWord = leftPhrase.get(0);
                         for (ChunkPhrase phrase : phrases) {
-                            if (leftWord.getNumInLine() >= phrase.getLeftIndex()
-                                    && leftWord.getNumInLine() <= phrase.getRightIndex()
-                                    && (phrase.getRightIndex() - phrase.getLeftIndex()) > 0) {
+                            if (leftWord.getNumInLine() >= phrase.getLeftIndex() && leftWord.getNumInLine() <= phrase.getRightIndex() && (phrase.getRightIndex() - phrase.getLeftIndex()) > 0) {
                                 if (leftVerbIndex > phrase.getLeftIndex()) {
-                                    leftPhrase = new ArrayList<Word>(words.subList(phrase.getLeftIndex(),
-                                            Math.min(leftVerbIndex, phrase.getRightIndex() + 1)));
+                                    leftPhrase = new ArrayList<Word>(words.subList(phrase.getLeftIndex(), Math.min(leftVerbIndex, phrase.getRightIndex() + 1)));
                                 } else {
-                                    leftPhrase = new ArrayList<Word>(
-                                            words.subList(phrase.getLeftIndex(), phrase.getRightIndex() + 1));
+                                    leftPhrase = new ArrayList<Word>(words.subList(phrase.getLeftIndex(), phrase.getRightIndex() + 1));
                                 }
                                 break;
                             }
@@ -690,16 +719,11 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                         // 宾语扩充
                         Word rightWord = rightPhrase.get(0);
                         for (ChunkPhrase phrase : phrases) {
-                            if (rightWord.getNumInLine() >= phrase.getLeftIndex()
-                                    && rightWord.getNumInLine() <= phrase.getRightIndex()
-                                    && (phrase.getRightIndex() - phrase.getLeftIndex()) > 0) {
+                            if (rightWord.getNumInLine() >= phrase.getLeftIndex() && rightWord.getNumInLine() <= phrase.getRightIndex() && (phrase.getRightIndex() - phrase.getLeftIndex()) > 0) {
                                 if (phrase.getRightIndex() > rightVerbIndex) {
-                                    rightPhrase = new ArrayList<Word>(
-                                            words.subList(Math.max(rightVerbIndex + 1, phrase.getLeftIndex()),
-                                                    phrase.getRightIndex() + 1));
+                                    rightPhrase = new ArrayList<Word>(words.subList(Math.max(rightVerbIndex + 1, phrase.getLeftIndex()), phrase.getRightIndex() + 1));
                                 } else {
-                                    rightPhrase = new ArrayList<Word>(
-                                            words.subList(phrase.getLeftIndex(), phrase.getRightIndex() + 1));
+                                    rightPhrase = new ArrayList<Word>(words.subList(phrase.getLeftIndex(), phrase.getRightIndex() + 1));
                                 }
                                 break;
                             }
@@ -757,8 +781,7 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                 prePhrase.getWords().addAll(words.subList(span.getStart() + 1, span.getEnd() + 1));
                 phrases.set(phrases.size() - 1, prePhrase);
             } else {
-                ChunkPhrase chunkPhrase = new ChunkPhrase(span.getStart() + 1, span.getEnd(),
-                        new ArrayList<Word>(words.subList(span.getStart() + 1, span.getEnd() + 1)));
+                ChunkPhrase chunkPhrase = new ChunkPhrase(span.getStart() + 1, span.getEnd(), new ArrayList<Word>(words.subList(span.getStart() + 1, span.getEnd() + 1)));
                 phrases.add(chunkPhrase);
             }
         }
@@ -848,8 +871,7 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
             // 谓语中第一个单词的序号
             int leftVerbIndex = eventWithPhrase.getMiddlePhrases().get(0).getNumInLine();
             // 谓语中第二个单词的序号
-            int rightVerbIndex = eventWithPhrase.getMiddlePhrases().get(eventWithPhrase.getMiddlePhrases().size() - 1)
-                    .getNumInLine();
+            int rightVerbIndex = eventWithPhrase.getMiddlePhrases().get(eventWithPhrase.getMiddlePhrases().size() - 1).getNumInLine();
 
             if (CollectionUtils.isNotEmpty(eventWithPhrase.getLeftPhrases())) {
                 // 存在主语
@@ -865,8 +887,7 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                                     eventWithPhrase.getLeftPhrases().set(0, word);
                                     break;
                                 }
-                                if (!EXCLUDE_PUNCTUATION.contains(word.getName())
-                                        && word.getName().equals(word.getPos())) {
+                                if (!EXCLUDE_PUNCTUATION.contains(word.getName()) && word.getName().equals(word.getPos())) {
                                     // 标点的pos等于其本身
                                     break;
                                 }
@@ -880,8 +901,7 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                                     eventWithPhrase.getLeftPhrases().set(0, word);
                                     break;
                                 }
-                                if (!EXCLUDE_PUNCTUATION.contains(word.getName())
-                                        && word.getName().equals(word.getPos())) {
+                                if (!EXCLUDE_PUNCTUATION.contains(word.getName()) && word.getName().equals(word.getPos())) {
                                     // 标点的pos等于其本身
                                     break;
                                 }
@@ -926,8 +946,7 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                                     eventWithPhrase.getRightPhrases().set(0, word);
                                     break;
                                 }
-                                if (!EXCLUDE_PUNCTUATION.contains(word.getName())
-                                        && word.getName().equals(word.getPos())) {
+                                if (!EXCLUDE_PUNCTUATION.contains(word.getName()) && word.getName().equals(word.getPos())) {
                                     // 当前为标点，标点的pos等于本身
                                     break;
                                 }
@@ -940,8 +959,7 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
                                     eventWithPhrase.getRightPhrases().set(0, word);
                                     break;
                                 }
-                                if (!EXCLUDE_PUNCTUATION.contains(word.getName())
-                                        && word.getName().equals(word.getPos())) {
+                                if (!EXCLUDE_PUNCTUATION.contains(word.getName()) && word.getName().equals(word.getPos())) {
                                     // 当前为标点，标点的pos等于本身
                                     break;
                                 }
@@ -1069,14 +1087,18 @@ implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhras
 
         });
 
-        ExecutorService es = Executors.newFixedThreadPool(4);
-        Future<Map<String, Map<Integer, List<EventWithPhrase>>>> future = es.submit(new EventsExtractBasedOnGraphV2("E:/workspace/optimization/singleText"));
-        es.shutdown();
+        ExecutorService es = Executors.newFixedThreadPool(1);
+        EhCacheUtil ehCacheUtil = new EhCacheUtil("db_cache_vec", "local");
+        Future<Map<String, Map<Integer, List<EventWithPhrase>>>> future = es.submit(new EventsExtractBasedOnGraphV2("E:/workspace/optimization/singleText", "E:/workspace/optimization", ehCacheUtil));
+
         if (MapUtils.isNotEmpty(future.get())) {
             System.out.println("success!");
         } else {
             System.out.println("failed!");
         }
+
+        es.shutdown();
+        EhCacheUtil.close();
     }
 
 }

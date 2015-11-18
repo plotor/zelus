@@ -64,6 +64,8 @@ public class MTSBOEC implements SystemConstant{
         int threadNum = Integer.parseInt(properties.getProperty("threadNum", "2"));
         String textDir = properties.getProperty("textDir");
         String workDir = properties.getProperty("workDir");
+        String cacheName = properties.getProperty("cacheName");
+        String datasource = properties.getProperty("datasource");
 
         /**
          * 执行事件抽取操作
@@ -76,9 +78,11 @@ public class MTSBOEC implements SystemConstant{
 
             List<Callable<Map<String, Map<Integer, List<EventWithPhrase>>>>> tasks = new ArrayList<Callable<Map<String, Map<Integer, List<EventWithPhrase>>>>>();
 
+            EhCacheUtil ehCacheUtil = new EhCacheUtil(cacheName, datasource);
+
             for (File dir : textDirFile.listFiles()) {
 
-                tasks.add(new EventsExtractBasedOnGraphV2(dir.getAbsolutePath()));
+                tasks.add(new EventsExtractBasedOnGraphV2(dir.getAbsolutePath(), workDir, ehCacheUtil));
 
             }
 
@@ -124,6 +128,8 @@ public class MTSBOEC implements SystemConstant{
 
                 } finally{
 
+                    EhCacheUtil.close();
+
                     executorService.shutdown();
 
                 }
@@ -143,8 +149,6 @@ public class MTSBOEC implements SystemConstant{
 
             log.info("Starting calculate events similarity...");
 
-            String cacheName = properties.getProperty("cacheName");
-            String datasource = properties.getProperty("datasource");
             File eventDirFile = new File(workDir + "/" + DIR_SERIALIZE_EVENTS);
             File[] topicDirs = eventDirFile.listFiles();
             List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();

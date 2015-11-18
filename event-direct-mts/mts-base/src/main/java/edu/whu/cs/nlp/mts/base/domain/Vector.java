@@ -1,5 +1,7 @@
 package edu.whu.cs.nlp.mts.base.domain;
 
+import java.io.Serializable;
+
 import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import opennlp.tools.util.StringUtil;
 
@@ -9,7 +11,9 @@ import opennlp.tools.util.StringUtil;
  * @author ZhenchaoWang 2015-11-4 11:18:18
  *
  */
-public class Vector {
+public class Vector implements Serializable{
+
+    private static final long serialVersionUID = -5109650996129271001L;
 
     private Long   id;
     private String word;

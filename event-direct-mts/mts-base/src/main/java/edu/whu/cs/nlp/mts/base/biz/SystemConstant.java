@@ -39,6 +39,9 @@ public interface SystemConstant {
     /** 目录名：存放序列化的词集合 */
     public static final String      DIR_WORDS_OBJ                      = "words";
 
+    /** 目录名：当前专题词向量字典 */
+    public static final String      DIR_WORDS_VECTOR                   = "word-vector-dict";
+
     /** 目录名：依存分析 */
     public final static String      DIR_PARSE_TEXT                     = "text_parse";
 

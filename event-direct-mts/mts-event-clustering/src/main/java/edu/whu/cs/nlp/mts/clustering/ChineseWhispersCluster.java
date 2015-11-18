@@ -27,6 +27,7 @@ import edu.stanford.nlp.trees.Tree;
 import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.domain.EventWithPhrase;
 import edu.whu.cs.nlp.mts.base.domain.NumedEventWithPhrase;
+import edu.whu.cs.nlp.mts.base.domain.Pair;
 import edu.whu.cs.nlp.mts.base.domain.Word;
 import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
 import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
@@ -164,7 +165,7 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
         Set<String> selectedWordsKey = new HashSet<String>();
         Map<Integer, List<List<Word>>> clusterSubSentence = new HashMap<Integer, List<List<Word>>>();
         Map<Integer, List<List<Word>>> clusterSubSentenceAfterSynonymReplacement = new HashMap<Integer, List<List<Word>>>();
-        Map<Integer, List<String>> clusterEventWeihts = new HashMap<Integer, List<String>>();
+        Map<Integer, List<Pair<NumedEventWithPhrase, Double>>> clusterEventWeihts = new HashMap<Integer, List<Pair<NumedEventWithPhrase, Double>>>();
 
         //获取当前句子所有的子句集合
         for (Entry<Integer, Set<Integer>> entry : clusterEvents.entrySet()) {
@@ -189,7 +190,7 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
             Integer clusterId = entry.getKey();
             List<List<Word>> subSentences = new ArrayList<List<Word>>();
             List<List<Word>> subSynSentences = new ArrayList<List<Word>>();
-            List<String> eventWeights = new ArrayList<String>();
+            List<Pair<NumedEventWithPhrase, Double>> eventWeights = new ArrayList<Pair<NumedEventWithPhrase, Double>>();
             for (Integer eventId : entry.getValue()) {
 
                 NumedEventWithPhrase numedEventWithPhrase = eventWithNums.get(eventId);
@@ -198,7 +199,7 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
 
                 // 计算当前事件到向量中心的距离
                 double eventWeight = VectorOperator.cosineDistence(centralVec, numedEventWithPhrase.getVec());
-                eventWeights.add(eventWeight + "\t" + eventWithPhrase.toShortString() + "\t" + eventWithPhrase);
+                eventWeights.add(new Pair<NumedEventWithPhrase, Double>(numedEventWithPhrase, eventWeight));
 
                 // 获取当前事件所属句子的句法树
                 Tree tree = syntacticTrees.get(eventWithPhrase.getFilename()).get(eventWithPhrase.getSentNum() - 1);
@@ -236,16 +237,30 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
         StringBuilder sbClustedSentences = new StringBuilder();
         StringBuilder taggedClustedSentences = new StringBuilder();
         for (Entry<Integer, List<List<Word>>> entry : clusterSubSentence.entrySet()) {
+
             if(CollectionUtils.isEmpty(entry.getValue()) || entry.getValue().size() < 5) {
                 // 跳过小于5个句子的类
                 continue;
             }
+
+            List<Pair<NumedEventWithPhrase, Double>> pairs = clusterEventWeihts.get(entry.getKey());
             sbClustedSentences.append("classes_" + entry.getKey() + ":" + LINE_SPLITER);
             taggedClustedSentences.append("classes_" + entry.getKey() + ":" + LINE_SPLITER);
             for (List<Word> words : entry.getValue()) {
                 StringBuilder inner = new StringBuilder();
                 StringBuilder tagged = new StringBuilder();
                 for (Word word : words) {
+                    /* 计算当前词与当前类别中事件的加权距离
+                     * 计算方式：
+                     *     当前词与每个事件的距离*事件的权值，然后取平均
+                     */
+                    // TODO 获取当前词的词向量 2015-11-18 21:02:52
+
+                    double wordWeight = 0.0D;
+                    for (Pair<NumedEventWithPhrase, Double> pair : pairs) {
+                        // TODO 计算当前词与每个事件的距离 2015-11-18 21:03:32
+                    }
+
                     inner.append(word.getName() + " ");
                     tagged.append(word.getName() + "/" + (word.getPos().equals(word.getName()) ? "PUNCT" : word.getPos()) + " ");
                 }
@@ -277,8 +292,8 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
         /**
          * 持久化事件的权值
          */
-        StringBuilder sbEventWeights = new StringBuilder();
-        for (Entry<Integer, List<String>> entry : clusterEventWeihts.entrySet()) {
+        /*StringBuilder sbEventWeights = new StringBuilder();
+        for (Entry<Integer, List<Pair<NumedEventWithPhrase, Double>>> entry : clusterEventWeihts.entrySet()) {
             if(CollectionUtils.isEmpty(entry.getValue()) || entry.getValue().size() < 5) {
                 // 跳过小于5个句子的类
                 continue;
@@ -301,7 +316,7 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
 
             this.log.error("Save clusted sentences to file[" + eventsWeightFile.getAbsolutePath() + "] error!", e);
 
-        }
+        }*/
 
         // FIXME 暂时不返回同义词替换的结果，替换的效果不好，需要优化，2015-11-11 16:34:36
         return clusterSubSentence;

@@ -250,7 +250,7 @@ public class EhCacheUtil {
     public static void main(String[] args) throws Exception {
         EhCacheUtil ehCacheUtil = new EhCacheUtil("db_cache_vec", "local");
         Word word = new Word();
-        word.setName("Be");
+        word.setName("sfgsgsgs");
         word.setLemma("be");
         word.setNer("O");
         /*List<Vector> vecs = ehCacheUtil.getVec(word);
