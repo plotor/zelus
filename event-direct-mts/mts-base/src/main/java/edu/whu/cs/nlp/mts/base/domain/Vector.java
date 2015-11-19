@@ -20,23 +20,44 @@ public class Vector implements Serializable{
     private String vec; // 向量字符串
 
     /**
-     * 将字符串表示的向量转换成对应的float类型数组
+     * 将字符串表示的向量转换成对应的Double类型数组
      *
      * @return
      */
     public Float[] floatVecs() {
 
-        Float[] floatVec = new Float[SystemConstant.DIMENSION];
+        Float[] floatVec = null;
         if (StringUtil.isEmpty(this.vec)) {
             return floatVec;
         }
-
+        floatVec = new Float[SystemConstant.DIMENSION];
         String[] strs = this.vec.split("\\s+");
         for (int i = 0; i < SystemConstant.DIMENSION; i++) {
             floatVec[i] = Float.parseFloat(strs[i]);
         }
 
         return floatVec;
+
+    }
+
+    /**
+     * 将字符串表示的向量转换成对应的Double类型数组
+     *
+     * @return
+     */
+    public Double[] doubleVecs() {
+
+        Double[] doubleVec = null;
+        if (StringUtil.isEmpty(this.vec)) {
+            return doubleVec;
+        }
+        doubleVec = new Double[SystemConstant.DIMENSION];
+        String[] strs = this.vec.split("\\s+");
+        for (int i = 0; i < SystemConstant.DIMENSION; i++) {
+            doubleVec[i] = Double.parseDouble(strs[i]);
+        }
+
+        return doubleVec;
 
     }
 

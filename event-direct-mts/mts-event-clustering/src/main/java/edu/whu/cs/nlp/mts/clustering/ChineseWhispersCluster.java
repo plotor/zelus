@@ -29,6 +29,7 @@ import edu.whu.cs.nlp.mts.base.biz.VectorOperator;
 import edu.whu.cs.nlp.mts.base.domain.EventWithPhrase;
 import edu.whu.cs.nlp.mts.base.domain.NumedEventWithPhrase;
 import edu.whu.cs.nlp.mts.base.domain.Pair;
+import edu.whu.cs.nlp.mts.base.domain.Vector;
 import edu.whu.cs.nlp.mts.base.domain.Word;
 import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
 import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
@@ -46,7 +47,7 @@ import edu.whu.cs.nlp.mts.clustering.domain.CWEdge;
  * @author ZhenchaoWang 2015-11-10 14:23:27
  *
  */
-public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<Word>>>>, SystemConstant {
+public class ChineseWhispersCluster implements Callable<Boolean>, SystemConstant {
 
     private final Logger log                   = Logger.getLogger(this.getClass());
 
@@ -56,21 +57,24 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
     private final String nodeFilePath;
     /** edge文件所在路径 */
     private final String edgeFilePath;
+    /**词向量字典文件所在路径*/
+    private final String wordvecDictPath;
     /**wordnet词典文件所在路径*/
     private final String wordnetDataPath;
     /** 允许入边的阈值 */
     private final Float  EDGE_WEIGHT_THRESHOLD = 1.39f;
 
-    public ChineseWhispersCluster(String topicDir, String nodeFilePath, String edgeFilePath, String wordnetDataPath) {
+    public ChineseWhispersCluster(String topicDir, String nodeFilePath, String edgeFilePath, String wordvecDictPath, String wordnetDataPath) {
         super();
         this.topicDir = topicDir;
         this.nodeFilePath = nodeFilePath;
         this.edgeFilePath = edgeFilePath;
+        this.wordvecDictPath = wordvecDictPath;
         this.wordnetDataPath = wordnetDataPath;
     }
 
     @Override
-    public Map<Integer, List<List<Word>>> call() throws Exception {
+    public Boolean call() throws Exception {
 
         Map<Integer, List<List<Word>>> clustedSentence = new HashMap<Integer, List<List<Word>>>();
 
@@ -94,6 +98,17 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
         if (CollectionUtils.isEmpty(cwEdges)) {
             this.log.error("Can't load any edge data from [" + this.edgeFilePath + "]");
             throw new IOException("Can't load any edge data from [" + this.edgeFilePath + "]");
+        }
+
+        /**
+         * 加载词向量字典文件
+         */
+        this.log.info("[" + Thread.currentThread().getName() + "]Loading serilized file:" + this.wordvecDictPath);
+        @SuppressWarnings("unchecked")
+        Map<String, Vector> vecDict = (Map<String, Vector>) SerializeUtil.readObj(this.wordvecDictPath);
+        if (MapUtils.isEmpty(vecDict)) {
+            this.log.error("Can't load any word vector dict data from [" + this.wordvecDictPath + "]");
+            throw new IOException("Can't load any word vector dict data from [" + this.wordvecDictPath + "]");
         }
 
         /**
@@ -222,7 +237,6 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
                     subSynSentences.add(subSynObjSentence);
                 }
 
-
             }
 
             clusterEventWeihts.put(clusterId, eventWeights);
@@ -237,6 +251,7 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
          */
         StringBuilder sbClustedSentences = new StringBuilder();
         StringBuilder taggedClustedSentences = new StringBuilder();
+        StringBuilder taggedWeightedClustedSentences = new StringBuilder();
         for (Entry<Integer, List<List<Word>>> entry : clusterSubSentence.entrySet()) {
 
             if(CollectionUtils.isEmpty(entry.getValue()) || entry.getValue().size() < 5) {
@@ -247,26 +262,38 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
             List<Pair<NumedEventWithPhrase, Double>> pairs = clusterEventWeihts.get(entry.getKey());
             sbClustedSentences.append("classes_" + entry.getKey() + ":" + LINE_SPLITER);
             taggedClustedSentences.append("classes_" + entry.getKey() + ":" + LINE_SPLITER);
+            taggedWeightedClustedSentences.append("classes_" + entry.getKey() + ":" + LINE_SPLITER);
             for (List<Word> words : entry.getValue()) {
                 StringBuilder inner = new StringBuilder();
                 StringBuilder tagged = new StringBuilder();
+                StringBuilder weighted = new StringBuilder();
                 for (Word word : words) {
                     /* 计算当前词与当前类别中事件的加权距离
                      * 计算方式：
                      *     当前词与每个事件的距离*事件的权值，然后取平均
                      */
-                    // TODO 获取当前词的词向量 2015-11-18 21:02:52
-
+                    Vector wordVec = vecDict.get(word.dictKey());
                     double wordWeight = 0.0D;
-                    for (Pair<NumedEventWithPhrase, Double> pair : pairs) {
-                        // TODO 计算当前词与每个事件的距离 2015-11-18 21:03:32
+                    if(wordVec != null) {
+                        for (Pair<NumedEventWithPhrase, Double> pair : pairs) {
+                            Double[] eventVec = pair.getLeft().getVec();
+                            if(null != eventVec) {
+                                double distence = VectorOperator.cosineDistence(wordVec.doubleVecs(), eventVec);
+                                if(distence > 0) {
+                                    wordWeight += distence * pair.getRight();
+                                }
+                            }
+                        }
+                        wordWeight /= pairs.size();
                     }
 
                     inner.append(word.getName() + " ");
                     tagged.append(word.getName() + "/" + (word.getPos().equals(word.getName()) ? "PUNCT" : word.getPos()) + " ");
+                    weighted.append(word.getName() + "/" + (word.getPos().equals(word.getName()) ? "PUNCT" : word.getPos()) + "/" + wordWeight + " ");
                 }
                 sbClustedSentences.append(inner.toString().trim() + LINE_SPLITER);
                 taggedClustedSentences.append(tagged.toString().trim() + LINE_SPLITER);
+                taggedWeightedClustedSentences.append(weighted.toString().trim() + LINE_SPLITER);
             }
         }
 
@@ -274,6 +301,7 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
         String filename = this.nodeFilePath.substring(Math.max(this.nodeFilePath.lastIndexOf("/"), this.nodeFilePath.lastIndexOf("\\"))).replace("node.obj", "txt");
         File extractedSentences = FileUtils.getFile(workDir + "/" + DIR_SUB_SENTENCES_EXTRACTED, filename);
         File taggedExtractedSentences = FileUtils.getFile(workDir + "/" + DIR_SUB_SENTENCES_EXTRACTED + "/tagged/", filename);
+        File weightedExtractedSentences = FileUtils.getFile(workDir + "/" + DIR_SUB_SENTENCES_EXTRACTED + "/weighted/", filename);
 
         try{
             this.log.info("Saving clusted sentences to file[" + extractedSentences.getAbsolutePath() + "]");
@@ -281,6 +309,8 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
             FileUtils.writeStringToFile(extractedSentences, CommonUtil.cutLastLineSpliter(sbClustedSentences.toString()), DEFAULT_CHARSET);
 
             FileUtils.writeStringToFile(taggedExtractedSentences, CommonUtil.cutLastLineSpliter(taggedClustedSentences.toString()), DEFAULT_CHARSET);
+
+            FileUtils.writeStringToFile(weightedExtractedSentences, CommonUtil.cutLastLineSpliter(taggedWeightedClustedSentences.toString()), DEFAULT_CHARSET);
 
             this.log.info("Save clusted sentences to file [" + extractedSentences.getAbsolutePath() + "] succeed!");
 
@@ -319,8 +349,7 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
 
         }*/
 
-        // FIXME 暂时不返回同义词替换的结果，替换的效果不好，需要优化，2015-11-11 16:34:36
-        return clusterSubSentence;
+        return true;
     }
 
     /**
@@ -510,8 +539,8 @@ public class ChineseWhispersCluster implements Callable<Map<Integer, List<List<W
 
     public static void main(String[] args) throws InterruptedException, ExecutionException {
         ExecutorService es = Executors.newSingleThreadExecutor();
-        Future<Map<Integer, List<List<Word>>>> future = es.submit(new ChineseWhispersCluster("E:/workspace/test/corpus/D0732H", "E:/workspace/test/nodes/D0732H.node.obj", "E:/workspace/test/edges/D0732H.edge.obj", "D:/Program Files (x86)/WordNet/2.1/dict"));
-        if(future.get() != null) {
+        Future<Boolean> future = es.submit(new ChineseWhispersCluster("E:/workspace/test/corpus/D0732H", "E:/workspace/test/nodes/D0732H.node.obj", "E:/workspace/test/edges/D0732H.edge.obj","E:/workspace/test/word-vector-dict/D0732H.obj", "D:/Program Files (x86)/WordNet/2.1/dict"));
+        if(future.get()) {
             System.out.println("success");
         } else {
             System.out.println("false");

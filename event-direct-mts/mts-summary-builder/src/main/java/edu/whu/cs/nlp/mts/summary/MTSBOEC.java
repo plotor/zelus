@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -20,7 +19,6 @@ import org.apache.log4j.Logger;
 
 import edu.whu.cs.nlp.msc.SentenceReRanker;
 import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
-import edu.whu.cs.nlp.mts.base.domain.Word;
 import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
 import edu.whu.cs.nlp.mts.clustering.CalculateSimilarityThread;
 import edu.whu.cs.nlp.mts.clustering.ChineseWhispersCluster;
@@ -159,16 +157,17 @@ public class MTSBOEC implements SystemConstant{
             try{
 
                 es = Executors.newFixedThreadPool(threadNum);
-                List<Callable<Map<Integer, List<List<Word>>>>> tasks = new ArrayList<Callable<Map<Integer, List<List<Word>>>>>();
+                List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
                 for (File file : nodes) {
                     String nodePath = file.getAbsolutePath();
                     String edgePath = workDir + "/" + DIR_EDGES + "/" + file.getName().replace("node", "edge");
+                    String wordvecDictPath = workDir + "/" + DIR_WORDS_VECTOR + "/" + file.getName().replace(".node", "");
                     String topicPath = textDir + "/" + file.getName().substring(0, file.getName().indexOf("."));
-                    tasks.add(new ChineseWhispersCluster(topicPath, nodePath, edgePath, dictPath));
+                    tasks.add(new ChineseWhispersCluster(topicPath, nodePath, edgePath, wordvecDictPath, dictPath));
                 }
 
-                List<Future<Map<Integer, List<List<Word>>>>> futures = es.invokeAll(tasks);
-                for (Future<Map<Integer, List<List<Word>>>> future : futures) {
+                List<Future<Boolean>> futures = es.invokeAll(tasks);
+                for (Future<Boolean> future : futures) {
                     future.get();
                 }
 
