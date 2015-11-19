@@ -31,6 +31,16 @@ public class Word implements Serializable, SystemConstant, Cloneable {
         return super.clone();
     }
 
+    /**
+     * 词向量字典的key
+     * @return
+     */
+    public String dictKey(){
+
+        return this.name + "-" + this.pos;
+
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;

@@ -57,7 +57,7 @@ import opennlp.tools.util.Span;
  * @author ZhenchaoWang 2015-10-26 19:38:22
  *
  */
-public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map<String, Map<Integer, List<EventWithPhrase>>>> {
+public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Boolean> {
 
     private final Logger log = Logger.getLogger(this.getClass());
 
@@ -87,12 +87,14 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map
     }
 
     @Override
-    public Map<String, Map<Integer, List<EventWithPhrase>>> call() throws Exception {
+    public Boolean call() throws Exception {
 
         this.log.info(Thread.currentThread().getId() + "当前主题：" + this.textDir);
 
+        String topicName = this.textDir.substring(Math.max(this.textDir.lastIndexOf("/"), this.textDir.lastIndexOf("\\")));
+
         /* 一个topic下的事件集合，按照文件进行组织，key为文件名 */
-        Map<String, Map<Integer, List<EventWithPhrase>>> result = new HashMap<String, Map<Integer, List<EventWithPhrase>>>();
+        //Map<String, Map<Integer, List<EventWithPhrase>>> result = new HashMap<String, Map<Integer, List<EventWithPhrase>>>();
 
         /* 一个topic下所有词的向量字典 */
         Map<String, Vector> wordvecsInTopic = new HashMap<String, Vector>();
@@ -101,6 +103,7 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map
         Collection<File> files = FileUtils.listFiles(FileUtils.getFile(this.textDir), null, false);
 
         for (File file : files) {
+
             // 加载文件
             String absolutePath = file.getAbsolutePath(); // 当前处理的文件的绝对路径
             String parentPath = file.getParentFile().getAbsolutePath(); // 文件所属文件夹的路径
@@ -154,7 +157,6 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map
                 }
 
                 // 获取对句子中单词进行对象化后的文本
-                @SuppressWarnings("unchecked")
                 List<List<Word>> words = (List<List<Word>>) coreNlpResults.get(StanfordNLPTools.KEY_WORDS);
 
                 // 序列化词集合
@@ -171,7 +173,7 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map
                  */
                 for (List<Word> wordsInSent : words) {
                     for (Word word : wordsInSent) {
-                        String key = word.getName() + "/" + word.getPos();
+                        String key = word.dictKey();
                         if(wordvecsInTopic.containsKey(key)) {
                             continue;
                         }
@@ -181,13 +183,6 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map
                             wordvecsInTopic.put(key, vector);
                         }
                     }
-                }
-
-
-                File wordVectorDict = new File(this.workDir + "/" + DIR_WORDS_VECTOR + "/" + this.topicName + ".obj");
-
-                if(wordVectorDict.exists()) {
-
                 }
 
                 // 以文本形式存储词集合
@@ -373,7 +368,19 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map
                     }
                     FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_RP_PE_EF_EVENTS, file.getName()), CommonUtil.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
                     FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_RP_PE_EF_EVENTSSIMPLIFY, file.getName()), CommonUtil.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
-                    result.put(file.getParentFile().getName() + "/" + file.getName(), eventsAfterCRAndRPAndPEAndEF);
+
+                    if(MapUtils.isNotEmpty(eventsAfterCRAndRPAndPEAndEF)) {
+                        /*
+                         * 序列化事件抽取结果
+                         */
+                        File eventsObjFile = FileUtils.getFile(this.workDir + "/" + DIR_SERIALIZE_EVENTS + "/" + topicName, file.getName() + SUFFIX_SERIALIZE_FILE);
+                        try{
+                            SerializeUtil.writeObj(eventsAfterCRAndRPAndPEAndEF, eventsObjFile.getAbsoluteFile());
+                        }catch (IOException e) {
+                            this.log.error("Seralize error:" + eventsObjFile.getAbsolutePath(), e);
+                        }
+
+                    }
 
                 } catch (Throwable e) {
 
@@ -390,22 +397,23 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map
             }
         }
 
-        /*
-         * 序列化词向量字典
-         */
-        File wordvecFile = FileUtils.getFile(this.workDir + "/" + DIR_WORDS_VECTOR, this.topicName + ".obj");
-        try{
+        if(MapUtils.isNotEmpty(wordvecsInTopic)) {
+            /*
+             * 序列化词向量字典
+             */
+            File wordvecFile = FileUtils.getFile(this.workDir + "/" + DIR_WORDS_VECTOR, this.topicName + ".obj");
+            try{
 
-            SerializeUtil.writeObj(wordvecsInTopic, wordvecFile);
+                SerializeUtil.writeObj(wordvecsInTopic, wordvecFile);
 
-        } catch(IOException e) {
+            } catch(IOException e) {
 
-            this.log.error("Serialize word vector file[" + wordvecFile.getAbsolutePath() + "] error!", e);
-            throw e;
+                this.log.error("Serialize word vector file[" + wordvecFile.getAbsolutePath() + "] error!", e);
+                throw e;
+            }
         }
 
-
-        return result;
+        return true;
 
     }
 
@@ -1087,11 +1095,11 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Map
 
         });
 
-        ExecutorService es = Executors.newFixedThreadPool(1);
+        ExecutorService es = Executors.newSingleThreadExecutor();
         EhCacheUtil ehCacheUtil = new EhCacheUtil("db_cache_vec", "local");
-        Future<Map<String, Map<Integer, List<EventWithPhrase>>>> future = es.submit(new EventsExtractBasedOnGraphV2("E:/workspace/optimization/singleText", "E:/workspace/optimization", ehCacheUtil));
+        Future<Boolean> future = es.submit(new EventsExtractBasedOnGraphV2("E:/workspace/test/corpus/D0718D", "E:/workspace/test", ehCacheUtil));
 
-        if (MapUtils.isNotEmpty(future.get())) {
+        if (future.get()) {
             System.out.println("success!");
         } else {
             System.out.println("failed!");

@@ -15,12 +15,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
 import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
+import edu.whu.cs.nlp.mts.base.biz.VectorOperator;
 import edu.whu.cs.nlp.mts.base.domain.EventWithPhrase;
 import edu.whu.cs.nlp.mts.base.domain.NumedEventWithPhrase;
+import edu.whu.cs.nlp.mts.base.domain.Vector;
 import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
 import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
 import edu.whu.cs.nlp.mts.clustering.domain.CWEdge;
@@ -36,13 +39,16 @@ public class CalculateSimilarityThread implements Callable<Boolean>, SystemConst
 
     private final String topicDir;
 
+    private final String workDir;
+
     private final VectorOperator vectorOperator;
 
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#0.000000");
 
-    public CalculateSimilarityThread(String topicDir, String cacheName, String datasource) {
+    public CalculateSimilarityThread(String topicDir, String workDir) {
         this.topicDir = topicDir;
-        this.vectorOperator = new VectorOperator(cacheName, datasource);
+        this.workDir = workDir;
+        this.vectorOperator = new VectorOperator();
     }
 
     @Override
@@ -50,9 +56,28 @@ public class CalculateSimilarityThread implements Callable<Boolean>, SystemConst
 
         log.info(Thread.currentThread().getId() +  " - calculating event similarity, dir:" + this.topicDir);
 
+        /*
+         * 加载当前主题下的词向量字典
+         */
         int index = Math.max(this.topicDir.lastIndexOf("/"), this.topicDir.lastIndexOf("\\"));
         String topicName = this.topicDir.substring(index);
-        String workDir = this.topicDir.substring(0, index - DIR_SERIALIZE_EVENTS.length());
+
+        String seralizeFilepath = this.workDir + "/" + DIR_WORDS_VECTOR + "/" + topicName + ".obj";
+        Map<String, Vector> wordvecsInTopic = null;
+        try{
+            wordvecsInTopic = (Map<String, Vector>) SerializeUtil.readObj(this.workDir + "/" + DIR_WORDS_VECTOR + "/" + topicName + ".obj");
+        } catch(Exception e) {
+
+            log.error("Load seralize file[" + seralizeFilepath + "] error!", e);
+
+            throw e;
+
+        }
+
+        if(MapUtils.isEmpty(wordvecsInTopic)) {
+            log.error("The word vector dict is empty:" + seralizeFilepath);
+            return false;
+        }
 
         int num = 0; // 事件编号
 
@@ -76,11 +101,12 @@ public class CalculateSimilarityThread implements Callable<Boolean>, SystemConst
                     //对事件进行编号，然后封装成对象存储
                     for (EventWithPhrase eventWithPhrase : event.getValue()) {
 
-                        Double[] eventVec = this.vectorOperator.eventToVecPlus(eventWithPhrase);
+                        Double[] eventVec = this.vectorOperator.eventToVecPlus(eventWithPhrase, wordvecsInTopic);
                         if(eventVec == null) {
                             log.warn("The event[" + eventWithPhrase + "]'s vector is null, ignore it!");
                             continue;
                         }
+
                         NumedEventWithPhrase numedEventWithPhrase = new NumedEventWithPhrase();
                         numedEventWithPhrase.setNum(num);
                         numedEventWithPhrase.setEvent(eventWithPhrase);
@@ -102,7 +128,7 @@ public class CalculateSimilarityThread implements Callable<Boolean>, SystemConst
 
         //将编号的事件保存
         if (eventWithNums.size() > 0) {
-            File nodeFile = FileUtils.getFile(workDir + "/" + DIR_NODES, topicName + ".node.obj");
+            File nodeFile = FileUtils.getFile(this.workDir + "/" + DIR_NODES, topicName + ".node.obj");
             try {
                 SerializeUtil.writeObj(eventWithNums, nodeFile);
             } catch (IOException e) {
@@ -138,7 +164,7 @@ public class CalculateSimilarityThread implements Callable<Boolean>, SystemConst
             for (int j = i + 1; j < num; ++j) {
                 try {
                     // 计算向量的余弦值
-                    double approx = this.vectorOperator.cosineDistence(eventWithNums.get(i).getVec(), eventWithNums.get(j).getVec());
+                    double approx = VectorOperator.cosineDistence(eventWithNums.get(i).getVec(), eventWithNums.get(j).getVec());
 
                     // 计算向量的欧式距离
                     //double approx = this.vectorOperator.euclideanDistance(eventWithNums.get(i).getVec(), eventWithNums.get(j).getVec());
@@ -171,7 +197,7 @@ public class CalculateSimilarityThread implements Callable<Boolean>, SystemConst
             }
         }
 
-        File edgeFile = FileUtils.getFile(workDir + "/" + DIR_EDGES, topicName + ".edge.obj");
+        File edgeFile = FileUtils.getFile(this.workDir + "/" + DIR_EDGES, topicName + ".edge.obj");
         try {
 
             SerializeUtil.writeObj(cwEdges, edgeFile);
@@ -186,7 +212,8 @@ public class CalculateSimilarityThread implements Callable<Boolean>, SystemConst
 
     public static void main(String[] args) throws InterruptedException, ExecutionException {
         ExecutorService es = Executors.newSingleThreadExecutor();
-        Future<Boolean> future = es.submit(new CalculateSimilarityThread("E:/workspace/test/serializable-events/D0732H", "db_cache_vec", "local"));
+        //Future<Boolean> future = es.submit(new CalculateSimilarityThread("E:/workspace/test/serializable-events/D0732H", "db_cache_vec", "local"));
+        Future<Boolean> future = es.submit(new CalculateSimilarityThread("E:/workspace/test/serializable-events/D0732H", "E:/workspace/test"));
         if(future.get()){
             System.out.println("success!");
         } else {

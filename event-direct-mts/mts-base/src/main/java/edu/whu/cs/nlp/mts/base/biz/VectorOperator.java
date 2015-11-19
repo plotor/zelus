@@ -1,15 +1,16 @@
-package edu.whu.cs.nlp.mts.clustering;
+package edu.whu.cs.nlp.mts.base.biz;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.log4j.Logger;
 
-import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.domain.EventType;
 import edu.whu.cs.nlp.mts.base.domain.EventWithPhrase;
 import edu.whu.cs.nlp.mts.base.domain.Vector;
@@ -25,7 +26,11 @@ public class VectorOperator implements SystemConstant{
 
     private final Logger log = Logger.getLogger(this.getClass());
 
-    private final EhCacheUtil ehCacheUtil;
+    private EhCacheUtil ehCacheUtil;
+
+    public VectorOperator() {
+        super();
+    }
 
     public VectorOperator(String cacheName, String datasource) {
 
@@ -275,6 +280,64 @@ public class VectorOperator implements SystemConstant{
         Float[] leftVec = this.phraseVector(eventWithPhrase.getLeftPhrases(), true);
         Float[] middleVec = this.phraseVector(eventWithPhrase.getMiddlePhrases(), false);
         Float[] rightVec = this.phraseVector(eventWithPhrase.getRightPhrases(), true);
+
+        int randomCount = 0;
+
+        if(middleVec == null) {
+            // 对于谓语，如果不存在向量，则直接忽略该事件
+            //middleVec = this.randomWordVec();
+            //randomCount++;
+            this.log.warn("The middle vector is null, ignore this event:" + eventWithPhrase);
+            return null;
+        }
+
+        if(leftVec == null) {
+            leftVec = this.randomWordVec();
+            randomCount++;
+            this.log.info("The left vector is null, build a random vector:" + Arrays.toString(leftVec));
+        }
+
+        if(rightVec == null) {
+            rightVec = this.randomWordVec();
+            randomCount++;
+            this.log.info("The right vector is null, build a random vector:" + Arrays.toString(rightVec));
+        }
+
+        if(randomCount > 1) {
+            // 对于一个事件，如果存在两次以上的随机向量生成，则忽略该事件
+            return null;
+        }
+
+        return this.wordVecToEventVec(leftVec, middleVec, rightVec);
+
+    }
+
+    /**
+     * 计算事件向量<br>
+     * 相对于eventToVec的区别在于，如果某个短语的向量不存在，则随机生成一个向量，而不是用1代替
+     *
+     * @param eventWithPhrase
+     * @param wordvecsInTopic 词向量字典
+     * @return
+     */
+    public Double[] eventToVecPlus(EventWithPhrase eventWithPhrase, Map<String, Vector> wordvecsInTopic) {
+
+        if(EventType.ERROR.equals(eventWithPhrase.eventType())) {
+            this.log.error("不支持该事件类型：" + eventWithPhrase);
+            return null;
+        }
+
+        if(MapUtils.isEmpty(wordvecsInTopic)) {
+            this.log.error("The word vector dict is empty!");
+            return null;
+        }
+
+        /*
+         * 计算短语的最佳向量
+         */
+        Float[] leftVec = this.phraseVector(eventWithPhrase.getLeftPhrases(), true, wordvecsInTopic);
+        Float[] middleVec = this.phraseVector(eventWithPhrase.getMiddlePhrases(), false, wordvecsInTopic);
+        Float[] rightVec = this.phraseVector(eventWithPhrase.getRightPhrases(), true, wordvecsInTopic);
 
         int randomCount = 0;
 
@@ -628,6 +691,75 @@ public class VectorOperator implements SystemConstant{
                     }*/
 
                 Vector vector = this.ehCacheUtil.getMostSimilarVec(word);
+                if(vector != null) {
+                    Float[] vec = vector.floatVecs();
+                    for(int i = 0; i < DIMENSION; i++) {
+                        phraseVec[i] += vec[i];
+                    }
+                    count++;
+                } else {
+
+                    this.log.warn("[ignoreStopwords=" + ignoreStopwords + "] Can't find vector for word:" + word);
+
+                }
+            } catch (Exception e) {
+                this.log.error("Get vector error, word: " + word, e);
+            }
+        }
+
+        if(count == 0) {
+            this.log.warn("[ignoreStopwords=" + ignoreStopwords + "] Can't find vector for phrase:" + phrase);
+            return null;
+        }
+
+        for(int i = 0; i < DIMENSION; i++) {
+            phraseVec[i] /= count;
+        }
+
+        return phraseVec;
+
+    }
+
+    /**
+     * 计算一个短语的向量
+     *
+     * @param phrase
+     * @param ignoreStopwords
+     * @param wordvecsInTopic 词向量字典
+     * @return
+     */
+    private Float[] phraseVector(List<Word> phrase, boolean ignoreStopwords, Map<String, Vector> wordvecsInTopic) {
+
+        Float[] phraseVec = null;
+
+        if(CollectionUtils.isEmpty(phrase)) {
+
+            return phraseVec;
+
+        }
+
+        /**
+         * 计算策略:<br>
+         * 对短语中的非停用词的向量进行累加取平均
+         */
+        phraseVec = new Float[DIMENSION];
+        Arrays.fill(phraseVec, 0.0f);  // 初始以0填充
+        int count = 0;
+        for (Word word : phrase) {
+
+            if(word.getName().equals(word.getPos())) {
+                // 跳过标点符号
+                continue;
+            }
+
+            if(ignoreStopwords && STOPWORDS.contains(word.getLemma())) {
+                // 跳过停用词
+                continue;
+            }
+
+            try {
+                //Vector vector = this.ehCacheUtil.getMostSimilarVec(word);
+                Vector vector = wordvecsInTopic.get(word.dictKey());
                 if(vector != null) {
                     Float[] vec = vector.floatVecs();
                     for(int i = 0; i < DIMENSION; i++) {

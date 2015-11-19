@@ -25,6 +25,7 @@ import org.apache.log4j.Logger;
 import edu.mit.jwi.IDictionary;
 import edu.stanford.nlp.trees.Tree;
 import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
+import edu.whu.cs.nlp.mts.base.biz.VectorOperator;
 import edu.whu.cs.nlp.mts.base.domain.EventWithPhrase;
 import edu.whu.cs.nlp.mts.base.domain.NumedEventWithPhrase;
 import edu.whu.cs.nlp.mts.base.domain.Pair;

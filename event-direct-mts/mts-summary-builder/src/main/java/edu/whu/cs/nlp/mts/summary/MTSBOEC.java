@@ -8,7 +8,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -17,15 +16,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
 import edu.whu.cs.nlp.msc.SentenceReRanker;
 import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
-import edu.whu.cs.nlp.mts.base.domain.EventWithPhrase;
 import edu.whu.cs.nlp.mts.base.domain.Word;
 import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
-import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
 import edu.whu.cs.nlp.mts.clustering.CalculateSimilarityThread;
 import edu.whu.cs.nlp.mts.clustering.ChineseWhispersCluster;
 import edu.whu.cs.nlp.mts.extraction.graph.EventsExtractBasedOnGraphV2;
@@ -76,7 +72,7 @@ public class MTSBOEC implements SystemConstant{
 
             File textDirFile = new File(textDir);
 
-            List<Callable<Map<String, Map<Integer, List<EventWithPhrase>>>>> tasks = new ArrayList<Callable<Map<String, Map<Integer, List<EventWithPhrase>>>>>();
+            List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
 
             EhCacheUtil ehCacheUtil = new EhCacheUtil(cacheName, datasource);
 
@@ -86,53 +82,19 @@ public class MTSBOEC implements SystemConstant{
 
             }
 
-            if(CollectionUtils.isNotEmpty(tasks)){
-
-                /*执行完成之前，主线程阻塞*/
-
-                ExecutorService executorService = Executors.newFixedThreadPool(threadNum);
-                try {
-
-                    List<Future<Map<String, Map<Integer, List<EventWithPhrase>>>>> futures = executorService.invokeAll(tasks);
-
-                    for (Future<Map<String, Map<Integer, List<EventWithPhrase>>>> future : futures) {
-
-                        Map<String, Map<Integer, List<EventWithPhrase>>> eventsInTopic = future.get();
-
-                        log.info("Starting seralize events...");
-                        for (Entry<String, Map<Integer, List<EventWithPhrase>>> eventsInFile : eventsInTopic.entrySet()) {
-
-                            String key = eventsInFile.getKey();
-                            String[] strs = key.split("/");
-                            String topic = strs[0];
-                            String filename = strs[1];
-                            try {
-                                // 将事件抽取结果按照原文件的组织方式进行序列化存储
-                                SerializeUtil.writeObj(eventsInFile.getValue(), FileUtils.getFile(workDir + "/" + DIR_SERIALIZE_EVENTS + "/" + topic, filename + SUFFIX_SERIALIZE_FILE));
-
-                            } catch (IOException e) {
-
-                                log.error("Seralize error:" + topic + "/" + filename + SUFFIX_SERIALIZE_FILE, e);
-
-                            }
-                        }
-                        log.info("Finished seralize events.");
-
-                    }
-
-                } catch (InterruptedException | ExecutionException e) {
-
-                    log.error("There is an exception when extract events!", e);
-
-                    return;
-
-                } finally{
-
-                    EhCacheUtil.close();
-
-                    executorService.shutdown();
-
+            /*执行完成之前，主线程阻塞*/
+            ExecutorService executorService = Executors.newFixedThreadPool(threadNum);
+            try {
+                List<Future<Boolean>> futures = executorService.invokeAll(tasks);
+                for (Future<Boolean> future : futures) {
+                    future.get();
                 }
+            } catch (InterruptedException | ExecutionException e) {
+                log.error("There is an exception when extract events!", e);
+                return;
+            } finally{
+                EhCacheUtil.close();
+                executorService.shutdown();
             }
 
         }else{
@@ -153,7 +115,7 @@ public class MTSBOEC implements SystemConstant{
             File[] topicDirs = eventDirFile.listFiles();
             List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
             for (File topicDir : topicDirs) {
-                tasks.add(new CalculateSimilarityThread(topicDir.getAbsolutePath(), cacheName, datasource));
+                tasks.add(new CalculateSimilarityThread(topicDir.getAbsolutePath(), workDir));
             }
             if(CollectionUtils.isNotEmpty(tasks)) {
                 ExecutorService executorService = Executors.newFixedThreadPool(nThreadSimiarity);
@@ -165,7 +127,6 @@ public class MTSBOEC implements SystemConstant{
                 } catch (InterruptedException | ExecutionException e) {
                     log.error("There is an exception when calculate events similarity!", e);
                 }finally{
-                    EhCacheUtil.close(); // 关闭缓存
                     executorService.shutdown();
                 }
             }
