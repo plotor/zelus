@@ -2,6 +2,8 @@ package edu.whu.cs.nlp.mts.clustering;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -75,6 +77,10 @@ public class ChineseWhispersCluster implements Callable<Boolean>, SystemConstant
 
     @Override
     public Boolean call() throws Exception {
+
+        // 数字格式化器
+        DecimalFormat decimalFormat = new DecimalFormat("0.######");
+        decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
 
         Map<Integer, List<List<Word>>> clustedSentence = new HashMap<Integer, List<List<Word>>>();
 
@@ -285,6 +291,8 @@ public class ChineseWhispersCluster implements Callable<Boolean>, SystemConstant
                             }
                         }
                         wordWeight /= pairs.size();
+                        // 格式化
+                        wordWeight = Double.parseDouble(decimalFormat.format(wordWeight));
                     }
 
                     inner.append(word.getName() + " ");
