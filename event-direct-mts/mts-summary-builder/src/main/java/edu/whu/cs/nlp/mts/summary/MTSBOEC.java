@@ -206,7 +206,7 @@ public class MTSBOEC implements SystemConstant{
                 List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
                 EhCacheUtil ehCacheUtil = new EhCacheUtil(properties.getProperty("cacheName"), properties.getProperty("datasource"));
                 for (File file : compressFiles.listFiles()) {
-                    tasks.add(new SentenceReRanker(prop.getProperty(file.getName()) , file.getAbsolutePath(), ehCacheUtil));
+                    tasks.add(new SentenceReRanker(prop.getProperty(file.getName().substring(0, file.getName().lastIndexOf("."))) , file.getAbsolutePath(), ehCacheUtil));
                 }
 
                 List<Future<Boolean>> futures = es.invokeAll(tasks);
