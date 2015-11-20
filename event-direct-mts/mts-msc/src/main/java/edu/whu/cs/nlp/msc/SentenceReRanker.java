@@ -22,6 +22,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import edu.whu.cs.nlp.msc.domain.CompressUnit;
+import edu.whu.cs.nlp.msc.giga.GrammarScorer;
+import edu.whu.cs.nlp.msc.giga.NGramScore;
 import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.domain.Pair;
 import edu.whu.cs.nlp.mts.base.domain.Vector;
@@ -37,20 +39,26 @@ import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
  */
 public class SentenceReRanker implements Callable<Boolean>, SystemConstant {
 
-    private final Logger log = Logger.getLogger(this.getClass());
+    private final Logger                  log = Logger.getLogger(this.getClass());
 
-    /**当前专题的问句*/
-    private final String question;
-    /**当前专题对应压缩结果所在路径*/
-    private final String compressSentencesPath;
+    /** 当前专题的问句 */
+    private final String                  question;
+    /** 当前专题对应压缩结果所在路径 */
+    private final String                  compressSentencesPath;
+    /** 词向量获取器 */
+    private final EhCacheUtil             ehCacheUtil;
+    /** 语言模型打分器 */
+    private final GrammarScorer           grammarScorer;
+    /** N元语法模型 */
+    private final Map<String, NGramScore> ngramModel;
 
-    private final EhCacheUtil ehCacheUtil;
-
-    public SentenceReRanker(String question, String compressSentencesPath, EhCacheUtil ehCacheUtil) {
+    public SentenceReRanker(String question, String compressSentencesPath, EhCacheUtil ehCacheUtil, String ngramModelPath) throws IOException {
         super();
         this.question = question;
         this.compressSentencesPath = compressSentencesPath;
         this.ehCacheUtil = ehCacheUtil;
+        this.grammarScorer = new GrammarScorer();
+        this.ngramModel = this.grammarScorer.loadNgramModel(ngramModelPath);
     }
 
     @Override
@@ -121,7 +129,10 @@ public class SentenceReRanker implements Callable<Boolean>, SystemConstant {
                 // 利用余弦定理计算句子与问句的距离
                 double cosVal = cosineDistence(quentionVec, sentvec);
 
-                float newScore = (float) (cosVal / compressUnit.getScore());
+                // 计算当前句子的语言模型得分
+                float fluency = this.grammarScorer.calculateFluency(compressUnit.getSentence(), this.ngramModel);
+
+                float newScore = (float) (cosVal * (fluency + 1.0f) / compressUnit.getScore());
                 weightSumInClass += newScore;
                 compressUnits.add(new CompressUnit(newScore, compressUnit.getSentence()));
             }
@@ -250,20 +261,20 @@ public class SentenceReRanker implements Callable<Boolean>, SystemConstant {
 
         double value = -1;
 
-        if(vec1 == null || vec2 == null) {
+        if (vec1 == null || vec2 == null) {
             return value;
         }
 
-        //利用向量余弦值来计算事件之间的相似度
-        double scalar = 0;  //两个向量的内积
-        double module_1 = 0, module_2 = 0;  //向量vec_1和vec_2的模
-        for(int i = 0; i < DIMENSION; ++i){
+        // 利用向量余弦值来计算事件之间的相似度
+        double scalar = 0; // 两个向量的内积
+        double module_1 = 0, module_2 = 0; // 向量vec_1和vec_2的模
+        for (int i = 0; i < DIMENSION; ++i) {
             scalar += vec1[i] * vec2[i];
             module_1 += vec1[i] * vec1[i];
             module_2 += vec2[i] * vec2[i];
         }
 
-        if(module_1 > 0 && module_2 > 0) {
+        if (module_1 > 0 && module_2 > 0) {
             value = scalar / (Math.sqrt(module_1) * Math.sqrt(module_2)) + 1;
         }
 
@@ -279,19 +290,19 @@ public class SentenceReRanker implements Callable<Boolean>, SystemConstant {
      */
     private double[] sentenceToVector(String sentence) {
         double[] vector = null;
-        if(StringUtils.isBlank(sentence)) {
+        if (StringUtils.isBlank(sentence)) {
             return vector;
         }
-        vector =new double[DIMENSION];
+        vector = new double[DIMENSION];
         Arrays.fill(vector, 0.0D);
         String[] strs = sentence.split("\\s+");
         int count = 0;
         for (String str : strs) {
-            if(PUNCT_EN.contains(str)) {
+            if (PUNCT_EN.contains(str)) {
                 // 跳过标点
                 continue;
             }
-            if(STOPWORDS.contains(str)) {
+            if (STOPWORDS.contains(str)) {
                 // 跳过停用词
                 continue;
             }
@@ -302,12 +313,12 @@ public class SentenceReRanker implements Callable<Boolean>, SystemConstant {
             word.setNer("O");
             try {
                 Vector vec = this.ehCacheUtil.getMostSimilarVec(word);
-                if(vec == null) {
+                if (vec == null) {
                     // 如果在词向量中找不到当前的词向量，则跳过
                     continue;
                 }
                 Float[] floatVec = vec.floatVecs();
-                for(int i = 0; i < DIMENSION; i++) {
+                for (int i = 0; i < DIMENSION; i++) {
                     vector[i] += floatVec[i];
                 }
                 count++;
@@ -316,8 +327,8 @@ public class SentenceReRanker implements Callable<Boolean>, SystemConstant {
             }
         }
 
-        if(count > 0) {
-            for(int i = 0; i < DIMENSION; i++) {
+        if (count > 0) {
+            for (int i = 0; i < DIMENSION; i++) {
                 vector[i] /= count;
             }
         }
@@ -328,7 +339,7 @@ public class SentenceReRanker implements Callable<Boolean>, SystemConstant {
     public static void main(String[] args) throws Exception {
         ExecutorService es = Executors.newSingleThreadExecutor();
         EhCacheUtil ehCacheUtil = new EhCacheUtil("db_cache_vec", "local");
-        Future<Boolean> future = es.submit(new SentenceReRanker("Describe the activities of Morris Dees and the Southern Poverty Law Center.", "E:/workspace/test/compressed-results/D0701A.txt", ehCacheUtil));
+        Future<Boolean> future = es.submit(new SentenceReRanker("Describe the activities of Morris Dees and the Southern Poverty Law Center.", "E:/workspace/test/compressed-results/D0701A.txt", ehCacheUtil, "E:/workspace/test/giga_3gram.lm"));
         future.get();
         es.shutdown();
         EhCacheUtil.close();

@@ -29,6 +29,7 @@
                 <dict.path>/usr/local/WordNet-3.0/dict</dict.path>
                 <workdir>/home/experiment</workdir>
                 <corpusdir>/home/experiment/corpus/duc2007/news</corpusdir>
+                <ngram.model.path>/home/experiment/data/giga_3gram.lm</ngram.model.path>
             </properties>
         </profile>
         <profile>
@@ -38,6 +39,7 @@
                 <dict.path>D:/Program Files (x86)/WordNet/2.1/dict</dict.path>
                 <workdir>E:/workspace/test</workdir>
                 <corpusdir>E:/workspace/test/corpus</corpusdir>
+                <ngram.model.path>E:/workspace/test/giga_3gram.lm</ngram.model.path>
             </properties>
         </profile>
     </profiles>
