@@ -34,7 +34,7 @@ public class MTSBOEC implements SystemConstant{
 
     private static final Logger log = Logger.getLogger(MTSBOEC.class);
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         if(args.length == 0){
             System.err.println("请指定配置文件！");
@@ -193,10 +193,12 @@ public class MTSBOEC implements SystemConstant{
             // 加载question文件
             Properties prop = new Properties();
             try {
+                log.info("Loading question file...");
                 prop.load(new InputStreamReader(MTSBOEC.class.getClassLoader().getResourceAsStream("questions.properties")));
+                log.info("Loading question succeed!");
             } catch (IOException e) {
                 log.error("Load question file error!", e);
-                //e.printStackTrace();
+                throw e;
             }
 
             ExecutorService es = null;
@@ -211,9 +213,7 @@ public class MTSBOEC implements SystemConstant{
 
                 List<Future<Boolean>> futures = es.invokeAll(tasks);
                 for (Future<Boolean> future : futures) {
-                    if(!future.get()) {
-                        throw new Exception();
-                    }
+                    future.get();
                 }
 
                 EhCacheUtil.close();

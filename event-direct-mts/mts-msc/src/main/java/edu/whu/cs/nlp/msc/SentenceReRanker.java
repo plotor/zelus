@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,7 @@ import org.apache.log4j.Logger;
 
 import edu.whu.cs.nlp.msc.domain.CompressUnit;
 import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
+import edu.whu.cs.nlp.mts.base.domain.Pair;
 import edu.whu.cs.nlp.mts.base.domain.Vector;
 import edu.whu.cs.nlp.mts.base.domain.Word;
 import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
@@ -104,21 +106,14 @@ public class SentenceReRanker implements Callable<Boolean>, SystemConstant {
         }
 
         Map<String, List<CompressUnit>> rerankedClustedCompressUnits = new HashMap<String, List<CompressUnit>>();
-        /*存放重排序后的聚类句子集合，key为当前类的大小，按大小从大到小排序*/
-        /*Map<Integer, List<CompressUnit>> rerankedClustedCompressUnits = new TreeMap<Integer, List<CompressUnit>>(new Comparator<Integer>() {
 
-            @Override
-            public int compare(Integer key1, Integer key2) {
-
-                return key2 - key1;
-            }
-
-        });*/
+        List<Pair<Float, String>> classWeightAvg = new ArrayList<Pair<Float,String>>();
 
         for (Entry<String, List<CompressUnit>> entry : clustedCompressUnits.entrySet()) {
 
             List<CompressUnit> compressUnits = new ArrayList<CompressUnit>();
 
+            float weightSumInClass = 0.0f;
             for (CompressUnit compressUnit : entry.getValue()) {
                 // 计算句子的向量
                 double[] sentvec = this.sentenceToVector(compressUnit.getSentence());
@@ -126,13 +121,18 @@ public class SentenceReRanker implements Callable<Boolean>, SystemConstant {
                 // 利用余弦定理计算句子与问句的距离
                 double cosVal = cosineDistence(quentionVec, sentvec);
 
-                compressUnits.add(new CompressUnit((float) (cosVal / compressUnit.getScore()), compressUnit.getSentence()));
+                float newScore = (float) (cosVal / compressUnit.getScore());
+                weightSumInClass += newScore;
+                compressUnits.add(new CompressUnit(newScore, compressUnit.getSentence()));
             }
 
             if(CollectionUtils.isNotEmpty(compressUnits)) {
                 // 对句子按照得分从大到小进行排序
                 Collections.sort(compressUnits);
                 rerankedClustedCompressUnits.put(entry.getKey(), compressUnits);
+
+                // 记录每个类别的权重，用句子权重的均值评估
+                classWeightAvg.add(new Pair<Float, String>(weightSumInClass / compressUnits.size(), entry.getKey()));
             }
 
         }
@@ -178,31 +178,40 @@ public class SentenceReRanker implements Callable<Boolean>, SystemConstant {
 
         }
 
+        // 按照权重由大到小对类别进行排序
+        Collections.sort(classWeightAvg, new Comparator<Pair<Float, String>>() {
 
-        // 打印到控制台
-        /*for (Entry<Integer, List<CompressUnit>> entry : rerankedClustedCompressUnits.entrySet()) {
-            System.out.println(entry.getKey() + ":");
-            Collections.sort(entry.getValue());
-            for (CompressUnit compressUnit : entry.getValue()) {
-                System.out.println(compressUnit);
+            @Override
+            public int compare(Pair<Float, String> firstPair, Pair<Float, String> secondPair) {
+                if(firstPair.getLeft() < secondPair.getLeft()) {
+                    return 1;
+                } else if(firstPair.getLeft() > secondPair.getLeft()) {
+                    return -1;
+                } else {
+                    return 0;
+                }
             }
-        }*/
 
-        /*StringBuilder summary = new StringBuilder();
+        });
+
+        // 构建摘要
+        StringBuilder summary = new StringBuilder();
         int num = 0;
         int count = 0;
         while(count < MAX_SUMMARY_WORDS_COUNT) {
-            for (Entry<String, List<CompressUnit>> entry : rerankedClustedCompressUnits.entrySet()) {
+
+            for (Pair<Float, String> pair : classWeightAvg) {
+                List<CompressUnit> compressUnits = rerankedClustedCompressUnits.get(pair.getRight());
                 // 按分数从大到小进行排序
-                if(num >= entry.getValue().size()) {
+                if(num >= compressUnits.size()) {
                     continue;
                 }
-                Collections.sort(entry.getValue());
-                CompressUnit compressUnit = entry.getValue().get(num);
+                CompressUnit compressUnit = compressUnits.get(num);
                 String sentence = compressUnit.getSentence();
                 sentence = sentence.replaceAll("\\s+'s", "'s");
+                sentence = sentence.replaceAll("-lrb-[\\s\\S]*?-rrb-\\s+", "");
                 String[] strs = sentence.split("\\s+");
-                summary.append(sentence + " ");
+                summary.append(sentence + "\n");
                 for (String str : strs) {
                     if(!PUNCT_EN.contains(str)) {
                         count++;
@@ -212,20 +221,19 @@ public class SentenceReRanker implements Callable<Boolean>, SystemConstant {
                     break;
                 }
             }
+
             num++;
+
         }
         this.log.info("Build summary iterator times:" + num + "\t[" + this.compressSentencesPath + "]");
-
-        String dir = this.compressSentencesPath.substring(0, this.compressSentencesPath.indexOf(DIR_SENTENCES_COMPRESSION));
-        String filename = this.compressSentencesPath.substring(Math.max(this.compressSentencesPath.lastIndexOf("\\"), this.compressSentencesPath.lastIndexOf("/")));
-        String summaryFilename = filename.substring(0, filename.length() - 1) + ".M.250." + filename.substring(filename.length() - 1) + ".3";
+        int indexOfPoint = filename.lastIndexOf(".");
+        String summaryFilename = filename.substring(0, indexOfPoint - 1) + ".M.250." + filename.substring(indexOfPoint - 1, indexOfPoint) + ".3";
         try {
             FileUtils.writeStringToFile(FileUtils.getFile(dir + "/" + DIR_SUMMARIES, summaryFilename), summary.toString().trim(), DEFAULT_CHARSET);
         } catch(IOException e) {
             this.log.error("Save summary[" + filename + "] error!", e);
             throw e;
-        }*/
-
+        }
 
         return true;
     }
@@ -320,7 +328,7 @@ public class SentenceReRanker implements Callable<Boolean>, SystemConstant {
     public static void main(String[] args) throws Exception {
         ExecutorService es = Executors.newSingleThreadExecutor();
         EhCacheUtil ehCacheUtil = new EhCacheUtil("db_cache_vec", "local");
-        Future<Boolean> future = es.submit(new SentenceReRanker("Describe the activities of Morris Dees and the Southern Poverty Law Center.", "E:/workspace/test/compressed-results/D0701A", ehCacheUtil));
+        Future<Boolean> future = es.submit(new SentenceReRanker("Describe the activities of Morris Dees and the Southern Poverty Law Center.", "E:/workspace/test/compressed-results/D0701A.txt", ehCacheUtil));
         future.get();
         es.shutdown();
         EhCacheUtil.close();
