@@ -38,6 +38,7 @@ public class ModelLoader {
                 if (pipeline == null) {
                     Properties props = new Properties();
                     props.put("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
+                    //props.put("annotators", "tokenize, ssplit, pos, lemma");
                     pipeline = new StanfordCoreNLP(props);
                 }
             }

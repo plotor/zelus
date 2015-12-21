@@ -89,7 +89,7 @@ public class EventWithPhrase extends Event implements Serializable {
         StringBuilder sb_left = new StringBuilder();
         if (CollectionUtils.isNotEmpty(this.leftPhrases)) {
             for (Word word : this.leftPhrases) {
-                sb_left.append(word.getLemma() + SPLITER);
+                sb_left.append(word.getName() + SPLITER);
             }
             result.append(sb_left.substring(0, sb_left.lastIndexOf(SPLITER)));
         }
@@ -97,7 +97,7 @@ public class EventWithPhrase extends Event implements Serializable {
         StringBuilder sb_middle = new StringBuilder();
         if (CollectionUtils.isNotEmpty(this.middlePhrases)) {
             for (Word word : this.middlePhrases) {
-                sb_middle.append(word.getLemma() + SPLITER);
+                sb_middle.append(word.getName() + SPLITER);
             }
             result.append(sb_middle.substring(0, sb_middle.lastIndexOf(SPLITER)));
         }
@@ -105,7 +105,7 @@ public class EventWithPhrase extends Event implements Serializable {
         StringBuilder sb_right = new StringBuilder();
         if (CollectionUtils.isNotEmpty(this.rightPhrases)) {
             for (Word word : this.rightPhrases) {
-                sb_right.append(word.getLemma() + SPLITER);
+                sb_right.append(word.getName() + SPLITER);
             }
             result.append(sb_right.substring(0, sb_right.lastIndexOf(SPLITER)));
         }

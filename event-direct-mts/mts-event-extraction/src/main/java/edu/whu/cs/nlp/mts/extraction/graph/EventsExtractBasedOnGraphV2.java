@@ -1097,7 +1097,7 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Boo
 
         ExecutorService es = Executors.newSingleThreadExecutor();
         EhCacheUtil ehCacheUtil = new EhCacheUtil("db_cache_vec", "local");
-        Future<Boolean> future = es.submit(new EventsExtractBasedOnGraphV2("E:/workspace/test/corpus/D0718D", "E:/workspace/test", ehCacheUtil));
+        Future<Boolean> future = es.submit(new EventsExtractBasedOnGraphV2("E:/workspace/test/example/text", "E:/workspace/test/example", ehCacheUtil));
 
         if (future.get()) {
             System.out.println("success!");

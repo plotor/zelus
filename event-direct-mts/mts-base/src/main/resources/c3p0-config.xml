@@ -29,6 +29,20 @@
         <property name="maxPoolSize">100</property>
         <property name="maxIdleTime">60</property>
     </named-config>
+    
+    <named-config name="lab">
+        <property name="driverClass">com.mysql.jdbc.Driver</property>
+        <property name="jdbcUrl">jdbc:mysql://119.254.110.32:3223/user_vec?characterEncoding=utf8&amp;autoReconnect=true&amp;failOverReadOnly=false&amp;zeroDateTimeBehavior=convertToNull</property>
+        <property name="user">root</property>
+        <property name="password">693559wzc</property>
+        <property name="acquireIncrement">5</property>
+        <property name="initialPoolSize">10</property>
+        <property name="acquireRetryAttempts">10</property>
+        <property name="acquireRetryDelay">3000</property>
+        <property name="minPoolSize">1</property>
+        <property name="maxPoolSize">100</property>
+        <property name="maxIdleTime">60</property>
+    </named-config>
 
     <named-config name="localhost-3306-rouge_eval">
         <property name="driverClass">com.mysql.jdbc.Driver</property>

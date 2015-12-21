@@ -25,6 +25,18 @@ public class Word implements Serializable, SystemConstant, Cloneable {
         super();
     }
 
+    public Word(String name, String pos, String lemma, String ner, int sentenceNum, int numInLine) {
+        super();
+        this.name = name;
+        this.pos = pos;
+        this.lemma = lemma;
+        this.ner = ner;
+        this.sentenceNum = sentenceNum;
+        this.numInLine = numInLine;
+    }
+
+
+
     @Override
     public Object clone() throws CloneNotSupportedException {
         // Word word = (Word) super.clone();

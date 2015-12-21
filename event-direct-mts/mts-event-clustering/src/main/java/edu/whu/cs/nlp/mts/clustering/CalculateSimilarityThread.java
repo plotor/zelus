@@ -213,7 +213,7 @@ public class CalculateSimilarityThread implements Callable<Boolean>, SystemConst
     public static void main(String[] args) throws InterruptedException, ExecutionException {
         ExecutorService es = Executors.newSingleThreadExecutor();
         //Future<Boolean> future = es.submit(new CalculateSimilarityThread("E:/workspace/test/serializable-events/D0732H", "db_cache_vec", "local"));
-        Future<Boolean> future = es.submit(new CalculateSimilarityThread("E:/workspace/test/serializable-events/D0732H", "E:/workspace/test"));
+        Future<Boolean> future = es.submit(new CalculateSimilarityThread("E:/workspace/test/example/serializable-events/text", "E:/workspace/test/example"));
         if(future.get()){
             System.out.println("success!");
         } else {

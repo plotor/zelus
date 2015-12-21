@@ -23,7 +23,17 @@
 
     <profiles>
         <profile>
-            <id>server</id>
+            <id>server2005</id>
+            <properties>
+                <c3p0.datasource>server</c3p0.datasource>
+                <dict.path>/usr/local/WordNet-3.0/dict</dict.path>
+                <workdir>/home/experiment/duc2005</workdir>
+                <corpusdir>/home/experiment/corpus/duc2005/docs</corpusdir>
+                <ngram.model.path>/home/experiment/data/giga_3gram.lm</ngram.model.path>
+            </properties>
+        </profile>
+        <profile>
+            <id>server2007</id>
             <properties>
                 <c3p0.datasource>server</c3p0.datasource>
                 <dict.path>/usr/local/WordNet-3.0/dict</dict.path>
@@ -40,6 +50,16 @@
                 <workdir>E:/workspace/test</workdir>
                 <corpusdir>E:/workspace/test/corpus</corpusdir>
                 <ngram.model.path>E:/workspace/test/giga_3gram.lm</ngram.model.path>
+            </properties>
+        </profile>
+        <profile>
+            <id>lab</id>
+            <properties>
+                <c3p0.datasource>lab</c3p0.datasource>
+                <dict.path>/usr/local/WordNet-3.0/dict</dict.path>
+                <workdir>/home/zhenchao/experiment/duc2005</workdir>
+                <corpusdir>/home/zhenchao/experiment/corpus/duc2005/docs</corpusdir>
+                <ngram.model.path>/home/zhenchao/data/giga_3gram.lm</ngram.model.path>
             </properties>
         </profile>
     </profiles>

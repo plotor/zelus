@@ -238,7 +238,7 @@ public class SentenceReRanker implements Callable<Boolean>, SystemConstant {
         }
         this.log.info("Build summary iterator times:" + num + "\t[" + this.compressSentencesPath + "]");
         int indexOfPoint = filename.lastIndexOf(".");
-        String summaryFilename = filename.substring(0, indexOfPoint - 1) + ".M.250." + filename.substring(indexOfPoint - 1, indexOfPoint) + ".3";
+        String summaryFilename = filename.substring(0, indexOfPoint - 1).toUpperCase() + ".M.250." + filename.substring(indexOfPoint - 1, indexOfPoint).toUpperCase() + ".3";
         try {
             FileUtils.writeStringToFile(FileUtils.getFile(dir + "/" + DIR_SUMMARIES, summaryFilename), summary.toString().trim(), DEFAULT_CHARSET);
         } catch(IOException e) {
