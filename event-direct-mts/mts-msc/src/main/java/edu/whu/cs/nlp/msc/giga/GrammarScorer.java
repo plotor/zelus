@@ -4,10 +4,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 /**
@@ -155,6 +157,23 @@ public class GrammarScorer {
 
             return model.get(words[0]).getProb();
 
+        }
+
+    }
+
+    public static void main(String[] args) throws IOException {
+
+        String modelpath = args[0];
+        GrammarScorer gs = new GrammarScorer();
+        HashMap<String, NGramScore> model = gs.loadNgramModel(modelpath);
+
+        System.out.println("Please input a setence:(bank string exit)");
+        Scanner sc = new Scanner(System.in);
+        String sentence = sc.nextLine();
+        while(StringUtils.isNotBlank(sentence)) {
+            System.out.println("language score:\t" + gs.calculateFluency(sentence, model));
+            System.out.println("Please input a setence:(bank string exit)");
+            sentence = sc.nextLine();
         }
 
     }
