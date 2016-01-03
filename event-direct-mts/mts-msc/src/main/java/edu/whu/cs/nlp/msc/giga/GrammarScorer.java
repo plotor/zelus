@@ -32,11 +32,11 @@ public class GrammarScorer {
      */
     public HashMap<String, NGramScore> loadNgramModel(String filepath) throws IOException {
 
-        if (MapUtils.isEmpty(models)) {
+        if (MapUtils.isEmpty(GrammarScorer.models)) {
             synchronized (GrammarScorer.class) {
-                if (MapUtils.isEmpty(models)) {
+                if (MapUtils.isEmpty(GrammarScorer.models)) {
                     this.log.info("Loading nGram model:" + filepath);
-                    models = new HashMap<String, NGramScore>();
+                    GrammarScorer.models = new HashMap<String, NGramScore>();
                     LineIterator lineIterator = null;
                     //String numRegex = "[+-]*\\d+(\\.\\d*)*";
                     try {
@@ -62,10 +62,10 @@ public class GrammarScorer {
                                 }*/
                                 backOffScore = Float.valueOf(strs[2]);
                             }
-                            models.put(tmpTrigram, new NGramScore(probScore, backOffScore));
+                            GrammarScorer.models.put(tmpTrigram, new NGramScore(probScore, backOffScore));
                         }
 
-                        this.log.info("Loading nGram model success, model size:" + models.size());
+                        this.log.info("Loading nGram model success, model size:" + GrammarScorer.models.size());
 
                     } catch (IOException e) {
                         this.log.error("Load model file[" + filepath + "] error!", e);
@@ -79,7 +79,7 @@ public class GrammarScorer {
             }
         }
 
-        return models;
+        return GrammarScorer.models;
 
     }
 
@@ -99,7 +99,7 @@ public class GrammarScorer {
             return score;
         }
 
-        String sentenceStr = "<s> " + sentence + "</s>";
+        String sentenceStr = "<s> " + sentence + " </s>";
         String[] strs = sentenceStr.split("\\s+");
         String w1, w2, w3;
         for (int i = 2; i < strs.length; i++) {
