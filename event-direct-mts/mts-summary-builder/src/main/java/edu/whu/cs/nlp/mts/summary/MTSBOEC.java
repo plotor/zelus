@@ -50,7 +50,7 @@ public class MTSBOEC implements SystemConstant{
         try {
             properties.load(new FileInputStream(propFilePath));
         } catch (IOException e) {
-            log.error("load properties failed!", e);
+            MTSBOEC.log.error("load properties failed!", e);
             return;
         }
 
@@ -66,7 +66,7 @@ public class MTSBOEC implements SystemConstant{
          */
         if("y".equalsIgnoreCase(properties.getProperty("isExtractEvent"))){
 
-            log.info("Starting event extract: " + textDir);
+            MTSBOEC.log.info("Starting event extract: " + textDir);
 
             File textDirFile = new File(textDir);
 
@@ -88,7 +88,7 @@ public class MTSBOEC implements SystemConstant{
                     future.get();
                 }
             } catch (InterruptedException | ExecutionException e) {
-                log.error("There is an exception when extract events!", e);
+                MTSBOEC.log.error("There is an exception when extract events!", e);
                 return;
             } finally{
                 EhCacheUtil.close();
@@ -97,7 +97,7 @@ public class MTSBOEC implements SystemConstant{
 
         }else{
 
-            log.info("Events extract is not enabled!");
+            MTSBOEC.log.info("Events extract is not enabled!");
 
         }
 
@@ -107,9 +107,9 @@ public class MTSBOEC implements SystemConstant{
         int nThreadSimiarity = Integer.parseInt(properties.getProperty("nThreadSimiarity"));  //计算事件相似度的线程数量
         if("y".equalsIgnoreCase(properties.getProperty("isCalculateSimilarity"))){
 
-            log.info("Starting calculate events similarity...");
+            MTSBOEC.log.info("Starting calculate events similarity...");
 
-            File eventDirFile = new File(workDir + "/" + DIR_SERIALIZE_EVENTS);
+            File eventDirFile = new File(workDir + "/" + SystemConstant.DIR_SERIALIZE_EVENTS);
             File[] topicDirs = eventDirFile.listFiles();
             List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
             for (File topicDir : topicDirs) {
@@ -123,13 +123,13 @@ public class MTSBOEC implements SystemConstant{
                         future.get();
                     }
                 } catch (InterruptedException | ExecutionException e) {
-                    log.error("There is an exception when calculate events similarity!", e);
+                    MTSBOEC.log.error("There is an exception when calculate events similarity!", e);
                 }finally{
                     executorService.shutdown();
                 }
             }
         }else{
-            log.info("Events similarity calculate is not enabled!");
+            MTSBOEC.log.info("Events similarity calculate is not enabled!");
         }
 
         /**
@@ -137,11 +137,11 @@ public class MTSBOEC implements SystemConstant{
          */
         if("y".equalsIgnoreCase(properties.getProperty("isEventCluster"))){
 
-            log.info("Starting events clusting & sub sentences extracting...");
+            MTSBOEC.log.info("Starting events clusting & sub sentences extracting...");
 
             String dictPath = properties.getProperty("dictPath");
 
-            File nodeFile = new File(workDir + "/" + DIR_NODES);
+            File nodeFile = new File(workDir + "/" + SystemConstant.DIR_NODES);
             File[] nodes = nodeFile.listFiles(new FilenameFilter() {
 
                 @Override
@@ -160,8 +160,8 @@ public class MTSBOEC implements SystemConstant{
                 List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
                 for (File file : nodes) {
                     String nodePath = file.getAbsolutePath();
-                    String edgePath = workDir + "/" + DIR_EDGES + "/" + file.getName().replace("node", "edge");
-                    String wordvecDictPath = workDir + "/" + DIR_WORDS_VECTOR + "/" + file.getName().replace(".node", "");
+                    String edgePath = workDir + "/" + SystemConstant.DIR_EDGES + "/" + file.getName().replace("node", "edge");
+                    String wordvecDictPath = workDir + "/" + SystemConstant.DIR_WORDS_VECTOR + "/" + file.getName().replace(".node", "");
                     String topicPath = textDir + "/" + file.getName().substring(0, file.getName().indexOf("."));
                     tasks.add(new ChineseWhispersCluster(topicPath, nodePath, edgePath, wordvecDictPath, dictPath));
                 }
@@ -173,7 +173,7 @@ public class MTSBOEC implements SystemConstant{
 
             } catch(Throwable e) {
 
-                log.error("Event cluster & Sentence Extract error!", e);
+                MTSBOEC.log.error("Event cluster & Sentence Extract error!", e);
 
             } finally {
                 if(es != null) {
@@ -182,7 +182,7 @@ public class MTSBOEC implements SystemConstant{
             }
 
         } else {
-            log.info("Events clusting is not enabled!");
+            MTSBOEC.log.info("Events clusting is not enabled!");
         }
 
         /**
@@ -193,11 +193,12 @@ public class MTSBOEC implements SystemConstant{
             // 加载question文件
             Properties prop = new Properties();
             try {
-                log.info("Loading question file...");
-                prop.load(new InputStreamReader(MTSBOEC.class.getClassLoader().getResourceAsStream("questions.properties")));
-                log.info("Loading question succeed!");
+                String questionFilename = properties.getProperty("question_filename");
+                MTSBOEC.log.info("Loading question file[" + questionFilename + "]...");
+                prop.load(new InputStreamReader(MTSBOEC.class.getClassLoader().getResourceAsStream(questionFilename)));
+                MTSBOEC.log.info("Loading question file[" + questionFilename + "] success!");
             } catch (IOException e) {
-                log.error("Load question file error!", e);
+                MTSBOEC.log.error("Load question file error!", e);
                 throw e;
             }
 
@@ -207,7 +208,7 @@ public class MTSBOEC implements SystemConstant{
             ExecutorService es = null;
             try{
                 es = Executors.newFixedThreadPool(threadNum);
-                File compressFiles = new File(workDir + "/" + DIR_SENTENCES_COMPRESSION);
+                File compressFiles = new File(workDir + "/" + SystemConstant.DIR_SENTENCES_COMPRESSION);
                 List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
                 EhCacheUtil ehCacheUtil = new EhCacheUtil(properties.getProperty("cacheName"), properties.getProperty("datasource"));
                 for (File file : compressFiles.listFiles()) {
@@ -223,7 +224,7 @@ public class MTSBOEC implements SystemConstant{
 
             } catch (Throwable e) {
 
-                log.error("Build summary error!", e);
+                MTSBOEC.log.error("Build summary error!", e);
 
             } finally {
                 if(es != null) {
@@ -232,7 +233,7 @@ public class MTSBOEC implements SystemConstant{
             }
 
         } else {
-            log.info("Build summary is not enabled!");
+            MTSBOEC.log.info("Build summary is not enabled!");
         }
 
     }

@@ -69,9 +69,9 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <!-- <mainClass>edu.whu.cs.nlp.mts.summary.MTSBOEC</mainClass> -->
+                            <mainClass>edu.whu.cs.nlp.mts.summary.MTSBOEC</mainClass>
                             <!-- <mainClass>edu.whu.cs.nlp.mts.optimize.Optimizer</mainClass> -->
-                            <mainClass>edu.whu.cs.nlp.msc.giga.GrammarScorer</mainClass>
+                            <!-- <mainClass>edu.whu.cs.nlp.msc.giga.GrammarScorer</mainClass> -->
                         </manifest>
                     </archive>
                 </configuration>
