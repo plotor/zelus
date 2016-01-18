@@ -46,8 +46,7 @@
 
     <named-config name="localhost-3306-rouge_eval">
         <property name="driverClass">com.mysql.jdbc.Driver</property>
-        <property name="jdbcUrl">jdbc:mysql://localhost:3306/rouge_eval?characterEncoding=utf8&amp;autoReconnect=true&amp;failOverReadOnly=false&amp;zeroDateTimeBehavior=convertToNull
-        </property>
+        <property name="jdbcUrl">jdbc:mysql://localhost:3306/rouge_eval?characterEncoding=utf8&amp;autoReconnect=true&amp;failOverReadOnly=false&amp;zeroDateTimeBehavior=convertToNull</property>
         <property name="user">root</property>
         <property name="password">693559wzc</property>
         <property name="acquireIncrement">5</property>

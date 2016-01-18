@@ -95,6 +95,9 @@ public interface SystemConstant {
     /** 目录名：事件聚类 */
     public final static String      DIR_EVENTS_CLUST                   = "events-clust";
 
+    /** 目录名：类别权重 */
+    public final static String      DIR_CLUSTER_WEIGHT                 = "cluster-weights";
+
     /** 目录名：子句抽取 */
     public final static String      DIR_SUB_SENTENCES_EXTRACTED        = "sub-sentences";
 
@@ -142,164 +145,164 @@ public interface SystemConstant {
      * 人称代词 + 所有格代词
      */
     public final static Set<String> POS_PRP                            = new HashSet<String>() {
-        private static final long serialVersionUID = 3536875708378397981L;
+                                                                           private static final long serialVersionUID = 3536875708378397981L;
 
-        {
-            add("PRP");
-            add("PRP$");
-            add("WP");
-            add("WP$");
-        }
-    };
+                                                                           {
+                                                                               this.add("PRP");
+                                                                               this.add("PRP$");
+                                                                               this.add("WP");
+                                                                               this.add("WP$");
+                                                                           }
+                                                                       };
 
     /**
      * 指示代词集合，后续根据实际情况进行补充
      */
     public final static Set<String> DEMONSTRACTIVE_PRONOUN             = new HashSet<String>() {
 
-        private static final long serialVersionUID = -1988404852361670496L;
+                                                                           private static final long serialVersionUID = -1988404852361670496L;
 
-        {
-            add("i");
-            add("you");
-            add("he");
-            add("she");
-            add("it");
-            add("we");
-            add("they");
-            add("me");
-            add("him");
-            add("her");
-            add("us");
-            add("them");
-            add("this");
-            add("that");
-            add("these");
-            add("those");
-            add("who");
-            add("which");
-            add("what");
-        }
-    };
+                                                                           {
+                                                                               this.add("i");
+                                                                               this.add("you");
+                                                                               this.add("he");
+                                                                               this.add("she");
+                                                                               this.add("it");
+                                                                               this.add("we");
+                                                                               this.add("they");
+                                                                               this.add("me");
+                                                                               this.add("him");
+                                                                               this.add("her");
+                                                                               this.add("us");
+                                                                               this.add("them");
+                                                                               this.add("this");
+                                                                               this.add("that");
+                                                                               this.add("these");
+                                                                               this.add("those");
+                                                                               this.add("who");
+                                                                               this.add("which");
+                                                                               this.add("what");
+                                                                           }
+                                                                       };
 
     /**
      * 不希望被指代的词集合，后续根据实际情况进行补充
      */
     public final static Set<String> EXCEPTED_DEMONSTRACTIVE_PRONOUN    = new HashSet<String>() {
 
-        private static final long serialVersionUID = -1988404852361670496L;
+                                                                           private static final long serialVersionUID = -1988404852361670496L;
 
-        {
-            add("i");
-            add("you");
-            add("he");
-            add("she");
-            add("it");
-            add("we");
-            add("they");
-            add("me");
-            add("him");
-            add("her");
-            add("us");
-            add("them");
-            add("its");
-            add("this");
-            add("that");
-            add("these");
-            add("those");
-            add("my");
-            add("your");
-            add("his");
-            add("their");
-            add("who");
-            add("which");
-            add("what");
-        }
-    };
+                                                                           {
+                                                                               this.add("i");
+                                                                               this.add("you");
+                                                                               this.add("he");
+                                                                               this.add("she");
+                                                                               this.add("it");
+                                                                               this.add("we");
+                                                                               this.add("they");
+                                                                               this.add("me");
+                                                                               this.add("him");
+                                                                               this.add("her");
+                                                                               this.add("us");
+                                                                               this.add("them");
+                                                                               this.add("its");
+                                                                               this.add("this");
+                                                                               this.add("that");
+                                                                               this.add("these");
+                                                                               this.add("those");
+                                                                               this.add("my");
+                                                                               this.add("your");
+                                                                               this.add("his");
+                                                                               this.add("their");
+                                                                               this.add("who");
+                                                                               this.add("which");
+                                                                               this.add("what");
+                                                                           }
+                                                                       };
 
     /**
      * 词性标签-名词
      */
     public final static Set<String> POS_NOUN                           = new HashSet<String>() {
-        private static final long serialVersionUID = -4215344365700028825L;
+                                                                           private static final long serialVersionUID = -4215344365700028825L;
 
-        {
-            add("NN");
-            add("NNS");
-            add("NNP");
-            add("NNPS");
-        }
-    };
+                                                                           {
+                                                                               this.add("NN");
+                                                                               this.add("NNS");
+                                                                               this.add("NNP");
+                                                                               this.add("NNPS");
+                                                                           }
+                                                                       };
 
     /**
      * 词性标签-动词
      */
     public final static Set<String> POS_VERB                           = new HashSet<String>() {
-        private static final long serialVersionUID = 92436997464208966L;
+                                                                           private static final long serialVersionUID = 92436997464208966L;
 
-        {
-            add("VB");
-            add("VBD");
-            add("VBG");
-            add("VBN");
-            add("VBP");
-            add("VBZ");
-        }
-    };
+                                                                           {
+                                                                               this.add("VB");
+                                                                               this.add("VBD");
+                                                                               this.add("VBG");
+                                                                               this.add("VBN");
+                                                                               this.add("VBP");
+                                                                               this.add("VBZ");
+                                                                           }
+                                                                       };
 
     /**
      * 词性标签-副词
      */
     public final static Set<String> POS_ADVERB                         = new HashSet<String>() {
-        private static final long serialVersionUID = -4717718652903957444L;
+                                                                           private static final long serialVersionUID = -4717718652903957444L;
 
-        {
-            add("RB");
-            add("RBR");
-            add("RBS");
-        }
-    };
+                                                                           {
+                                                                               this.add("RB");
+                                                                               this.add("RBR");
+                                                                               this.add("RBS");
+                                                                           }
+                                                                       };
 
     /**
      * 词性标签-形容词
      */
     public final static Set<String> POS_ADJ                            = new HashSet<String>() {
-        private static final long serialVersionUID = 1739698370056824950L;
+                                                                           private static final long serialVersionUID = 1739698370056824950L;
 
-        {
-            add("JJ");
-            add("JJR");
-            add("JJS");
-        }
-    };
+                                                                           {
+                                                                               this.add("JJ");
+                                                                               this.add("JJR");
+                                                                               this.add("JJS");
+                                                                           }
+                                                                       };
 
     /**
      * 依存关系：施事
      */
     public final static Set<String> DEPENDENCY_AGENT                   = new HashSet<String>() {
-        private static final long serialVersionUID = -4819853309587426759L;
+                                                                           private static final long serialVersionUID = -4819853309587426759L;
 
-        {
-            add("nsubj");
-            add("xsubj");
-            add("csubj");
-            add("agent");
-        }
-    };
+                                                                           {
+                                                                               this.add("nsubj");
+                                                                               this.add("xsubj");
+                                                                               this.add("csubj");
+                                                                               this.add("agent");
+                                                                           }
+                                                                       };
 
     /**
      * 依存关系：受事
      */
     public final static Set<String> DEPENDENCY_OBJECT                  = new HashSet<String>() {
-        private static final long serialVersionUID = -4819853309587426759L;
+                                                                           private static final long serialVersionUID = -4819853309587426759L;
 
-        {
-            add("dobj");
-            add("nsubjpass");
-            add("acomp");
-            add("xcomp");
-        }
-    };
+                                                                           {
+                                                                               this.add("dobj");
+                                                                               this.add("nsubjpass");
+                                                                               this.add("acomp");
+                                                                               this.add("xcomp");
+                                                                           }
+                                                                       };
 
     /** 序列化文件后缀 */
     public static final String      SUFFIX_SERIALIZE_FILE              = ".obj";
@@ -316,96 +319,96 @@ public interface SystemConstant {
     /** 排除的标点 */
     public static final Set<String> EXCLUDE_PUNCTUATION                = new HashSet<String>() {
 
-        private static final long serialVersionUID = 8560383953434971371L;
+                                                                           private static final long serialVersionUID = 8560383953434971371L;
 
-        {
-            add("-LRB-");
-            add("-RRB-");
-            add("\"");
-            add("\'");
-            add(":");
-        }
-    };
+                                                                           {
+                                                                               this.add("-LRB-");
+                                                                               this.add("-RRB-");
+                                                                               this.add("\"");
+                                                                               this.add("\'");
+                                                                               this.add(":");
+                                                                           }
+                                                                       };
 
     /** 英文标点集 */
     public static final Set<String> PUNCT_EN                           = new HashSet<String>() {
 
-        private static final long serialVersionUID = -5498481342248064994L;
+                                                                           private static final long serialVersionUID = -5498481342248064994L;
 
-        {
-            add("≠");
-            add("≡");
-            add("≤");
-            add("≥");
-            add("\"\"");
-            add("≮");
-            add("≯");
-            add("＜");
-            add("＝");
-            add("＞");
-            add("\"");
-            add("#");
-            add("△");
-            add("!");
-            add("&");
-            add("'");
-            add("...");
-            add("%");
-            add("*");
-            add("+");
-            add("≈");
-            add("(");
-            add(")");
-            add("§");
-            add(".");
-            add("/");
-            add(",");
-            add("≌");
-            add("-");
-            add("//");
-            add(";");
-            add(":");
-            add("°");
-            add("±");
-            add("?");
-            add("[]");
-            add("∠");
-            add("⊥");
-            add("→");
-            add("∩");
-            add("∪");
-            add("∫");
-            add("∵");
-            add("∴");
-            add("∷");
-            add("℃");
-            add("‖");
-            add("]");
-            add("\\");
-            add("～");
-            add("×");
-            add("()");
-            add("○");
-            add("[");
-            add("〃");
-            add("⌒");
-            add("--");
-            add("‰");
-            add("″");
-            add("′");
-            add("∑");
-            add("⊙");
-            add("~");
-            add("∞");
-            add("÷");
-            add("∝");
-            add("}");
-            add("|");
-            add("π");
-            add("{");
-            add("√");
-        }
-    };
+                                                                           {
+                                                                               this.add("≠");
+                                                                               this.add("≡");
+                                                                               this.add("≤");
+                                                                               this.add("≥");
+                                                                               this.add("\"\"");
+                                                                               this.add("≮");
+                                                                               this.add("≯");
+                                                                               this.add("＜");
+                                                                               this.add("＝");
+                                                                               this.add("＞");
+                                                                               this.add("\"");
+                                                                               this.add("#");
+                                                                               this.add("△");
+                                                                               this.add("!");
+                                                                               this.add("&");
+                                                                               this.add("'");
+                                                                               this.add("...");
+                                                                               this.add("%");
+                                                                               this.add("*");
+                                                                               this.add("+");
+                                                                               this.add("≈");
+                                                                               this.add("(");
+                                                                               this.add(")");
+                                                                               this.add("§");
+                                                                               this.add(".");
+                                                                               this.add("/");
+                                                                               this.add(",");
+                                                                               this.add("≌");
+                                                                               this.add("-");
+                                                                               this.add("//");
+                                                                               this.add(";");
+                                                                               this.add(":");
+                                                                               this.add("°");
+                                                                               this.add("±");
+                                                                               this.add("?");
+                                                                               this.add("[]");
+                                                                               this.add("∠");
+                                                                               this.add("⊥");
+                                                                               this.add("→");
+                                                                               this.add("∩");
+                                                                               this.add("∪");
+                                                                               this.add("∫");
+                                                                               this.add("∵");
+                                                                               this.add("∴");
+                                                                               this.add("∷");
+                                                                               this.add("℃");
+                                                                               this.add("‖");
+                                                                               this.add("]");
+                                                                               this.add("\\");
+                                                                               this.add("～");
+                                                                               this.add("×");
+                                                                               this.add("()");
+                                                                               this.add("○");
+                                                                               this.add("[");
+                                                                               this.add("〃");
+                                                                               this.add("⌒");
+                                                                               this.add("--");
+                                                                               this.add("‰");
+                                                                               this.add("″");
+                                                                               this.add("′");
+                                                                               this.add("∑");
+                                                                               this.add("⊙");
+                                                                               this.add("~");
+                                                                               this.add("∞");
+                                                                               this.add("÷");
+                                                                               this.add("∝");
+                                                                               this.add("}");
+                                                                               this.add("|");
+                                                                               this.add("π");
+                                                                               this.add("{");
+                                                                               this.add("√");
+                                                                           }
+                                                                       };
 
     /** 最大迭代次数 */
     public static final int         MAX_ITERATIONS                     = 5;

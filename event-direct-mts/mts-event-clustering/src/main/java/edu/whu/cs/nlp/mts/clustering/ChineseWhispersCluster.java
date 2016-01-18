@@ -53,6 +53,8 @@ public class ChineseWhispersCluster implements Callable<Boolean>, SystemConstant
 
     private final Logger log                   = Logger.getLogger(this.getClass());
 
+    private static final String CLASS_PREFIX = "classes_";
+
     /** 当前主题路径 */
     private final String topicDir;
     /** node文件所在路径 */
@@ -149,7 +151,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, SystemConstant
         /**
          * 加载当前主题下所有的文本
          */
-        File objWordsDir = new File(this.topicDir + "/" + OBJ + "/" + DIR_WORDS_OBJ);
+        File objWordsDir = new File(this.topicDir + "/" + SystemConstant.OBJ + "/" + SystemConstant.DIR_WORDS_OBJ);
         File[] objfiles = objWordsDir.listFiles();
         Map<String, List<List<Word>>> texts = new HashMap<String, List<List<Word>>>(25);
         for (File file : objfiles) {
@@ -166,7 +168,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, SystemConstant
         /**
          * 加载当前主题下所有文本中句子的句法分析树
          */
-        File objSyntacticTreesDir = new File(this.topicDir + "/" + OBJ + "/" + DIR_SYNTACTICTREES_OBJ);
+        File objSyntacticTreesDir = new File(this.topicDir + "/" + SystemConstant.OBJ + "/" + SystemConstant.DIR_SYNTACTICTREES_OBJ);
         File[] objSyntacticTreefiles = objSyntacticTreesDir.listFiles();
         Map<String, List<Tree>> syntacticTrees = new HashMap<String, List<Tree>>(25);
         for (File file : objSyntacticTreefiles) {
@@ -189,6 +191,12 @@ public class ChineseWhispersCluster implements Callable<Boolean>, SystemConstant
         Map<Integer, List<List<Word>>> clusterSubSentenceAfterSynonymReplacement = new HashMap<Integer, List<List<Word>>>();
         Map<Integer, List<Pair<NumedEventWithPhrase, Double>>> clusterEventWeihts = new HashMap<Integer, List<Pair<NumedEventWithPhrase, Double>>>();
 
+        /*
+         * 存放每个类的权值
+         * 计算方法：一个cluster中包含的文档的数量之和（每个文档计数为1）
+         */
+        Map<String, Float> clusterWeights = new HashMap<String, Float>();
+
         //获取当前句子所有的子句集合
         for (Entry<Integer, Set<Integer>> entry : clusterEvents.entrySet()) {
 
@@ -196,11 +204,18 @@ public class ChineseWhispersCluster implements Callable<Boolean>, SystemConstant
                 continue;
             }
 
+            Set<String> filenames4ClusterWeight = new HashSet<String>();
+
             List<Double[]> vectorsInCluster = new ArrayList<Double[]>();
             for (Integer eventNum : entry.getValue()) {
                 NumedEventWithPhrase numedEventWithPhrase =  eventWithNums.get(eventNum);
                 vectorsInCluster.add(numedEventWithPhrase.getVec());
+                // 以文件名来计算一个cluster的包含的来源文件的数目，以此度量一个cluster的主题贡献
+                filenames4ClusterWeight.add(numedEventWithPhrase.getEvent().getFilename());
             }
+
+            // 以一个类包含的总的文件数量来度量该类的权重
+            clusterWeights.put(ChineseWhispersCluster.CLASS_PREFIX + entry.getKey(), (float)filenames4ClusterWeight.size());
 
             // 计算向量中心
             Double[] centralVec = VectorOperator.centralVector(vectorsInCluster);
@@ -251,6 +266,18 @@ public class ChineseWhispersCluster implements Callable<Boolean>, SystemConstant
 
         }
 
+        String workDir = this.nodeFilePath.substring(0, this.nodeFilePath.indexOf(SystemConstant.DIR_NODES));
+        String filename = this.nodeFilePath.substring(Math.max(this.nodeFilePath.lastIndexOf("/"), this.nodeFilePath.lastIndexOf("\\"))).replace("node.obj", "txt");
+
+        // 序列化cluster权重
+        File clusterWeightsFile = FileUtils.getFile(workDir + '/' + SystemConstant.DIR_CLUSTER_WEIGHT , filename + "." + SystemConstant.OBJ);
+        try{
+            this.log.info("Serilizing cluster weight to file[" + clusterWeightsFile.getAbsolutePath() + "]");
+            SerializeUtil.writeObj(clusterWeights, clusterWeightsFile);
+        } catch(IOException e) {
+            this.log.error("Serilizing cluster weight to file[" + clusterWeightsFile.getAbsolutePath() + "] error!", e);
+            throw e;
+        }
 
         /**
          * 持久化聚类的句子集合
@@ -266,9 +293,9 @@ public class ChineseWhispersCluster implements Callable<Boolean>, SystemConstant
             }
 
             List<Pair<NumedEventWithPhrase, Double>> pairs = clusterEventWeihts.get(entry.getKey());
-            sbClustedSentences.append("classes_" + entry.getKey() + ":" + LINE_SPLITER);
-            taggedClustedSentences.append("classes_" + entry.getKey() + ":" + LINE_SPLITER);
-            taggedWeightedClustedSentences.append("classes_" + entry.getKey() + ":" + LINE_SPLITER);
+            sbClustedSentences.append(ChineseWhispersCluster.CLASS_PREFIX + entry.getKey() + ":" + SystemConstant.LINE_SPLITER);
+            taggedClustedSentences.append(ChineseWhispersCluster.CLASS_PREFIX + entry.getKey() + ":" + SystemConstant.LINE_SPLITER);
+            taggedWeightedClustedSentences.append(ChineseWhispersCluster.CLASS_PREFIX + entry.getKey() + ":" + SystemConstant.LINE_SPLITER);
             for (List<Word> words : entry.getValue()) {
                 StringBuilder inner = new StringBuilder();
                 StringBuilder tagged = new StringBuilder();
@@ -299,26 +326,24 @@ public class ChineseWhispersCluster implements Callable<Boolean>, SystemConstant
                     tagged.append(word.getName() + "/" + (word.getPos().equals(word.getName()) ? "PUNCT" : word.getPos()) + " ");
                     weighted.append(word.getName() + "/" + (word.getPos().equals(word.getName()) ? "PUNCT" : word.getPos()) + "/" + wordWeight + " ");
                 }
-                sbClustedSentences.append(inner.toString().trim() + LINE_SPLITER);
-                taggedClustedSentences.append(tagged.toString().trim() + LINE_SPLITER);
-                taggedWeightedClustedSentences.append(weighted.toString().trim() + LINE_SPLITER);
+                sbClustedSentences.append(inner.toString().trim() + SystemConstant.LINE_SPLITER);
+                taggedClustedSentences.append(tagged.toString().trim() + SystemConstant.LINE_SPLITER);
+                taggedWeightedClustedSentences.append(weighted.toString().trim() + SystemConstant.LINE_SPLITER);
             }
         }
 
-        String workDir = this.nodeFilePath.substring(0, this.nodeFilePath.indexOf(DIR_NODES));
-        String filename = this.nodeFilePath.substring(Math.max(this.nodeFilePath.lastIndexOf("/"), this.nodeFilePath.lastIndexOf("\\"))).replace("node.obj", "txt");
-        File extractedSentences = FileUtils.getFile(workDir + "/" + DIR_SUB_SENTENCES_EXTRACTED, filename);
-        File taggedExtractedSentences = FileUtils.getFile(workDir + "/" + DIR_SUB_SENTENCES_EXTRACTED + "/tagged/", filename);
-        File weightedExtractedSentences = FileUtils.getFile(workDir + "/" + DIR_SUB_SENTENCES_EXTRACTED + "/weighted/", filename);
+        File extractedSentences = FileUtils.getFile(workDir + "/" + SystemConstant.DIR_SUB_SENTENCES_EXTRACTED, filename);
+        File taggedExtractedSentences = FileUtils.getFile(workDir + "/" + SystemConstant.DIR_SUB_SENTENCES_EXTRACTED + "/tagged/", filename);
+        File weightedExtractedSentences = FileUtils.getFile(workDir + "/" + SystemConstant.DIR_SUB_SENTENCES_EXTRACTED + "/weighted/", filename);
 
         try{
             this.log.info("Saving clusted sentences to file[" + extractedSentences.getAbsolutePath() + "]");
 
-            FileUtils.writeStringToFile(extractedSentences, CommonUtil.cutLastLineSpliter(sbClustedSentences.toString()), DEFAULT_CHARSET);
+            FileUtils.writeStringToFile(extractedSentences, CommonUtil.cutLastLineSpliter(sbClustedSentences.toString()), SystemConstant.DEFAULT_CHARSET);
 
-            FileUtils.writeStringToFile(taggedExtractedSentences, CommonUtil.cutLastLineSpliter(taggedClustedSentences.toString()), DEFAULT_CHARSET);
+            FileUtils.writeStringToFile(taggedExtractedSentences, CommonUtil.cutLastLineSpliter(taggedClustedSentences.toString()), SystemConstant.DEFAULT_CHARSET);
 
-            FileUtils.writeStringToFile(weightedExtractedSentences, CommonUtil.cutLastLineSpliter(taggedWeightedClustedSentences.toString()), DEFAULT_CHARSET);
+            FileUtils.writeStringToFile(weightedExtractedSentences, CommonUtil.cutLastLineSpliter(taggedWeightedClustedSentences.toString()), SystemConstant.DEFAULT_CHARSET);
 
             this.log.info("Save clusted sentences to file [" + extractedSentences.getAbsolutePath() + "] succeed!");
 
@@ -388,7 +413,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, SystemConstant
             Set<String> wordSet = new HashSet<String>(Arrays.asList(sentStr.split("\\s+")));
             if (CollectionUtils.isNotEmpty(leftphrase)) {
                 for (Word word : leftphrase) {
-                    if (!word.getName().equals(word.getPos()) && !STOPWORDS.contains(word.getLemma()) && wordSet.contains(word.getName())) {
+                    if (!word.getName().equals(word.getPos()) && !SystemConstant.STOPWORDS.contains(word.getLemma()) && wordSet.contains(word.getName())) {
                         ++count;
                         break;
                     }
@@ -397,7 +422,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, SystemConstant
             }
             if (CollectionUtils.isNotEmpty(middlephrase)) {
                 for (Word word : middlephrase) {
-                    if (!word.getName().equals(word.getPos()) && !STOPWORDS.contains(word.getLemma()) && wordSet.contains(word.getName())) {
+                    if (!word.getName().equals(word.getPos()) && !SystemConstant.STOPWORDS.contains(word.getLemma()) && wordSet.contains(word.getName())) {
                         ++count;
                         break;
                     }
@@ -405,7 +430,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, SystemConstant
             }
             if (CollectionUtils.isNotEmpty(rightphrase)) {
                 for (Word word : rightphrase) {
-                    if (!word.getName().equals(word.getPos()) && !STOPWORDS.contains(word.getLemma()) && wordSet.contains(word.getName())) {
+                    if (!word.getName().equals(word.getPos()) && !SystemConstant.STOPWORDS.contains(word.getLemma()) && wordSet.contains(word.getName())) {
                         ++count;
                         break;
                     }
