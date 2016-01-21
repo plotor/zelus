@@ -270,7 +270,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, SystemConstant
         String filename = this.nodeFilePath.substring(Math.max(this.nodeFilePath.lastIndexOf("/"), this.nodeFilePath.lastIndexOf("\\"))).replace("node.obj", "txt");
 
         // 序列化cluster权重
-        File clusterWeightsFile = FileUtils.getFile(workDir + '/' + SystemConstant.DIR_CLUSTER_WEIGHT , filename + "." + SystemConstant.OBJ);
+        File clusterWeightsFile = FileUtils.getFile(workDir + '/' + SystemConstant.DIR_CLUSTER_WEIGHT , filename.replaceAll("txt", OBJ));
         try{
             this.log.info("Serilizing cluster weight to file[" + clusterWeightsFile.getAbsolutePath() + "]");
             SerializeUtil.writeObj(clusterWeights, clusterWeightsFile);

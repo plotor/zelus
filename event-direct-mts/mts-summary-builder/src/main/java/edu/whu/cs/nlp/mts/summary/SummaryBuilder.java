@@ -9,6 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -103,7 +107,7 @@ public class SummaryBuilder implements Callable<Boolean>, SystemConstant {
             lineIterator = FileUtils.lineIterator(idfFIle, DEFAULT_CHARSET.toString());
             while (lineIterator.hasNext()) {
                 String line = lineIterator.nextLine();
-                String[] strs = line.split("\\s+");
+                String[] strs = line.split("###");
                 if (strs.length != 2) {
                     log.warn("Line[" + line + "] format is illegal, ignore it!");
                     continue;
@@ -124,7 +128,9 @@ public class SummaryBuilder implements Callable<Boolean>, SystemConstant {
          * 在保证摘要总字数不超过规定字数的前提下， 按照句子的综合得分（主题贡献分，查询覆盖度，多样性得分）循环从候选句子中选取句子
          */
 
+        // 当前摘要字数
         int summaryWordCount = 0;
+
         // 判断候选集合中是否还有句子
         boolean isNotEmpty = true;
 
@@ -142,6 +148,8 @@ public class SummaryBuilder implements Callable<Boolean>, SystemConstant {
 
         while (isNotEmpty && summaryWordCount < MAX_SUMMARY_WORDS_COUNT) {
 
+            log.info("topic name:" + this.filename + ",\t summary words:" + summaryWordCount);
+
             isNotEmpty = false;
 
             // 记录当前最大的综合得分
@@ -155,8 +163,19 @@ public class SummaryBuilder implements Callable<Boolean>, SystemConstant {
 
             for (Entry<String, List<Pair<Float, String>>> entry : candidateSentences.entrySet()) {
 
+                // 当前类别名称
                 String currentClustKey = entry.getKey();
+
+                // 当前类别下剩余的候选句子集合
                 List<Pair<Float, String>> pairs = entry.getValue();
+
+                if (CollectionUtils.isEmpty(pairs)) {
+                    // 当前类别下已没有候选句子
+                    continue;
+                }
+
+                // 说明还有候选句子
+                isNotEmpty = true;
 
                 // 获取当前cluster的权值
                 float currentClusterWeight = clusterWeights.get(currentClustKey);
@@ -167,64 +186,64 @@ public class SummaryBuilder implements Callable<Boolean>, SystemConstant {
                     historyDiversityScore += innerEntry.getValue();
                 }
 
-                if (CollectionUtils.isNotEmpty(pairs)) {
+                // 综合得分
+                float generalScore = 0.0f;
 
-                    isNotEmpty = true;
+                // 遍历处理当前类别下的句子
+                for (int i = 0; i < pairs.size(); i++) {
 
-                    // 综合得分
-                    float generalScore = 0.0f;
+                    Pair<Float, String> pair = pairs.get(i);
 
-                    for (int i = 0; i < pairs.size(); i++) {
+                    // 1.计算当前句子的主题贡献分
+                    float topicScore = currentClusterWeight / pair.getLeft();
 
-                        Pair<Float, String> pair = pairs.get(i);
+                    // 2.计算当前句子的查询覆盖度
+                    float queryScore = 0.0f;
 
-                        // 1.计算当前句子的主题贡献分
-                        float topicScore = currentClusterWeight * pair.getLeft();
+                    String sentence = pair.getRight();
 
-                        // 2.计算当前句子的查询覆盖度
-                        float queryScore = 0.0f;
-                        String sentence = pair.getRight();
-                        // 计算当前句子中每个词的频率
-                        String[] strs = sentence.trim().split("\\s+");
-                        Map<String, Integer> wordFreqInSentence = new HashMap<String, Integer>();
-                        for (String word : strs) {
-                            Integer freq = wordFreqInSentence.get(word);
-                            if (null == freq) {
-                                freq = 0;
-                            }
-                            freq += 1;
-                            wordFreqInSentence.put(word, freq);
+                    // 计算当前句子中每个词的频率
+                    String[] strs = sentence.trim().split("\\s+");
+                    Map<String, Integer> wordFreqInSentence = new HashMap<String, Integer>();
+                    for (String word : strs) {
+                        Integer freq = wordFreqInSentence.get(word);
+                        if (null == freq) {
+                            freq = 0;
                         }
+                        freq += 1;
+                        wordFreqInSentence.put(word, freq);
+                    }
 
-                        for (String questionWord : questionWords) {
-                            // 问句中的词在当前摘要中的词频
-                            Integer frequencyInSummary = wordFrequencyInPartialSummary.get(questionWord);
-                            if (null == frequencyInSummary) {
-                                frequencyInSummary = 0;
-                            }
-                            // 问句中的词在当前句子中的词频
-                            Integer frequencyInSentence = wordFreqInSentence.get(questionWord);
-                            if (null == frequencyInSentence) {
-                                frequencyInSentence = 0;
-                            }
-                            // 计算当前词的tf-idf值
-                            double tf = (frequencyInSummary + frequencyInSentence) / (double) (summaryWordCount + strs.length);
-                            double idf = idfValue.get(questionWord);
-                            queryScore += tf * idf;
+                    for (String questionWord : questionWords) {
+                        // 问句中的词在当前摘要中的词频
+                        Integer frequencyInSummary = wordFrequencyInPartialSummary.get(questionWord);
+                        if (null == frequencyInSummary) {
+                            frequencyInSummary = 0;
                         }
+                        // 问句中的词在当前句子中的词频
+                        Integer frequencyInSentence = wordFreqInSentence.get(questionWord);
+                        if (null == frequencyInSentence) {
+                            frequencyInSentence = 0;
+                        }
+                        // 计算当前词的tf-idf值
+                        double tf = (frequencyInSummary + frequencyInSentence) / (double) (summaryWordCount + strs.length);
+                        double idf = idfValue.get(questionWord.toLowerCase());
+                        queryScore += tf * idf;
+                    }
 
-                        // 3.计算当前句子的多样性得分
-                        // 计算非当前clust的历史多样性分值之和
-                        double diversityScore = historyDiversityScore;
+                    // 3.计算当前句子的多样性得分
+                    // 计算非当前clust的历史多样性分值之和
+                    double diversityScore = historyDiversityScore;
 
-                        // 当前句子的多样性得分
-                        double currentSentenceDiversityScore = 0.0D;
-                        // 当前句子的向量
-                        double[] sentenceVec = this.sentenceToVector(sentence);
+                    // 当前句子的多样性得分
+                    double currentSentenceDiversityScore = 0.0D;
+                    // 当前句子的向量
+                    double[] sentenceVec = this.sentenceToVector(sentence);
 
-                        if (null != sentenceVec) {
-                            // 计算当前clust的多样性得分
-                            List<Pair<Float, String>> selectedSentencesInClust = partialSummary.get(entry.getKey());
+                    if (null != sentenceVec) {
+                        // 计算当前clust的多样性得分
+                        List<Pair<Float, String>> selectedSentencesInClust = partialSummary.get(entry.getKey());
+                        if(CollectionUtils.isNotEmpty(selectedSentencesInClust)) {
                             for (Pair<Float, String> pairInClust : selectedSentencesInClust) {
                                 // 计算当前句子与所属clust里面已经选择的句子的相似度之和
                                 // 计算历史句子的向量
@@ -235,26 +254,26 @@ public class SummaryBuilder implements Callable<Boolean>, SystemConstant {
                                 currentSentenceDiversityScore += this.cosineDistence(sentenceVec, otherSentVec);
                             }
                         }
-
-                        diversityScore += currentSentenceDiversityScore;
-
-                        // 计算综合得分
-                        generalScore = (float) (topicScore + this.alpha * queryScore + this.beta * diversityScore);
-
-                        if(generalScore > maxGeneralScore) {
-                            maxGeneralScore = generalScore;
-                            selectedClustName = entry.getKey();
-                            selectedSentenceNumInClust = i;
-                            selectedClustDiversityScore = diversityScore;
-                        }
-
                     }
+
+                    diversityScore += currentSentenceDiversityScore;
+
+                    // 计算综合得分
+                    generalScore = (float) (topicScore + this.alpha * queryScore + this.beta * diversityScore);
+
+                    if (generalScore > maxGeneralScore) {
+                        maxGeneralScore = generalScore;
+                        selectedClustName = entry.getKey();
+                        selectedSentenceNumInClust = i;
+                        selectedClustDiversityScore = diversityScore;
+                    }
+
                 }
 
             }
 
             // 更新已经选择的摘要
-            if(null == selectedClustName || selectedSentenceNumInClust == -1 || selectedClustDiversityScore == -1) {
+            if (null == selectedClustName || selectedSentenceNumInClust == -1 || selectedClustDiversityScore == -1) {
                 log.warn("Selected clust or sentence is illegal[selectedClustName = " + selectedClustName + ", selectedSentenceNumInClust = " + selectedSentenceNumInClust + "]");
                 continue;
             }
@@ -263,7 +282,7 @@ public class SummaryBuilder implements Callable<Boolean>, SystemConstant {
             List<Pair<Float, String>> sentences = candidateSentences.get(selectedClustName);
             Pair<Float, String> selectedSentence = sentences.remove(selectedSentenceNumInClust);
             List<Pair<Float, String>> clustSentencesInSummary = partialSummary.get(selectedClustName);
-            if(null == clustSentencesInSummary) {
+            if (null == clustSentencesInSummary) {
                 clustSentencesInSummary = new ArrayList<Pair<Float, String>>();
             }
             clustSentencesInSummary.add(selectedSentence);
@@ -392,30 +411,37 @@ public class SummaryBuilder implements Callable<Boolean>, SystemConstant {
         Pattern pattern = Pattern.compile("(classes_\\d+):");
 
         try {
-            SummaryBuilder.log.info("Loading msc file[" + this.workDir + "/" + SystemConstant.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "]");
+            log.info("Loading msc file[" + this.workDir + "/" + SystemConstant.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "]");
             LineIterator lineIterator = FileUtils.lineIterator(FileUtils.getFile(this.workDir + '/' + SystemConstant.DIR_SENTENCES_COMPRESSION, this.filename), SystemConstant.DEFAULT_CHARSET.toString());
 
             String currentKey = "";
             int sentCount = 0; // 存储当前选择的句子数
+            int totalCount = 0;  // 总句子数
             while (lineIterator.hasNext()) {
                 String line = lineIterator.nextLine();
                 Matcher matcher = pattern.matcher(line);
                 if (matcher.find()) {
                     // 当前为classes_
                     currentKey = matcher.group(1);
+                    totalCount += sentCount;
                     sentCount = 0;
                 } else {
                     if (sentCount <= count) {
                         List<Pair<Float, String>> sentences = clustedSentences.get(currentKey);
                         if (null == sentences) {
                             sentences = new ArrayList<Pair<Float, String>>();
+                            clustedSentences.put(currentKey, sentences);
                         }
                         // 将score#sentence转换成(score, sentence)
                         int flagNum = line.indexOf("#");
                         sentences.add(new Pair<Float, String>(Float.parseFloat(line.substring(0, flagNum)), line.substring(flagNum + 1)));
+                        ++sentCount;
                     }
                 }
             }
+
+            log.info("Load msc file finished[sentence count:" + totalCount + "]");
+
         } catch (IOException e) {
             SummaryBuilder.log.error("Load msc file[" + this.workDir + "/" + SystemConstant.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "] error!", e);
             throw e;
@@ -425,24 +451,21 @@ public class SummaryBuilder implements Callable<Boolean>, SystemConstant {
 
     }
 
-    /**
-     * 计算当前候选句子的主题贡献分
-     *
-     * @param selectedSentences
-     *            已经选取的句子集合
-     * @param candidateSentence
-     *            候选句子
-     * @param clusterKey
-     *            当前cluster的key
-     * @param clusterWeights
-     *            所有clust的权值
-     * @return
-     */
-    private float topicScore(Map<String, List<Pair<Float, String>>> selectedSentences, Pair<Float, String> candidateSentence, Float currentClusterWeights) {
+    public static void main(String[] args) {
 
-        float score = 0.0f;
+        String question = "Describe the state of teaching art and music in public schools around the world. Indicate problems, progress and failures.";
 
-        return score;
+        EhCacheUtil ehCacheUtil = new EhCacheUtil("db_cache_vec", "lab");
+        SummaryBuilder summaryBuilder = new SummaryBuilder("E:/dev_workspace/tmp/workspace", "D0702A.txt", 10, "duc2007.idf", question, ehCacheUtil, 1.0f, 1.0f);
+        ExecutorService es = Executors.newSingleThreadExecutor();
+        Future<Boolean> future = es.submit(summaryBuilder);
+        try {
+            future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+        es.shutdown();
+        EhCacheUtil.close();
 
     }
 
