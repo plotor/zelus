@@ -11,9 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
@@ -52,13 +49,19 @@ public class SentenceReRanker implements Callable<Boolean>, SystemConstant {
     /** N元语法模型 */
     private final Map<String, NGramScore> ngramModel;
 
-    public SentenceReRanker(String question, String compressSentencesPath, EhCacheUtil ehCacheUtil, String ngramModelPath) throws IOException {
+    private final float alpha;
+
+    private final float beta;
+
+    public SentenceReRanker(String question, String compressSentencesPath, EhCacheUtil ehCacheUtil, String ngramModelPath, float alpha, float beta) throws IOException {
         super();
         this.question = question;
         this.compressSentencesPath = compressSentencesPath;
         this.ehCacheUtil = ehCacheUtil;
         this.grammarScorer = new GrammarScorer();
         this.ngramModel = this.grammarScorer.loadNgramModel(ngramModelPath);
+        this.alpha = alpha;
+        this.beta = beta;
     }
 
     @Override
@@ -121,7 +124,7 @@ public class SentenceReRanker implements Callable<Boolean>, SystemConstant {
 
             List<CompressUnit> compressUnits = new ArrayList<CompressUnit>();
 
-            float weightSumInClass = 0.0f;
+            double weightSumInClass = 0.0;
             for (CompressUnit compressUnit : entry.getValue()) {
                 // 计算句子的向量
                 double[] sentvec = this.sentenceToVector(compressUnit.getSentence());
@@ -132,9 +135,16 @@ public class SentenceReRanker implements Callable<Boolean>, SystemConstant {
                 // 计算当前句子的语言模型得分
                 float fluency = this.grammarScorer.calculateFluency(compressUnit.getSentence(), this.ngramModel);
 
-                float newScore = (float) (cosVal * (fluency + 1.0f) / compressUnit.getScore());
+                // 综合查询覆盖度，语言模型得分，路径得分
+                double queryScore = Math.log(cosVal + 1.0);
+                double fluencyScore = Math.log(fluency + 1.0);
+                double pathScore = Math.log(compressUnit.getScore() + 1.0);
+                this.log.info("query score:" + queryScore + "\tfluency score:" + fluencyScore + "\tpath score:" + pathScore);
+                double newScore = queryScore + fluencyScore * this.alpha - pathScore * this.beta;
+
                 weightSumInClass += newScore;
-                compressUnits.add(new CompressUnit(newScore, compressUnit.getSentence()));
+
+                compressUnits.add(new CompressUnit((float)newScore, compressUnit.getSentence()));
             }
 
             if(CollectionUtils.isNotEmpty(compressUnits)) {
@@ -143,7 +153,7 @@ public class SentenceReRanker implements Callable<Boolean>, SystemConstant {
                 rerankedClustedCompressUnits.put(entry.getKey(), compressUnits);
 
                 // 记录每个类别的权重，用句子权重的均值评估
-                classWeightAvg.add(new Pair<Float, String>(weightSumInClass / compressUnits.size(), entry.getKey()));
+                classWeightAvg.add(new Pair<Float, String>((float)weightSumInClass / compressUnits.size(), entry.getKey()));
             }
 
         }
@@ -336,13 +346,13 @@ public class SentenceReRanker implements Callable<Boolean>, SystemConstant {
         return vector;
     }
 
-    public static void main(String[] args) throws Exception {
+/*    public static void main(String[] args) throws Exception {
         ExecutorService es = Executors.newSingleThreadExecutor();
         EhCacheUtil ehCacheUtil = new EhCacheUtil("db_cache_vec", "local");
         Future<Boolean> future = es.submit(new SentenceReRanker("Describe the activities of Morris Dees and the Southern Poverty Law Center.", "E:/workspace/test/compressed-results/D0701A.txt", ehCacheUtil, "E:/workspace/test/giga_3gram.lm"));
         future.get();
         es.shutdown();
         EhCacheUtil.close();
-    }
+    }*/
 
 }

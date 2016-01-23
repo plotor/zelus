@@ -16,7 +16,7 @@ public class CompressUnit implements Comparable<CompressUnit>, Serializable {
 
     private static final long serialVersionUID = 2448812084641441217L;
 
-    /** 压缩得分，越小越好，可能为0 */
+    /** 压缩得分，可能为0 */
     private float  score;
     /** 压缩输出句子 */
     private String sentence;

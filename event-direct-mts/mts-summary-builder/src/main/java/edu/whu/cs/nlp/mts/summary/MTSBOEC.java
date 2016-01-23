@@ -205,6 +205,9 @@ public class MTSBOEC implements SystemConstant{
             // ngram 模型所在路径
             String ngramModelPath = properties.getProperty("ngramModelPath");
 
+            float alpha = Float.parseFloat(properties.getProperty("alpha"));
+            float beta = Float.parseFloat(properties.getProperty("alpha"));
+
             ExecutorService es = null;
             try{
                 es = Executors.newFixedThreadPool(threadNum);
@@ -212,7 +215,7 @@ public class MTSBOEC implements SystemConstant{
                 List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
                 EhCacheUtil ehCacheUtil = new EhCacheUtil(properties.getProperty("cacheName"), properties.getProperty("datasource"));
                 for (File file : compressFiles.listFiles()) {
-                    tasks.add(new SentenceReRanker(prop.getProperty(file.getName().substring(0, file.getName().lastIndexOf("."))) , file.getAbsolutePath(), ehCacheUtil, ngramModelPath));
+                    tasks.add(new SentenceReRanker(prop.getProperty(file.getName().substring(0, file.getName().lastIndexOf("."))) , file.getAbsolutePath(), ehCacheUtil, ngramModelPath, alpha, beta));
                 }
 
                 List<Future<Boolean>> futures = es.invokeAll(tasks);

@@ -45,6 +45,28 @@
             </properties>
         </profile>
         <profile>
+            <id>HP2005</id>
+            <properties>
+                <c3p0.datasource>lab</c3p0.datasource>
+                <dict.path>/dawnfs/users/nlplab/user/zhenchao.wang/dict</dict.path>
+                <workdir>/dawnfs/users/nlplab/user/zhenchao.wang/workspace/duc2005</workdir>
+                <corpusdir>/dawnfs/users/nlplab/user/zhenchao.wang/corpus/duc2005/docs</corpusdir>
+                <ngram.model.path>/dawnfs/users/nlplab/user/zhenchao.wang/resources/giga_3gram.lm</ngram.model.path>
+                <question.filename>questions-2005.properties</question.filename>
+            </properties>
+        </profile>
+        <profile>
+            <id>HP2007</id>
+            <properties>
+                <c3p0.datasource>lab</c3p0.datasource>
+                <dict.path>/dawnfs/users/nlplab/user/zhenchao.wang/dict</dict.path>
+                <workdir>/dawnfs/users/nlplab/user/zhenchao.wang/workspace/duc2007</workdir>
+                <corpusdir>/dawnfs/users/nlplab/user/zhenchao.wang/corpus/duc2007/docs</corpusdir>
+                <ngram.model.path>/dawnfs/users/nlplab/user/zhenchao.wang/resources/giga_3gram.lm</ngram.model.path>
+                <question.filename>questions-2007.properties</question.filename>
+            </properties>
+        </profile>
+        <profile>
             <id>local</id>
             <properties>
                 <c3p0.datasource>local</c3p0.datasource>
