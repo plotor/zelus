@@ -122,6 +122,9 @@ public interface SystemConstant {
     /** 目录名：摘要结果 */
     public static final String      DIR_SUMMARIES                      = "summaries";
 
+    /** 目录名：采用子模函数的摘要结果 */
+    public static final String      DIR_NEW_SUMMARIES                  = "summaries-new";
+
     /** 事件中词之间的连接符 */
     public final static String      WORD_CONNECTOR_IN_EVENTS           = "#";
 

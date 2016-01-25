@@ -21,8 +21,14 @@ public class ModelLoader {
 
     private static Logger log = Logger.getLogger(ModelLoader.class);
 
-    private volatile static StanfordCoreNLP pipeline; // stanford coref need
-    private volatile static ChunkerModel chunkerModel;  // open nlp chunk need
+    /** 启用core nlp的全部功能 */
+    private volatile static StanfordCoreNLP pipeline;
+
+    /** 仅启用分词功能 */
+    private volatile static StanfordCoreNLP pipeline4wordseg;
+
+    /** open nlp chunk need */
+    private volatile static ChunkerModel chunkerModel;
 
     private ModelLoader() {}
 
@@ -33,11 +39,31 @@ public class ModelLoader {
      * @return
      */
     public static StanfordCoreNLP getPipeLine() {
+        if (pipeline4wordseg == null) {
+            synchronized (ModelLoader.class) {
+                if (pipeline4wordseg == null) {
+                    Properties props = new Properties();
+                    props.put("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
+                    //props.put("annotators", "tokenize, ssplit, pos, lemma");
+                    pipeline4wordseg = new StanfordCoreNLP(props);
+                }
+            }
+        }
+        return pipeline4wordseg;
+    }
+
+    /**
+     * 加载stanford指代消解模型<br>
+     * 单例模式，线程安全
+     *
+     * @return
+     */
+    public static StanfordCoreNLP getWordSegPipeLine() {
         if (pipeline == null) {
             synchronized (ModelLoader.class) {
                 if (pipeline == null) {
                     Properties props = new Properties();
-                    props.put("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
+                    props.put("annotators", "tokenize, ssplit, pos, lemma, ner");
                     //props.put("annotators", "tokenize, ssplit, pos, lemma");
                     pipeline = new StanfordCoreNLP(props);
                 }

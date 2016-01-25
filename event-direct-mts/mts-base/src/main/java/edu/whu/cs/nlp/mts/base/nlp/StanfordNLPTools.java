@@ -161,6 +161,46 @@ public class StanfordNLPTools implements SystemConstant{
 
     }
 
+    /**
+     * 对输入文本进行分句、分词处理
+     * @param sentence
+     * @return
+     */
+    public synchronized static List<Word> segmentWord(final String sentence) {
+
+        List<Word> words = new ArrayList<Word>();
+
+        StanfordCoreNLP pipeline = ModelLoader.getWordSegPipeLine();
+
+        Annotation document = new Annotation(sentence);
+        pipeline.annotate(document);
+
+        List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+
+        // 获取句子中词的详细信息，并封装成对象
+        for (int i = 0; i < sentences.size(); ++i) {
+
+            CoreMap sent = sentences.get(i);
+            for (CoreLabel token : sent.get(TokensAnnotation.class)) {
+
+                // 构建词对象
+                Word word = new Word();
+                word.setName(token.get(TextAnnotation.class));
+                word.setLemma(token.get(LemmaAnnotation.class));
+                word.setPos(token.get(PartOfSpeechAnnotation.class));
+                word.setNer(token.get(NamedEntityTagAnnotation.class));
+                word.setSentenceNum((i + 1));
+                word.setNumInLine(token.index());
+                words.add(word);
+
+            }
+
+        }
+
+        return words;
+
+    }
+
     public static void main(String[] args) {
 
         String corpusDir = "E:/workspace/corpus/duc07.results.data/testdata/duc2007_testdocs/main_pretreat";
