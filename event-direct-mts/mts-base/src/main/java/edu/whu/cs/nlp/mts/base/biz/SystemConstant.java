@@ -101,6 +101,9 @@ public interface SystemConstant {
     /** 目录名：IDF值 */
     public static final String      DIR_IDF_FILE                       = "idf-value";
 
+    /** 目录名：词向量 */
+    public static final String      DIR_VEC_FILE                       = "word-vec";
+
     /** 目录名：子句抽取 */
     public final static String      DIR_SUB_SENTENCES_EXTRACTED        = "sub-sentences";
 

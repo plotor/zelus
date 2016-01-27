@@ -32,6 +32,7 @@
                 <ngram.model.path>/home/experiment/resources/giga_3gram.lm</ngram.model.path>
                 <question.filename>questions-2005.properties</question.filename>
                 <idf.filename>duc2005.idf</idf.filename>
+                <vec.filename>duc2005.vec</vec.filename>
             </properties>
         </profile>
         <profile>
@@ -44,6 +45,7 @@
                 <ngram.model.path>/home/experiment/resources/giga_3gram.lm</ngram.model.path>
                 <question.filename>questions-2007.properties</question.filename>
                 <idf.filename>duc2007.idf</idf.filename>
+                <vec.filename>duc2007.vec</vec.filename>
             </properties>
         </profile>
         <profile>
@@ -56,6 +58,7 @@
                 <ngram.model.path>/dawnfs/users/nlplab/user/zhenchao.wang/resources/giga_3gram.lm</ngram.model.path>
                 <question.filename>questions-2005.properties</question.filename>
                 <idf.filename>duc2005.idf</idf.filename>
+                <vec.filename>duc2005.vec</vec.filename>
             </properties>
         </profile>
         <profile>
@@ -68,6 +71,7 @@
                 <ngram.model.path>/dawnfs/users/nlplab/user/zhenchao.wang/resources/giga_3gram.lm</ngram.model.path>
                 <question.filename>questions-2007.properties</question.filename>
                 <idf.filename>duc2007.idf</idf.filename>
+                <vec.filename>duc2007.vec</vec.filename>
             </properties>
         </profile>
         <profile>

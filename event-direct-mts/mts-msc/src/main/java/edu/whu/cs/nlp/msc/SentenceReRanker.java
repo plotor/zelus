@@ -139,8 +139,9 @@ public class SentenceReRanker implements Callable<Boolean>, SystemConstant {
                 double queryScore = Math.log(cosVal + 1.0);
                 double fluencyScore = Math.log(fluency + 1.0);
                 double pathScore = Math.log(compressUnit.getScore() + 1.0);
-                this.log.info("query score:" + queryScore + "\tfluency score:" + fluencyScore + "\tpath score:" + pathScore);
-                double newScore = queryScore + fluencyScore * this.alpha - pathScore * this.beta;
+                this.log.info(Thread.currentThread().getName() + "[before, alpha=" + this.alpha + ", beta=" + this.beta + "]query score:" + queryScore + "\tfluency score:" + fluencyScore + "\tpath score:" + pathScore);
+                double newScore = queryScore + this.alpha * fluencyScore - this.beta * pathScore;
+                this.log.info(Thread.currentThread().getName() + "[after, alpha=" + this.alpha + ", beta=" + this.beta + "]query score:" + queryScore + "\tfluency score:" + (this.alpha * fluencyScore) + "\tpath score:" + (this.beta * pathScore));
 
                 weightSumInClass += newScore;
 

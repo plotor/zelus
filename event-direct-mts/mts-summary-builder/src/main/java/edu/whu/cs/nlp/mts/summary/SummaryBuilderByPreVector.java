@@ -18,6 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang.StringUtils;
@@ -30,19 +31,19 @@ import edu.whu.cs.nlp.mts.base.domain.Vector;
 import edu.whu.cs.nlp.mts.base.domain.Word;
 import edu.whu.cs.nlp.mts.base.nlp.StanfordNLPTools;
 import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
-import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
 import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
 import edu.whu.cs.nlp.mts.domain.ClustItem;
 
 /**
- * 基于子模函数生成多文档摘要(利用向量来度量句子之间的相似度)
+ * 基于子模函数生成多文档摘要(利用向量来度量句子之间的相似度)<br>
+ * 向量不实时获取，采用预处理
  *
- * @author zhenchao.wang 2016-1-27 10:54:02
+ * @author zhenchao.wang 2016-1-27 20:24:18
  *
  */
-public class SummaryBuilderByVector implements Callable<Boolean>, SystemConstant {
+public class SummaryBuilderByPreVector implements Callable<Boolean>, SystemConstant {
 
-    private static Logger     log              = Logger.getLogger(SummaryBuilderByVector.class);
+    private static Logger     log              = Logger.getLogger(SummaryBuilderByPreVector.class);
 
     /** 工作目录 */
     private final String      workDir;
@@ -63,7 +64,10 @@ public class SummaryBuilderByVector implements Callable<Boolean>, SystemConstant
     private final String      question;
 
     /** 词向量获取器 */
-    private final EhCacheUtil ehCacheUtil;
+    /*private final EhCacheUtil ehCacheUtil;*/
+
+    /** 当前duc下所有词的词向量 */
+    private final Map<String, Vector> wordVecs;
 
     /** alpha 参数 */
     private final float       alpha;
@@ -74,16 +78,16 @@ public class SummaryBuilderByVector implements Callable<Boolean>, SystemConstant
     /** 每个主题下面选取的句子的数量 */
     private Integer           sentCountInClust = 10;
 
-    public SummaryBuilderByVector(String workDir, String numDir, String filename, int sentCountInClust, Map<String, Double> idfValues, String question, EhCacheUtil ehCacheUtil, float alpha, float beta) {
+    public SummaryBuilderByPreVector(String workDir, String numDir, String filename, int sentCountInClust, Map<String, Double> idfValues, String question, Map<String, Vector> wordVecs, float alpha, float beta) {
         super();
         this.workDir = workDir;
-        this.numDir = StringUtils.isEmpty(numDir) ? "" : (numDir.trim() + "/");
+        this.numDir = StringUtils.isEmpty(numDir) ? "" : ("/" + numDir.trim());
         this.filename = filename;
         this.topicname = this.filename.substring(0, this.filename.length() - 4);
         this.sentCountInClust = Integer.valueOf(sentCountInClust);
         this.idfValues = idfValues;
         this.question = question;
-        this.ehCacheUtil = ehCacheUtil;
+        this.wordVecs = wordVecs;
         this.alpha = alpha;
         this.beta = beta;
     }
@@ -277,7 +281,7 @@ public class SummaryBuilderByVector implements Callable<Boolean>, SystemConstant
             if (null == clustSentencesInSummary) {
                 clustSentencesInSummary = new ArrayList<Pair<Float, String>>();
                 partialSummary.put(selectedClustName, clustSentencesInSummary);
-                System.out.println("-->\t" + ss.getRight());
+                log.info("-->\t" + ss.getRight());
             }
             clustSentencesInSummary.add(ss);
 
@@ -330,7 +334,7 @@ public class SummaryBuilderByVector implements Callable<Boolean>, SystemConstant
         int indexOfPoint = this.filename.lastIndexOf(".");
         String summaryFilename = this.filename.substring(0, indexOfPoint - 1).toUpperCase() + ".M.250." + this.filename.substring(indexOfPoint - 1, indexOfPoint).toUpperCase() + ".3";
         try {
-            File file = FileUtils.getFile(this.workDir + "/" + this.numDir + DIR_NEW_SUMMARIES, summaryFilename);
+            File file = FileUtils.getFile(this.workDir + "/" + DIR_NEW_SUMMARIES + this.numDir, summaryFilename);
             log.info("Saving summary to file[" + file.getAbsolutePath() + "]");
             FileUtils.writeStringToFile(file, summary.toString().trim(), DEFAULT_CHARSET);
         } catch (IOException e) {
@@ -377,7 +381,8 @@ public class SummaryBuilderByVector implements Callable<Boolean>, SystemConstant
             }
 
             try {
-                Vector vec = this.ehCacheUtil.getMostSimilarVec(word);
+                /*Vector vec = this.ehCacheUtil.getMostSimilarVec(word);*/
+                Vector vec = this.wordVecs.get(word.getName() + "/-/" + word.getPos());
                 if (vec == null) {
                     // 如果在词向量中找不到当前的词向量，则跳过
                     continue;
@@ -462,10 +467,11 @@ public class SummaryBuilderByVector implements Callable<Boolean>, SystemConstant
 
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
 
         String workDir = "E:/dev_workspace/tmp/workspace/duc2007";
         String idfFilename = "duc2007.idf";
+        String vecFilename = "duc2007.vec";
 
         final double TOTAL_PAGE_COUNT = 30000000000.0D;
 
@@ -496,9 +502,23 @@ public class SummaryBuilderByVector implements Callable<Boolean>, SystemConstant
 
         String question = "Describe the legal battle between various recording artists and members of the record industry and the Internet music site Napster. What support, or lack thereof, have the litigants received?";
 
-        EhCacheUtil ehCacheUtil = new EhCacheUtil("db_cache_vec", "lab");
+        File vecFile = FileUtils.getFile(workDir + "/" + DIR_VEC_FILE, vecFilename);
+        log.info("Loading word vec[" + vecFile.getAbsolutePath() + "]");
+        Map<String, Vector> wordVecs = new HashMap<String, Vector>();
+        try {
+            wordVecs = (Map<String, Vector>) SerializeUtil.readObj(vecFile.getAbsolutePath());
+        } catch (ClassNotFoundException e) {
+            log.error("Load word vec[" + vecFile.getAbsolutePath() + "] error!", e);
+            throw e;
+        }
+        log.info("Load word vec[" + vecFile.getAbsolutePath() + "] success!");
 
-        SummaryBuilderByVector summaryBuilder = new SummaryBuilderByVector(workDir, "0", "D0714D.txt", 10, idfValues, question, ehCacheUtil, 1.0f, 1.6f);
+        if(MapUtils.isEmpty(wordVecs)) {
+            log.error("Can't load any word vec[" + vecFile.getAbsolutePath() + "]");
+            throw new Exception("Can't load any word vec[" + vecFile.getAbsolutePath() + "]");
+        }
+
+        SummaryBuilderByPreVector summaryBuilder = new SummaryBuilderByPreVector(workDir, "0", "D0714D.txt", 10, idfValues, question, wordVecs, 1.0f, 1.6f);
         ExecutorService es = Executors.newSingleThreadExecutor();
         Future<Boolean> future = es.submit(summaryBuilder);
         try {
@@ -507,7 +527,6 @@ public class SummaryBuilderByVector implements Callable<Boolean>, SystemConstant
             e.printStackTrace();
         }
         es.shutdown();
-        EhCacheUtil.close();
 
     }
 

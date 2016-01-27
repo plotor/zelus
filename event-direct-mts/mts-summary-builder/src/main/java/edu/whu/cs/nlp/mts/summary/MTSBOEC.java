@@ -17,13 +17,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.log4j.Logger;
 
 import edu.whu.cs.nlp.msc.SentenceReRanker;
 import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
+import edu.whu.cs.nlp.mts.base.domain.Vector;
 import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
+import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
 import edu.whu.cs.nlp.mts.clustering.CalculateSimilarityThread;
 import edu.whu.cs.nlp.mts.clustering.ChineseWhispersCluster;
 import edu.whu.cs.nlp.mts.extraction.graph.EventsExtractBasedOnGraphV2;
@@ -38,7 +41,7 @@ public class MTSBOEC implements SystemConstant {
 
     private static final Logger log = Logger.getLogger(MTSBOEC.class);
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
 
         if (args.length == 0) {
             System.err.println("请指定配置文件！");
@@ -46,6 +49,12 @@ public class MTSBOEC implements SystemConstant {
         }
 
         String propFilePath = args[0]; // 配置文件所在路径
+
+        // 以文件名最后数字作为文件名，用于同时跑多个任务
+        String numDir = propFilePath.substring(propFilePath.lastIndexOf(".") + 1, propFilePath.length());
+        if(!numDir.matches("\\d+")) {
+            numDir = "";
+        }
 
         /*
          * 加载配置文件
@@ -209,15 +218,15 @@ public class MTSBOEC implements SystemConstant {
             String buildMode = properties.getProperty("buildMode");
 
             float alpha = Float.parseFloat(properties.getProperty("alpha"));
-            float beta = Float.parseFloat(properties.getProperty("alpha"));
+            float beta = Float.parseFloat(properties.getProperty("beta"));
 
-            EhCacheUtil ehCacheUtil = new EhCacheUtil(properties.getProperty("cacheName"), properties.getProperty("datasource"));
             List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
             File compressFiles = new File(workDir + "/" + SystemConstant.DIR_SENTENCES_COMPRESSION);
 
             if ("old".equalsIgnoreCase(buildMode)) {
                 // 采用老的reranker策略构建摘要
                 log.info("Summary build mode: old");
+                EhCacheUtil ehCacheUtil = new EhCacheUtil(properties.getProperty("cacheName"), properties.getProperty("datasource"));
                 // ngram 模型所在路径
                 String ngramModelPath = properties.getProperty("ngramModelPath");
                 for (File file : compressFiles.listFiles()) {
@@ -261,10 +270,28 @@ public class MTSBOEC implements SystemConstant {
                     }
                 }
 
+                String vecFilename = properties.getProperty("vec_filename");
+                File vecFile = FileUtils.getFile(workDir + "/" + DIR_VEC_FILE, vecFilename);
+                log.info("Loading word vec[" + vecFile.getAbsolutePath() + "]");
+                Map<String, Vector> wordVecs = new HashMap<String, Vector>();
+                try {
+                    wordVecs = (Map<String, Vector>) SerializeUtil.readObj(vecFile.getAbsolutePath());
+                } catch (ClassNotFoundException e) {
+                    log.error("Load word vec[" + vecFile.getAbsolutePath() + "] error!", e);
+                    throw e;
+                }
+                log.info("Load word vec[" + vecFile.getAbsolutePath() + "] success!");
+
+                if(MapUtils.isEmpty(wordVecs)) {
+                    log.error("Can't load any word vec[" + vecFile.getAbsolutePath() + "]");
+                    throw new Exception("Can't load any word vec[" + vecFile.getAbsolutePath() + "]");
+                }
+
                 for (File file : compressFiles.listFiles()) {
                     String topicName = file.getName().substring(0, file.getName().lastIndexOf("."));
                     //tasks.add(new SummaryBuilder(workDir, file.getName(), sentenceCount, idfValues, prop.getProperty(topicName), alpha, beta));
-                    tasks.add(new SummaryBuilderByVector(workDir, file.getName(), sentenceCount, idfValues, prop.getProperty(topicName), ehCacheUtil, alpha, beta));
+                    //tasks.add(new SummaryBuilderByVector(workDir, numDir, file.getName(), sentenceCount, idfValues, prop.getProperty(topicName), ehCacheUtil, alpha, beta));
+                    tasks.add(new SummaryBuilderByPreVector(workDir, numDir, file.getName(), sentenceCount, idfValues, prop.getProperty(topicName), wordVecs, alpha, beta));
                 }
 
             }
