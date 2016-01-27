@@ -3,6 +3,7 @@ package edu.whu.cs.nlp.mts.summary;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -22,50 +23,54 @@ import org.apache.commons.io.LineIterator;
 import org.apache.log4j.Logger;
 
 import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
+import edu.whu.cs.nlp.mts.base.biz.VectorOperator;
 import edu.whu.cs.nlp.mts.base.domain.Pair;
+import edu.whu.cs.nlp.mts.base.domain.Vector;
 import edu.whu.cs.nlp.mts.base.domain.Word;
 import edu.whu.cs.nlp.mts.base.nlp.StanfordNLPTools;
+import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
+import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
 import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
 import edu.whu.cs.nlp.mts.domain.ClustItem;
 
 /**
- * 基于子模函数生成多文档摘要（利用TF-IDF度量句子之间的相似度）
+ * 基于子模函数生成多文档摘要(利用向量来度量句子之间的相似度)
  *
- * @author zhenchao.wang 2016-1-17 17:06:39
+ * @author zhenchao.wang 2016-1-27 10:54:02
  *
  */
-public class SummaryBuilder implements Callable<Boolean>, SystemConstant {
+public class SummaryBuilderByVector implements Callable<Boolean>, SystemConstant {
 
-    private static Logger log              = Logger.getLogger(SummaryBuilder.class);
+    private static Logger     log              = Logger.getLogger(SummaryBuilderByVector.class);
 
     /** 工作目录 */
-    private final String  workDir;
+    private final String      workDir;
 
     /** 主题文件名 */
-    private final String  filename;
+    private final String      filename;
 
     /** 主题名称 */
-    private final String  topicname;
+    private final String      topicname;
 
     /** IDF值 */
-    Map<String, Double>   idfValues;
+    Map<String, Double>       idfValues;
 
     /** topic query */
-    private final String  question;
+    private final String      question;
 
     /** 词向量获取器 */
-    // private final EhCacheUtil ehCacheUtil;
+    private final EhCacheUtil ehCacheUtil;
 
     /** alpha 参数 */
-    private final float   alpha;
+    private final float       alpha;
 
     /** beta 参数 */
-    private final float   beta;
+    private final float       beta;
 
     /** 每个主题下面选取的句子的数量 */
-    private Integer       sentCountInClust = 10;
+    private Integer           sentCountInClust = 10;
 
-    public SummaryBuilder(String workDir, String filename, int sentCountInClust, Map<String, Double> idfValues, String question, float alpha, float beta) {
+    public SummaryBuilderByVector(String workDir, String filename, int sentCountInClust, Map<String, Double> idfValues, String question, EhCacheUtil ehCacheUtil, float alpha, float beta) {
         super();
         this.workDir = workDir;
         this.filename = filename;
@@ -73,7 +78,7 @@ public class SummaryBuilder implements Callable<Boolean>, SystemConstant {
         this.sentCountInClust = Integer.valueOf(sentCountInClust);
         this.idfValues = idfValues;
         this.question = question;
-        // this.ehCacheUtil = ehCacheUtil;
+        this.ehCacheUtil = ehCacheUtil;
         this.alpha = alpha;
         this.beta = beta;
     }
@@ -111,12 +116,15 @@ public class SummaryBuilder implements Callable<Boolean>, SystemConstant {
         // 判断候选集合中是否还有句子
         boolean isNotEmpty = true;
 
-        // 提取当前问题的关键字（考虑停用词）
-        // String[] questionWords = this.question.trim().split("\\s+");
+        // 对问句进行分词，计算句子向量
         List<Word> questionWords = StanfordNLPTools.segmentWord(this.question.trim());
+        Double[] questionVec = this.sentenceToVector(questionWords);
 
         /* 存放摘要的中间值，以及最终的摘要，按照clust进行组织 */
         Map<String, List<Pair<Float, String>>> partialSummary = new HashMap<String, List<Pair<Float, String>>>();
+
+        /* 摘要中间值中句子向量 */
+        List<Double[]> psVectors = new ArrayList<Double[]>();
 
         /* 摘要中间值中各词的词频 */
         Map<String, Integer> wordFrequencyInPartialSummary = new HashMap<String, Integer>();
@@ -175,96 +183,59 @@ public class SummaryBuilder implements Callable<Boolean>, SystemConstant {
                     Pair<Float, String> pair = pairItr.next();
                     // 1.计算当前句子的主题贡献分
                     float topicScore = currentClusterWeight / (pair.getLeft() * clust.getSize());
-                    //float topicScore = 0.001f / pair.getLeft();
+                    // float topicScore = 0.001f / pair.getLeft();
 
                     // 2.计算当前句子的查询覆盖度
                     float queryScore = 0.0f;
 
                     String sentence = pair.getRight();
 
-                    // 计算当前句子中每个词的频率
-                    // String[] strs = sentence.trim().split("\\s+");
+                    // 计算当前句子与问句的相似度
                     List<Word> words = StanfordNLPTools.segmentWord(sentence.trim());
+                    Double[] sentVec = this.sentenceToVector(words);
 
-                    // 计算纯句子的长度，不考虑标点
-                    int pureSentLen = 0;
-                    for (Word word : words) {
-                        if (word.getName().equals(word.getPos()) || "-lrb-".equals(word.getName()) || "-rrb-".equals(word.getName())) {
-                            continue;
-                        }
-                        ++pureSentLen;
-                    }
-                    if (pureSentLen < 8) {
-                        // 忽略长度小于8的句子
-                        pairItr.remove();
-                        continue;
-                    }
-
-                    Map<String, Integer> wordFreqInSentence = new HashMap<String, Integer>();
-                    for (Word word : words) {
-                        String key = word.getName().toLowerCase();
-                        Integer freq = wordFreqInSentence.get(key);
-                        if (null == freq) {
-                            freq = 0;
-                        }
-                        freq += 1;
-                        wordFreqInSentence.put(key, freq);
-                    }
-
-                    for (Word questionWord : questionWords) {
-                        // 问句中的词在当前摘要中的词频
-                        String key = questionWord.getName().trim().toLowerCase();
-                        Integer frequencyInSummary = wordFrequencyInPartialSummary.get(key);
-                        if (null == frequencyInSummary) {
-                            frequencyInSummary = 0;
-                        }
-                        // 问句中的词在当前句子中的词频
-                        Integer frequencyInSentence = wordFreqInSentence.get(key);
-                        if (null == frequencyInSentence) {
-                            frequencyInSentence = 0;
-                        }
-                        // 计算当前词的tf-idf值
-                        double tf = (frequencyInSummary + frequencyInSentence) / (double) (summaryWordCount + words.size() + questionWords.size());
-                        double idf = this.idfValues.containsKey(key) ? this.idfValues.get(key) : 0.0;
-                        queryScore += tf * idf;
-                    }
+                    queryScore = (float) VectorOperator.cosineDistence(sentVec, questionVec);
 
                     // 3.计算当前句子的多样性得分
-                    // 计算非当前clust的历史多样性分值之和
-                    // double diversityScore = historyDiversityScore;
-
                     double diversityScore = 0.0;
 
                     // 当前句子与已有摘要的相似度得分
                     double similarityScore = 0.0;
-
-                    // 利用TF-IDF值度量当前句子与摘要的相似度
-                    for (Word word : words) {
-                        // 句中词在当前摘要中的词频
-                        String key = word.getName().trim().toLowerCase();
-                        Integer frequencyInSummary = wordFrequencyInPartialSummary.get(key);
-                        if (null == frequencyInSummary) {
-                            continue;
+                    boolean isSame = false; // 如果候选句子中存在与当前句子在词语构成一模一样的句子则为true
+                    for (Double[] psVec : psVectors) {
+                        double sps = VectorOperator.cosineDistence(sentVec, psVec);
+                        if(sps > 1.8D) {
+                            isSame = true;
+                            break;
                         }
+                        if (sps > 0) {
+                            similarityScore += VectorOperator.cosineDistence(sentVec, psVec);
+                        }
+                    }
 
-                        // 计算当前词的tf-idf值
-                        double tf = frequencyInSummary / (double) (summaryWordCount + words.size());
-                        double idf = this.idfValues.containsKey(key) ? this.idfValues.get(key) : 0.0;
-                        similarityScore += tf * idf;
+                    if(isSame) {
+                        // 说明当前句子与已经选取的句子在词语构成上相同，忽略
+                        pairItr.remove();
+                        continue;
+                    }
+
+                    if (psVectors.size() > 0) {
+                        similarityScore /= psVectors.size();
                     }
 
                     // 计算综合得分
-                    // log.info("topic score:" + topicScore + ",\tquery score:" + queryScore + ",\tsimilarity score:" + similarityScore);
-                    topicScore = (float) this.sigmoid(topicScore);
-                    queryScore = (float) this.sigmoid(queryScore);
-                    similarityScore = this.sigmoid(similarityScore);
+                    topicScore = (float) (this.sigmoid(topicScore) - 0.5) * 4;
+                    /*queryScore = (float) this.sigmoid(queryScore);
+                    similarityScore = this.sigmoid(similarityScore);*/
+
+                    log.debug("topic score:" + topicScore + ",\tquery score:" + queryScore + ",\tsimilarity score:" + similarityScore);
                     generalScore = (float) (topicScore + this.alpha * queryScore - this.beta * similarityScore);
 
                     if (generalScore > maxGeneralScore) {
                         maxGeneralScore = generalScore;
                         selectedClustName = entry.getKey();
                         selectedSentence = pair;
-                        System.out.println(">>\t" + generalScore + "\t" + "topic score:" + topicScore + ",\tquery score:" + queryScore + ",\tsimilarity score:" + similarityScore + "\t" + pair.getRight());
+                        log.debug("[best in clust]" + generalScore + "\t" + "topic score:" + topicScore + ",\tquery score:" + queryScore + ",\tsimilarity score:" + similarityScore + "\t" + pair.getRight());
                         selectedClustDiversityScore = diversityScore;
                     }
 
@@ -283,31 +254,33 @@ public class SummaryBuilder implements Callable<Boolean>, SystemConstant {
             int num = -1;
             for (int i = 0; i < sentences.size(); i++) {
                 Pair<Float, String> sent = sentences.get(i);
-                if(selectedSentence.getRight().equals(sent.getRight())) {
+                if (selectedSentence.getRight().equals(sent.getRight())) {
                     num = i;
                     break;
                 }
             }
 
-            if(num == -1) {
+            if (num == -1) {
                 log.error("The sentence num is illegal:" + num);
                 return false;
             }
 
             Pair<Float, String> ss = sentences.remove(num);
-            System.out.println("!!!" + ss.getRight());
             List<Pair<Float, String>> clustSentencesInSummary = partialSummary.get(selectedClustName);
             if (null == clustSentencesInSummary) {
                 clustSentencesInSummary = new ArrayList<Pair<Float, String>>();
                 partialSummary.put(selectedClustName, clustSentencesInSummary);
+                System.out.println("-->\t" + ss.getRight());
             }
             clustSentencesInSummary.add(ss);
 
             // 更新相关数据
             List<Word> words = StanfordNLPTools.segmentWord(ss.getRight());
+            psVectors.add(this.sentenceToVector(words));
+
             // 1.更新摘要字数
             for (Word word : words) {
-                if(word.getName().equals(word.getPos())) {
+                if (CommonUtil.isPunctuation(word)) {
                     continue;
                 }
                 ++summaryWordCount;
@@ -315,6 +288,7 @@ public class SummaryBuilder implements Callable<Boolean>, SystemConstant {
 
             // 2.更新摘要包含的句子数
             ++summarySentenceCount;
+
             // 3.更新摘要中词的词频
             for (Word word : words) {
                 Integer freq = wordFrequencyInPartialSummary.get(word.getName().toLowerCase());
@@ -324,11 +298,9 @@ public class SummaryBuilder implements Callable<Boolean>, SystemConstant {
                 freq += 1;
                 wordFrequencyInPartialSummary.put(word.getName(), freq);
             }
-            // 4.更新选中句子所属类的多样性得分
-            clusterDiversies.put(selectedClustName, selectedClustDiversityScore);
 
-            // log.info("topic name:" + this.topicname + ",\t summary words:" +
-            // summaryWordCount);
+            // 4.更新psVectors
+            clusterDiversies.put(selectedClustName, selectedClustDiversityScore);
 
         }
 
@@ -336,14 +308,14 @@ public class SummaryBuilder implements Callable<Boolean>, SystemConstant {
         StringBuilder summary = new StringBuilder();
         for (Entry<String, List<Pair<Float, String>>> entry : partialSummary.entrySet()) {
             for (Pair<Float, String> pair : entry.getValue()) {
-                String sentence = pair.getRight().trim();
+                String sentence = pair.getRight();
                 sentence = sentence.replaceAll("''", "").replaceAll("``", "");
                 sentence = sentence.replaceAll("\\s+", " ");
                 sentence = sentence.replaceAll("\\s+'s", "'s");
-                sentence = sentence.replaceAll("-lrb-[\\s\\S]*?-rrb-\\s+", "");
+                /*sentence = sentence.replaceAll("-lrb-[\\s\\S]*?-rrb-\\s+", "");*/
                 sentence = sentence.replaceAll("-lrb-", "");
                 sentence = sentence.replaceAll("-rrb-", "");
-                sentence = sentence.endsWith(".") ? (sentence + "\n") : (sentence + ".\n");
+                sentence = sentence.endsWith(".") ? (sentence.trim() + "\n") : (sentence.trim() + ".\n");
                 summary.append(sentence);
             }
         }
@@ -374,36 +346,52 @@ public class SummaryBuilder implements Callable<Boolean>, SystemConstant {
     }
 
     /**
-     * 计算两个向量之间的余弦值<br>
-     * 如果小于0，则说明计算出错
+     * 计算输入句子的向量
      *
-     * @param vec1
-     * @param vec2
+     * @param sentence
      * @return
      */
-    private double cosineDistence(double[] vec1, double[] vec2) {
+    private Double[] sentenceToVector(List<Word> words) {
 
-        double value = -1;
+        Double[] vector = new Double[DIMENSION];
+        Arrays.fill(vector, 0.0D);
 
-        if (vec1 == null || vec2 == null) {
-            return value;
+        int count = 0;
+        for (Word word : words) {
+
+            if (CommonUtil.isPunctuation(word)) {
+                // 跳过标点
+                continue;
+            }
+
+            if (STOPWORDS.contains(word.getLemma())) {
+                // 跳过停用词
+                continue;
+            }
+
+            try {
+                Vector vec = this.ehCacheUtil.getMostSimilarVec(word);
+                if (vec == null) {
+                    // 如果在词向量中找不到当前的词向量，则跳过
+                    continue;
+                }
+                Float[] floatVec = vec.floatVecs();
+                for (int i = 0; i < DIMENSION; i++) {
+                    vector[i] += floatVec[i];
+                }
+                count++;
+            } catch (Exception e) {
+                log.error("Get word[" + word + "] vector error!", e);
+            }
         }
 
-        // 利用向量余弦值来计算事件之间的相似度
-        double scalar = 0; // 两个向量的内积
-        double module_1 = 0, module_2 = 0; // 向量vec_1和vec_2的模
-        for (int i = 0; i < DIMENSION; ++i) {
-            scalar += vec1[i] * vec2[i];
-            module_1 += vec1[i] * vec1[i];
-            module_2 += vec2[i] * vec2[i];
+        if (count > 0) {
+            for (int i = 0; i < DIMENSION; i++) {
+                vector[i] /= count;
+            }
         }
 
-        if (module_1 > 0 && module_2 > 0) {
-            value = scalar / (Math.sqrt(module_1) * Math.sqrt(module_2)) + 1;
-        }
-
-        return value;
-
+        return vector;
     }
 
     /**
@@ -501,7 +489,9 @@ public class SummaryBuilder implements Callable<Boolean>, SystemConstant {
 
         String question = "Describe the legal battle between various recording artists and members of the record industry and the Internet music site Napster. What support, or lack thereof, have the litigants received?";
 
-        SummaryBuilder summaryBuilder = new SummaryBuilder(workDir, "D0714D.txt", 10, idfValues, question, 1.0f, 1.6f);
+        EhCacheUtil ehCacheUtil = new EhCacheUtil("db_cache_vec", "lab");
+
+        SummaryBuilderByVector summaryBuilder = new SummaryBuilderByVector(workDir, "D0714D.txt", 10, idfValues, question, ehCacheUtil, 1.0f, 1.6f);
         ExecutorService es = Executors.newSingleThreadExecutor();
         Future<Boolean> future = es.submit(summaryBuilder);
         try {
@@ -510,6 +500,7 @@ public class SummaryBuilder implements Callable<Boolean>, SystemConstant {
             e.printStackTrace();
         }
         es.shutdown();
+        EhCacheUtil.close();
 
     }
 

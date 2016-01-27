@@ -170,4 +170,29 @@ public class CommonUtil implements SystemConstant{
         return dis;
     }
 
+    /**
+     * 判断一个词是不是标点
+     * @param word
+     * @return
+     */
+    public static boolean isPunctuation(Word word) {
+
+        boolean punct = false;
+
+        if(null == word) {
+            return false;
+        }
+
+        if(word.getName().equals(word.getPos())) {
+            return true;
+        }
+
+        if("-lrb-".equals(word.getName()) || "-rrb-".equals(word.getName())) {
+            return true;
+        }
+
+        return punct;
+
+    }
+
 }

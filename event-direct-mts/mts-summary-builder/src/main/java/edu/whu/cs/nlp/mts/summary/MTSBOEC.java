@@ -263,7 +263,8 @@ public class MTSBOEC implements SystemConstant {
 
                 for (File file : compressFiles.listFiles()) {
                     String topicName = file.getName().substring(0, file.getName().lastIndexOf("."));
-                    tasks.add(new SummaryBuilder(workDir, file.getName(), sentenceCount, idfValues, prop.getProperty(topicName), ehCacheUtil, alpha, beta));
+                    //tasks.add(new SummaryBuilder(workDir, file.getName(), sentenceCount, idfValues, prop.getProperty(topicName), alpha, beta));
+                    tasks.add(new SummaryBuilderByVector(workDir, file.getName(), sentenceCount, idfValues, prop.getProperty(topicName), ehCacheUtil, alpha, beta));
                 }
 
             }
@@ -276,7 +277,6 @@ public class MTSBOEC implements SystemConstant {
                 for (Future<Boolean> future : futures) {
                     future.get();
                 }
-                EhCacheUtil.close();
 
             } catch (Throwable e) {
                 log.error("Build summary error!", e);
@@ -284,6 +284,7 @@ public class MTSBOEC implements SystemConstant {
                 if (es != null) {
                     es.shutdown();
                 }
+                EhCacheUtil.close();
             }
 
         } else {
