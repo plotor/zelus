@@ -3,6 +3,7 @@ package edu.whu.cs.nlp.mts.base.utils;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
 
 import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
@@ -192,6 +193,38 @@ public class CommonUtil implements SystemConstant{
         }
 
         return punct;
+
+    }
+
+    /**
+     * 判断包含的单词数是否小于8
+     * @param words
+     * @return
+     */
+    public static boolean lessThanEight(List<Word> words) {
+
+        boolean less = true;
+
+        if(CollectionUtils.isEmpty(words)) {
+            return less;
+        }
+
+        int count = 0;
+        for (Word word : words) {
+            if(isPunctuation(word)) {
+                continue;
+            }
+            if("'s".equals(word.getName())) {
+                continue;
+            }
+            ++count;
+        }
+
+        if(count >= 8) {
+            less = false;
+        }
+
+        return less;
 
     }
 

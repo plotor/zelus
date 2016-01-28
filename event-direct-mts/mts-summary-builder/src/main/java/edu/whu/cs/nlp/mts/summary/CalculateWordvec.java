@@ -18,7 +18,7 @@ public class CalculateWordvec {
 
     public static void main(String[] args) {
 
-        String filepath = "E:/dev_workspace/experiment/nlp/event-guided-mts/corpus/duc2007/testdata/duc2007_testdocs/main_pretreat";
+        String filepath = "E:/dev_workspace/experiment/nlp/event-guided-mts/corpus/duc2005_docs/duc2005_docs";
 
         File file = new File(filepath);
 
@@ -54,7 +54,7 @@ public class CalculateWordvec {
         }
 
         System.out.println("序列化...");
-        File savefile = new File("E:/dev_workspace/experiment/nlp/event-guided-mts/corpus/duc2007/duc2007.vec");
+        File savefile = new File("E:/dev_workspace/experiment/nlp/event-guided-mts/corpus/duc2005_docs/duc2005.vec");
 
         try {
             SerializeUtil.writeObj(wordvecs, savefile);

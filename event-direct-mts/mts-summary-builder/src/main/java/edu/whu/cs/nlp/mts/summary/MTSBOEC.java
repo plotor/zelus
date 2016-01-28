@@ -223,15 +223,33 @@ public class MTSBOEC implements SystemConstant {
             List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
             File compressFiles = new File(workDir + "/" + SystemConstant.DIR_SENTENCES_COMPRESSION);
 
+            // 加载词向量
+            String vecFilename = properties.getProperty("vec_filename");
+            File vecFile = FileUtils.getFile(workDir + "/" + DIR_VEC_FILE, vecFilename);
+            log.info("Loading word vec[" + vecFile.getAbsolutePath() + "]");
+            Map<String, Vector> wordVecs = new HashMap<String, Vector>();
+            try {
+                wordVecs = (Map<String, Vector>) SerializeUtil.readObj(vecFile.getAbsolutePath());
+            } catch (ClassNotFoundException e) {
+                log.error("Load word vec[" + vecFile.getAbsolutePath() + "] error!", e);
+                throw e;
+            }
+            log.info("Load word vec[" + vecFile.getAbsolutePath() + "] success!");
+
+            if(MapUtils.isEmpty(wordVecs)) {
+                log.error("Can't load any word vec[" + vecFile.getAbsolutePath() + "]");
+                throw new Exception("Can't load any word vec[" + vecFile.getAbsolutePath() + "]");
+            }
+
             if ("old".equalsIgnoreCase(buildMode)) {
                 // 采用老的reranker策略构建摘要
                 log.info("Summary build mode: old");
-                EhCacheUtil ehCacheUtil = new EhCacheUtil(properties.getProperty("cacheName"), properties.getProperty("datasource"));
+                // EhCacheUtil ehCacheUtil = new EhCacheUtil(properties.getProperty("cacheName"), properties.getProperty("datasource"));
                 // ngram 模型所在路径
                 String ngramModelPath = properties.getProperty("ngramModelPath");
                 for (File file : compressFiles.listFiles()) {
                     String topicName = file.getName().substring(0, file.getName().lastIndexOf("."));
-                    tasks.add(new SentenceReRanker(prop.getProperty(topicName), file.getAbsolutePath(), ehCacheUtil, ngramModelPath, alpha, beta));
+                    tasks.add(new SentenceReRanker(prop.getProperty(topicName), file.getAbsolutePath(), numDir, wordVecs, ngramModelPath, alpha, beta));
                 }
 
             } else if ("new".equalsIgnoreCase(buildMode)) {
@@ -270,28 +288,11 @@ public class MTSBOEC implements SystemConstant {
                     }
                 }
 
-                String vecFilename = properties.getProperty("vec_filename");
-                File vecFile = FileUtils.getFile(workDir + "/" + DIR_VEC_FILE, vecFilename);
-                log.info("Loading word vec[" + vecFile.getAbsolutePath() + "]");
-                Map<String, Vector> wordVecs = new HashMap<String, Vector>();
-                try {
-                    wordVecs = (Map<String, Vector>) SerializeUtil.readObj(vecFile.getAbsolutePath());
-                } catch (ClassNotFoundException e) {
-                    log.error("Load word vec[" + vecFile.getAbsolutePath() + "] error!", e);
-                    throw e;
-                }
-                log.info("Load word vec[" + vecFile.getAbsolutePath() + "] success!");
-
-                if(MapUtils.isEmpty(wordVecs)) {
-                    log.error("Can't load any word vec[" + vecFile.getAbsolutePath() + "]");
-                    throw new Exception("Can't load any word vec[" + vecFile.getAbsolutePath() + "]");
-                }
-
                 for (File file : compressFiles.listFiles()) {
                     String topicName = file.getName().substring(0, file.getName().lastIndexOf("."));
                     //tasks.add(new SummaryBuilder(workDir, file.getName(), sentenceCount, idfValues, prop.getProperty(topicName), alpha, beta));
                     //tasks.add(new SummaryBuilderByVector(workDir, numDir, file.getName(), sentenceCount, idfValues, prop.getProperty(topicName), ehCacheUtil, alpha, beta));
-                    tasks.add(new SummaryBuilderByPreVector(workDir, numDir, file.getName(), sentenceCount, idfValues, prop.getProperty(topicName), wordVecs, alpha, beta));
+                    tasks.add(new SummaryBuilderByPreVectorReRanker(workDir, numDir, file.getName(), sentenceCount, idfValues, prop.getProperty(topicName), wordVecs, alpha, beta));
                 }
 
             }
@@ -311,7 +312,7 @@ public class MTSBOEC implements SystemConstant {
                 if (es != null) {
                     es.shutdown();
                 }
-                EhCacheUtil.close();
+                //EhCacheUtil.close();
             }
 
         } else {
