@@ -23,15 +23,15 @@ import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
-import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
-import edu.whu.cs.nlp.mts.base.biz.VectorOperator;
 import edu.whu.cs.nlp.mts.base.domain.Pair;
 import edu.whu.cs.nlp.mts.base.domain.Vector;
 import edu.whu.cs.nlp.mts.base.domain.Word;
+import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
 import edu.whu.cs.nlp.mts.base.nlp.StanfordNLPTools;
 import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
 import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
 import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
+import edu.whu.cs.nlp.mts.base.utils.VectorOperator;
 import edu.whu.cs.nlp.mts.domain.ClustItem;
 
 /**
@@ -40,7 +40,7 @@ import edu.whu.cs.nlp.mts.domain.ClustItem;
  * @author zhenchao.wang 2016-1-27 10:54:02
  *
  */
-public class SummaryBuilderByVector implements Callable<Boolean>, SystemConstant {
+public class SummaryBuilderByVector implements Callable<Boolean>, GlobalConstant {
 
     private static Logger     log              = Logger.getLogger(SummaryBuilderByVector.class);
 
@@ -91,13 +91,13 @@ public class SummaryBuilderByVector implements Callable<Boolean>, SystemConstant
     @Override
     public Boolean call() throws Exception {
 
-        log.info("[Thread id:" + Thread.currentThread().getId() + "] is building summary for[" + this.workDir + "/" + SystemConstant.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "]");
+        log.info("[Thread id:" + Thread.currentThread().getId() + "] is building summary for[" + this.workDir + "/" + GlobalConstant.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "]");
 
         // 加载当前主题下面的句子，每个类别控制句子数量
         Map<String, ClustItem> candidateSentences = this.loadSentences(this.sentCountInClust);
 
         // 加载每个clust的权值
-        String clusterWeightFilepath = this.workDir + "/" + SystemConstant.DIR_CLUSTER_WEIGHT + "/" + this.filename.substring(0, this.filename.length() - 4) + "." + SystemConstant.OBJ;
+        String clusterWeightFilepath = this.workDir + "/" + GlobalConstant.DIR_CLUSTER_WEIGHT + "/" + this.filename.substring(0, this.filename.length() - 4) + "." + GlobalConstant.OBJ;
         log.info("Loading serilized file[" + clusterWeightFilepath + "]");
         Map<String, Float> clusterWeights = null;
         try {
@@ -330,7 +330,7 @@ public class SummaryBuilderByVector implements Callable<Boolean>, SystemConstant
         int indexOfPoint = this.filename.lastIndexOf(".");
         String summaryFilename = this.filename.substring(0, indexOfPoint - 1).toUpperCase() + ".M.250." + this.filename.substring(indexOfPoint - 1, indexOfPoint).toUpperCase() + ".3";
         try {
-            File file = FileUtils.getFile(this.workDir + "/" + this.numDir + DIR_NEW_SUMMARIES, summaryFilename);
+            File file = FileUtils.getFile(this.workDir + "/" + this.numDir + DIR_SUMMARIES_V2, summaryFilename);
             log.info("Saving summary to file[" + file.getAbsolutePath() + "]");
             FileUtils.writeStringToFile(file, summary.toString().trim(), DEFAULT_CHARSET);
         } catch (IOException e) {
@@ -416,8 +416,8 @@ public class SummaryBuilderByVector implements Callable<Boolean>, SystemConstant
         Pattern pattern = Pattern.compile("(classes_\\d+):");
 
         try {
-            log.info("Loading msc file[" + this.workDir + "/" + SystemConstant.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "]");
-            LineIterator lineIterator = FileUtils.lineIterator(FileUtils.getFile(this.workDir + '/' + SystemConstant.DIR_SENTENCES_COMPRESSION, this.filename), SystemConstant.DEFAULT_CHARSET.toString());
+            log.info("Loading msc file[" + this.workDir + "/" + GlobalConstant.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "]");
+            LineIterator lineIterator = FileUtils.lineIterator(FileUtils.getFile(this.workDir + '/' + GlobalConstant.DIR_SENTENCES_COMPRESSION, this.filename), GlobalConstant.DEFAULT_CHARSET.toString());
 
             String currentKey = "";
             int sentCount = 0; // 存储当前选择的句子数
@@ -454,7 +454,7 @@ public class SummaryBuilderByVector implements Callable<Boolean>, SystemConstant
             log.info("Load msc file finished[sentence count:" + totalCount + "]");
 
         } catch (IOException e) {
-            log.error("Load msc file[" + this.workDir + "/" + SystemConstant.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "] error!", e);
+            log.error("Load msc file[" + this.workDir + "/" + GlobalConstant.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "] error!", e);
             throw e;
         }
 

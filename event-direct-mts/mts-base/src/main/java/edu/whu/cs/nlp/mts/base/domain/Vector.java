@@ -2,7 +2,7 @@ package edu.whu.cs.nlp.mts.base.domain;
 
 import java.io.Serializable;
 
-import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
+import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
 import opennlp.tools.util.StringUtil;
 
 /**
@@ -30,9 +30,9 @@ public class Vector implements Serializable{
         if (StringUtil.isEmpty(this.vec)) {
             return floatVec;
         }
-        floatVec = new Float[SystemConstant.DIMENSION];
+        floatVec = new Float[GlobalConstant.DIMENSION];
         String[] strs = this.vec.split("\\s+");
-        for (int i = 0; i < SystemConstant.DIMENSION; i++) {
+        for (int i = 0; i < GlobalConstant.DIMENSION; i++) {
             floatVec[i] = Float.parseFloat(strs[i]);
         }
 
@@ -51,9 +51,9 @@ public class Vector implements Serializable{
         if (StringUtil.isEmpty(this.vec)) {
             return doubleVec;
         }
-        doubleVec = new Double[SystemConstant.DIMENSION];
+        doubleVec = new Double[GlobalConstant.DIMENSION];
         String[] strs = this.vec.split("\\s+");
-        for (int i = 0; i < SystemConstant.DIMENSION; i++) {
+        for (int i = 0; i < GlobalConstant.DIMENSION; i++) {
             doubleVec[i] = Double.parseDouble(strs[i]);
         }
 

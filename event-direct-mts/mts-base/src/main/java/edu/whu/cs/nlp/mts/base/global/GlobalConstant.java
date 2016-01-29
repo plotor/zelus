@@ -1,19 +1,24 @@
-package edu.whu.cs.nlp.mts.base.biz;
+package edu.whu.cs.nlp.mts.base.global;
 
 import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Set;
 
+import edu.whu.cs.nlp.mts.base.loader.ResourceLoader;
+
 /**
- * 系统常量
+ * 全局常量
  *
- * @author Apache_xiaochao
+ * @author zhenchao.wang 2016-1-29 20:16:24
  *
  */
-public interface SystemConstant {
+public interface GlobalConstant {
 
     /** 系统默认字符编码 */
     public final static Charset     DEFAULT_CHARSET                    = Charset.forName("UTF-8");
+
+    /** 系统默认字符编码 */
+    public final static String      DEFAULT_ENCODING                   = DEFAULT_CHARSET.toString();
 
     /** 统一换行符，采用linux风格 */
     public final static String      LINE_SPLITER                       = "\n";
@@ -21,11 +26,17 @@ public interface SystemConstant {
     /** 一个单词中所有属性的连接符，用于打印时进行组织 */
     public final static String      WORD_ATTRBUTE_CONNECTOR            = "__";
 
+    /** 目录名：事件抽取 */
+    public final static String      DIR_EVENTS_EXTRACT                  = "event-extract";
+
     /** 文本结果上层路径 */
     public static final String      TEXT                               = "text";
 
     /** 序列化文件上层路径 */
     public static final String      OBJ                                = "obj";
+
+    /** 语料文件所在路径 */
+    public static final String      DIR_CORPUS                         = "corpus";
 
     /** 目录名：原文本 */
     public final static String      DIR_TEXT                           = "text";
@@ -45,6 +56,7 @@ public interface SystemConstant {
     /** 目录名：依存分析 */
     public final static String      DIR_PARSE_TEXT                     = "text_parse";
 
+    /** 目录名：句法树 */
     public static final String      DIR_SYNTACTICTREES_OBJ             = "syntactic-trees";
 
     /** 目录名：依存分析 */
@@ -122,11 +134,13 @@ public interface SystemConstant {
     /** 目录名：chunk处理得到的短语集合（简版） */
     public static final String      DIR_CHUNKSIMPILY                   = "chunk-simpily";
 
+    //public static final String      DIR_
+
     /** 目录名：摘要结果 */
-    public static final String      DIR_SUMMARIES                      = "summaries";
+    public static final String      DIR_SUMMARIES_V1                      = "v1";
 
     /** 目录名：采用子模函数的摘要结果 */
-    public static final String      DIR_NEW_SUMMARIES                  = "summaries-new";
+    public static final String      DIR_SUMMARIES_V2                  = "v2";
 
     /** 事件中词之间的连接符 */
     public final static String      WORD_CONNECTOR_IN_EVENTS           = "#";

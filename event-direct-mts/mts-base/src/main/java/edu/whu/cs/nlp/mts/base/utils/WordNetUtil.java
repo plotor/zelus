@@ -15,15 +15,15 @@ import edu.mit.jwi.item.ISynset;
 import edu.mit.jwi.item.IWord;
 import edu.mit.jwi.item.IWordID;
 import edu.mit.jwi.item.POS;
-import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.domain.Word;
+import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
 
 /**
  * WordNet相关工具类
  * @author Apache_xiaochao
  *
  */
-public class WordNetUtil implements SystemConstant{
+public class WordNetUtil implements GlobalConstant{
 
     private static Logger log = Logger.getLogger(WordNetUtil.class);
 

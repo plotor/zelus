@@ -6,15 +6,15 @@ import java.util.List;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
 
-import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.domain.Word;
+import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
 
 /**
  * 公共工具
  * @author Apache_xiaochao
  *
  */
-public class CommonUtil implements SystemConstant{
+public class CommonUtil implements GlobalConstant{
 
     public static final Logger log = Logger.getLogger(CommonUtil.class);
 
@@ -89,6 +89,32 @@ public class CommonUtil implements SystemConstant{
             word.setNumInLine(Integer.parseInt(attrs[5]));
         }
         return word;
+    }
+
+    /**
+     * 将words转换成sentence
+     * @param words
+     * @return
+     */
+    public static String wordsToSentence(List<Word> words) {
+        String sentence = "";
+
+        if(CollectionUtils.isEmpty(words)) {
+            return sentence;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (Word word : words) {
+            if(CommonUtil.isPunctuation(word)) {
+                sb.append(word.getName());
+            } else {
+                sb.append(" " + word.getName());
+            }
+        }
+
+        sentence = sb.toString().trim();
+
+        return sentence;
     }
 
     /**

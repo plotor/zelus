@@ -1,4 +1,4 @@
-package edu.whu.cs.nlp.mts.base.biz;
+package edu.whu.cs.nlp.mts.base.loader;
 
 import java.io.IOException;
 import java.net.URISyntaxException;

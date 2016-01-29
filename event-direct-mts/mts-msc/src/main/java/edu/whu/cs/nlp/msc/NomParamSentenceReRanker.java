@@ -30,12 +30,12 @@ import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
 import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
 
 /**
- * 从压缩输出语句集合中选择关键句构建摘要
+ * 从压缩输出语句集合中选择关键句构建摘要（非参）
  *
- * @author ZhenchaoWang 2015-11-12 15:43:50
+ * @author ZhenchaoWang 2016-1-29 18:47:56
  *
  */
-public class SentenceReRanker implements Callable<Boolean>, GlobalConstant {
+public class NomParamSentenceReRanker implements Callable<Boolean>, GlobalConstant {
 
     private final Logger                  log = Logger.getLogger(this.getClass());
 
@@ -44,30 +44,24 @@ public class SentenceReRanker implements Callable<Boolean>, GlobalConstant {
     /** 当前专题对应压缩结果所在路径 */
     private final String                  compressSentencesPath;
 
-    private final String                        numDir;
+    private final String                  numDir;
     /** 词向量获取器 */
-    /*private final EhCacheUtil             ehCacheUtil;*/
-    private final Map<String, Vector> wordVecs;
+    /* private final EhCacheUtil ehCacheUtil; */
+    private final Map<String, Vector>     wordVecs;
     /** 语言模型打分器 */
     private final GrammarScorer           grammarScorer;
     /** N元语法模型 */
     private final Map<String, NGramScore> ngramModel;
 
-    private final float                   alpha;
-
-    private final float                   beta;
-
-    public SentenceReRanker(String question, String compressSentencesPath, String numDir, Map<String, Vector> wordVecs, String ngramModelPath, float alpha, float beta) throws IOException {
+    public NomParamSentenceReRanker(String question, String compressSentencesPath, String numDir, Map<String, Vector> wordVecs, String ngramModelPath) throws IOException {
         super();
         this.question = question;
         this.compressSentencesPath = compressSentencesPath;
         this.numDir = StringUtils.isEmpty(numDir) ? "" : ("/" + numDir);
-        /*this.ehCacheUtil = ehCacheUtil;*/
+        /* this.ehCacheUtil = ehCacheUtil; */
         this.wordVecs = wordVecs;
         this.grammarScorer = new GrammarScorer();
         this.ngramModel = this.grammarScorer.loadNgramModel(ngramModelPath);
-        this.alpha = alpha;
-        this.beta = beta;
     }
 
     @Override
@@ -140,7 +134,7 @@ public class SentenceReRanker implements Callable<Boolean>, GlobalConstant {
                 List<Word> sentenceWords = compressUnit.getSentence();
                 double[] sentvec = this.sentenceToVector(sentenceWords);
 
-                if(null == sentvec) {
+                if (null == sentvec) {
                     continue;
                 }
 
@@ -151,14 +145,8 @@ public class SentenceReRanker implements Callable<Boolean>, GlobalConstant {
                 float fluency = this.grammarScorer.calculateFluency(CommonUtil.wordsToSentence(compressUnit.getSentence()), this.ngramModel);
 
                 // 综合查询覆盖度，语言模型得分，路径得分
-                double queryScore = Math.log(cosVal + 1.0);
-                double fluencyScore = Math.log(fluency + 1.0);
-                double pathScore = Math.log(compressUnit.getScore() + 1.0);
-                this.log.info(Thread.currentThread().getName() + "[before, alpha=" + this.alpha + ", beta=" + this.beta + "]query score:" + queryScore + "\tfluency score:" + fluencyScore + "\tpath score:" + pathScore);
-                double newScore = queryScore + this.alpha * fluencyScore - this.beta * pathScore;
-                this.log.info(Thread.currentThread().getName() + "[after, alpha=" + this.alpha + ", beta=" + this.beta + "]query score:" + queryScore + "\tfluency score:" + (this.alpha * fluencyScore) + "\tpath score:" + (this.beta * pathScore));
 
-                /*double newScore = (float) (cosVal * (fluency + 1.0f) / compressUnit.getScore());*/
+                double newScore = (float) (cosVal * (fluency + 1.0f) / compressUnit.getScore());
 
                 weightSumInClass += newScore;
 
@@ -334,7 +322,7 @@ public class SentenceReRanker implements Callable<Boolean>, GlobalConstant {
             }
 
             try {
-                /*Vector vec = this.ehCacheUtil.getMostSimilarVec(word);*/
+                /* Vector vec = this.ehCacheUtil.getMostSimilarVec(word); */
                 Vector vec = this.wordVecs.get(word);
                 if (vec == null) {
                     // 如果在词向量中找不到当前的词向量，则跳过
@@ -358,16 +346,5 @@ public class SentenceReRanker implements Callable<Boolean>, GlobalConstant {
 
         return vector;
     }
-
-    /*
-     * public static void main(String[] args) throws Exception { ExecutorService
-     * es = Executors.newSingleThreadExecutor(); EhCacheUtil ehCacheUtil = new
-     * EhCacheUtil("db_cache_vec", "local"); Future<Boolean> future =
-     * es.submit(new SentenceReRanker(
-     * "Describe the activities of Morris Dees and the Southern Poverty Law Center."
-     * , "E:/workspace/test/compressed-results/D0701A.txt", ehCacheUtil,
-     * "E:/workspace/test/giga_3gram.lm")); future.get(); es.shutdown();
-     * EhCacheUtil.close(); }
-     */
 
 }

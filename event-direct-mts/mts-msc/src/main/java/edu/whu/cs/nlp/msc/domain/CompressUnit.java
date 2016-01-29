@@ -1,10 +1,12 @@
 package edu.whu.cs.nlp.msc.domain;
 
 import java.io.Serializable;
+import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.collections.CollectionUtils;
 
-import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
+import edu.whu.cs.nlp.mts.base.domain.Word;
+import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
 
 /**
  * 压缩输出语句单元
@@ -19,9 +21,11 @@ public class CompressUnit implements Comparable<CompressUnit>, Serializable {
     /** 压缩得分，可能为0 */
     private float  score;
     /** 压缩输出句子 */
-    private String sentence;
+    /*private String sentence;*/
 
-    public CompressUnit(float score, String sentence) {
+    private List<Word> sentence;
+
+    public CompressUnit(float score, List<Word> sentence) {
         super();
         this.score = score;
         this.sentence = sentence;
@@ -29,7 +33,7 @@ public class CompressUnit implements Comparable<CompressUnit>, Serializable {
 
     @Override
     public String toString() {
-        return this.score + "#" + this.sentence;
+        return this.score + "#" + CommonUtil.wordsToSentence(this.sentence);
     }
 
     /**
@@ -41,13 +45,12 @@ public class CompressUnit implements Comparable<CompressUnit>, Serializable {
 
         int count = 0;
 
-        if(StringUtils.isBlank(this.sentence)) {
+        if(CollectionUtils.isEmpty(this.sentence)) {
             return count;
         }
 
-        String[] strs = this.sentence.split("\\s+");
-        for(int i = 0; i < strs.length; i++) {
-            if(SystemConstant.PUNCT_EN.contains(strs[i])) {
+        for (Word word : this.sentence) {
+            if(CommonUtil.isPunctuation(word)) {
                 continue;
             }
             count++;
@@ -65,23 +68,19 @@ public class CompressUnit implements Comparable<CompressUnit>, Serializable {
         this.score = score;
     }
 
-    public String getSentence() {
+    public List<Word> getSentence() {
         return this.sentence;
     }
 
-    public void setSentence(String sentence) {
+    public void setSentence(List<Word> sentence) {
         this.sentence = sentence;
     }
 
     @Override
     public int compareTo(CompressUnit other) {
-        if(this.score < other.getScore()) {
-            return 1;
-        } else if(this.score == other.getScore()) {
-            return 0;
-        } else {
-            return -1;
-        }
+
+        return Float.compare(other.getScore(), this.getScore());
+
     }
 
 }

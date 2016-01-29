@@ -25,14 +25,14 @@ import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
-import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
-import edu.whu.cs.nlp.mts.base.biz.VectorOperator;
 import edu.whu.cs.nlp.mts.base.domain.Pair;
 import edu.whu.cs.nlp.mts.base.domain.Vector;
 import edu.whu.cs.nlp.mts.base.domain.Word;
+import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
 import edu.whu.cs.nlp.mts.base.nlp.StanfordNLPTools;
 import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
 import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
+import edu.whu.cs.nlp.mts.base.utils.VectorOperator;
 import edu.whu.cs.nlp.mts.domain.ClustItemPlus;
 
 /**
@@ -42,7 +42,7 @@ import edu.whu.cs.nlp.mts.domain.ClustItemPlus;
  * @author zhenchao.wang 2016-1-27 20:24:18
  *
  */
-public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, SystemConstant {
+public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, GlobalConstant {
 
     private static Logger     log              = Logger.getLogger(SummaryBuilderByPreVectorReRanker.class);
 
@@ -76,10 +76,13 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Sys
     /** beta 参数 */
     private final float       beta;
 
+    /** 相似度上限 */
+    private final float similarityThresh;
+
     /** 每个主题下面选取的句子的数量 */
     private Integer           sentCountInClust = 10;
 
-    public SummaryBuilderByPreVectorReRanker(String workDir, String numDir, String filename, int sentCountInClust, Map<String, Double> idfValues, String question, Map<String, Vector> wordVecs, float alpha, float beta) {
+    public SummaryBuilderByPreVectorReRanker(String workDir, String numDir, String filename, int sentCountInClust, Map<String, Double> idfValues, String question, Map<String, Vector> wordVecs, float alpha, float beta, float similarityThresh) {
         super();
         this.workDir = workDir;
         this.numDir = StringUtils.isEmpty(numDir) ? "" : ("/" + numDir.trim());
@@ -91,12 +94,13 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Sys
         this.wordVecs = wordVecs;
         this.alpha = alpha;
         this.beta = beta;
+        this.similarityThresh = similarityThresh;
     }
 
     @Override
     public Boolean call() throws Exception {
 
-        log.info("[Thread id:" + Thread.currentThread().getId() + "] is building summary for[" + this.workDir + "/" + SystemConstant.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "]");
+        log.info("[Thread id:" + Thread.currentThread().getId() + "] is building summary for[" + this.workDir + "/" + GlobalConstant.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "]");
 
         // 加载当前主题下面的句子，每个类别控制句子数量
         List<ClustItemPlus> candidateSentences = this.loadSentences(this.sentCountInClust);
@@ -105,7 +109,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Sys
         Collections.sort(candidateSentences);
 
         // 加载每个clust的权值
-        String clusterWeightFilepath = this.workDir + "/" + SystemConstant.DIR_CLUSTER_WEIGHT + "/" + this.filename.substring(0, this.filename.length() - 4) + "." + SystemConstant.OBJ;
+        String clusterWeightFilepath = this.workDir + "/" + GlobalConstant.DIR_CLUSTER_WEIGHT + "/" + this.filename.substring(0, this.filename.length() - 4) + "." + GlobalConstant.OBJ;
         log.info("Loading serilized file[" + clusterWeightFilepath + "]");
         Map<String, Float> clusterWeights = null;
         try {
@@ -133,6 +137,11 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Sys
         List<Word> questionWords = StanfordNLPTools.segmentWord(this.question.trim());
         Double[] questionVec = this.sentenceToVector(questionWords);
 
+        if(questionVec == null) {
+            log.error("The question[" + this.question + "] vector is null!" );
+            return false;
+        }
+
         /* 存放摘要的中间值，以及最终的摘要，按照clust进行组织 */
         Map<String, List<Pair<Float, String>>> partialSummary = new HashMap<String, List<Pair<Float, String>>>();
 
@@ -143,7 +152,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Sys
         Map<String, Integer> wordFrequencyInPartialSummary = new HashMap<String, Integer>();
 
         /* 缓存摘要中每个类的多样性得分 */
-        Map<String, Double> clusterDiversies = new HashMap<String, Double>();
+        //Map<String, Double> clusterDiversies = new HashMap<String, Double>();
 
         while (isNotEmpty && summaryWordCount < MAX_SUMMARY_WORDS_COUNT) {
 
@@ -158,7 +167,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Sys
             // 记录最大综合得分对应的句子的序号
             Pair<Float, String> selectedSentence = null;
             // 记录最大综合得分对应类别的新的多样性得分
-            double selectedClustDiversityScore = -1.0D;
+            //double selectedClustDiversityScore = -1.0D;
 
             for (ClustItemPlus clustItem : candidateSentences) {
 
@@ -209,26 +218,32 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Sys
 
                     Double[] sentVec = this.sentenceToVector(words);
 
+                    if(null == sentVec) {
+                        log.info("The sentence[" + sentence + "] vector is null, ingore it!");
+                        pairItr.remove();
+                        continue;
+                    }
+
                     queryScore = (float) VectorOperator.cosineDistence(sentVec, questionVec);
 
                     // 3.计算当前句子的多样性得分
-                    double diversityScore = 0.0;
+                    //double diversityScore = 0.0;
 
                     // 当前句子与已有摘要的相似度得分
                     double similarityScore = 0.0;
-                    boolean isSame = false; // 如果候选句子中存在与当前句子在词语构成一模一样的句子则为true
+                    boolean tooSimilarity = false; // 如果候选句子中存在与当前句子在词语构成一模一样的句子则为true
                     for (Double[] psVec : psVectors) {
                         double sps = VectorOperator.cosineDistence(sentVec, psVec);
-                        if(sps > 1.59D) {
-                            isSame = true;
+                        if(sps > this.similarityThresh) {
+                            tooSimilarity = true;
                             break;
                         }
                         if (sps > 0) {
-                            similarityScore += VectorOperator.cosineDistence(sentVec, psVec);
+                            similarityScore += sps;
                         }
                     }
 
-                    if(isSame) {
+                    if(tooSimilarity) {
                         // 说明当前句子与已经选取的句子在词语构成上相同，忽略
                         pairItr.remove();
                         continue;
@@ -243,7 +258,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Sys
                     topicScore = (float) (this.sigmoid(Math.log(topicScore + 1)) - 0.5) * 4 * this.alpha;
                     similarityScore = Math.log(similarityScore + 1) * this.beta;
 
-                    log.debug("[BEFORE: alpha=" + this.alpha + ", beta= " + this.beta + "]query score:" + queryScore + ",\ttopic score:" + topicScore + ",\tsimilarity score:" + similarityScore);
+                    log.debug("[alpha=" + this.alpha + ", beta= " + this.beta + "]query score:" + queryScore + ",\ttopic score:" + topicScore + ",\tsimilarity score:" + similarityScore);
                     generalScore = (float) (queryScore + topicScore - similarityScore);
 
                     if (generalScore > maxGeneralScore) {
@@ -251,8 +266,8 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Sys
                         selectedClustName = clustname;
                         selectedClust = clustItem;
                         selectedSentence = pair;
+                        //selectedClustDiversityScore = diversityScore;
                         log.info("[best in clust, alpha=" + this.alpha + ", beta=" + this.beta + "]" + generalScore + "\t" + "query score:" + queryScore + ",\ttopic score:" + topicScore + ",\tsimilarity score:" + similarityScore + "\t" + pair.getRight());
-                        selectedClustDiversityScore = diversityScore;
                     }
 
                 }
@@ -260,8 +275,8 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Sys
             }
 
             // 更新已经选择的摘要
-            if (null == selectedClustName || null == selectedSentence || selectedClustDiversityScore == -1) {
-                log.warn("Selected clust or sentence is illegal[selectedClustName = " + selectedClustName + ", selectedSentence = " + selectedSentence + "]");
+            if (null == selectedClustName || null == selectedClust || null == selectedSentence) {
+                log.warn("[" + this.topicname + "]Selected clust or sentence is illegal[selectedClustName = " + selectedClustName + ", selectedSentence = " + selectedSentence + "]");
                 continue;
             }
 
@@ -292,7 +307,11 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Sys
 
             // 更新相关数据
             List<Word> words = StanfordNLPTools.segmentWord(ss.getRight());
-            psVectors.add(this.sentenceToVector(words));
+            Double[] sentvec = this.sentenceToVector(words);
+            if(sentvec == null) {
+                continue;
+            }
+            psVectors.add(sentvec);
 
             // 1.更新摘要字数
             for (Word word : words) {
@@ -319,7 +338,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Sys
             }
 
             // 4.更新psVectors
-            clusterDiversies.put(selectedClustName, selectedClustDiversityScore);
+            //clusterDiversies.put(selectedClustName, selectedClustDiversityScore);
 
         }
 
@@ -328,7 +347,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Sys
         for (Entry<String, List<Pair<Float, String>>> entry : partialSummary.entrySet()) {
             for (Pair<Float, String> pair : entry.getValue()) {
                 String sentence = pair.getRight();
-                sentence = sentence.replaceAll("''", "").replaceAll("``", "");
+                sentence = sentence.replaceAll("''\\s+", "").replaceAll("``\\s+", "").replaceAll("'\\s+", "").replaceAll("`\\s+", "");
                 sentence = sentence.replaceAll("\\s+", " ");
                 sentence = sentence.replaceAll("\\s+'s", "'s");
                 /*sentence = sentence.replaceAll("-lrb-[\\s\\S]*?-rrb-\\s+", "");*/
@@ -342,7 +361,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Sys
         int indexOfPoint = this.filename.lastIndexOf(".");
         String summaryFilename = this.filename.substring(0, indexOfPoint - 1).toUpperCase() + ".M.250." + this.filename.substring(indexOfPoint - 1, indexOfPoint).toUpperCase() + ".3";
         try {
-            File file = FileUtils.getFile(this.workDir + "/" + DIR_NEW_SUMMARIES + this.numDir, summaryFilename);
+            File file = FileUtils.getFile(this.workDir + "/" + DIR_SUMMARIES_V2 + this.numDir, summaryFilename);
             log.info("Saving summary to file[" + file.getAbsolutePath() + "]");
             FileUtils.writeStringToFile(file, summary.toString().trim(), DEFAULT_CHARSET);
         } catch (IOException e) {
@@ -376,6 +395,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Sys
         Arrays.fill(vector, 0.0D);
 
         int count = 0;
+        boolean flag = false;
         for (Word word : words) {
 
             if (CommonUtil.isPunctuation(word)) {
@@ -383,10 +403,10 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Sys
                 continue;
             }
 
-            if (STOPWORDS.contains(word.getLemma())) {
+            /*if (STOPWORDS.contains(word.getLemma())) {
                 // 跳过停用词
                 continue;
-            }
+            }*/
 
             try {
                 /*Vector vec = this.ehCacheUtil.getMostSimilarVec(word);*/
@@ -398,6 +418,9 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Sys
                 Float[] floatVec = vec.floatVecs();
                 for (int i = 0; i < DIMENSION; i++) {
                     vector[i] += floatVec[i];
+                    if(!flag) {
+                        flag = true;
+                    }
                 }
                 count++;
             } catch (Exception e) {
@@ -409,6 +432,10 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Sys
             for (int i = 0; i < DIMENSION; i++) {
                 vector[i] /= count;
             }
+        }
+
+        if(!flag) {
+            return null;
         }
 
         return vector;
@@ -429,8 +456,8 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Sys
         Pattern pattern = Pattern.compile("(classes_\\d+):");
 
         try {
-            log.info("Loading msc file[" + this.workDir + "/" + SystemConstant.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "]");
-            LineIterator lineIterator = FileUtils.lineIterator(FileUtils.getFile(this.workDir + '/' + SystemConstant.DIR_SENTENCES_COMPRESSION, this.filename), SystemConstant.DEFAULT_CHARSET.toString());
+            log.info("Loading msc file[" + this.workDir + "/" + GlobalConstant.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "]");
+            LineIterator lineIterator = FileUtils.lineIterator(FileUtils.getFile(this.workDir + '/' + GlobalConstant.DIR_SENTENCES_COMPRESSION, this.filename), GlobalConstant.DEFAULT_CHARSET.toString());
 
             String currentKey = "";
             int sentCount = 0; // 存储当前选择的句子数
@@ -475,7 +502,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Sys
             log.info("Load msc file finished[sentence count:" + totalCount + "]");
 
         } catch (IOException e) {
-            log.error("Load msc file[" + this.workDir + "/" + SystemConstant.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "] error!", e);
+            log.error("Load msc file[" + this.workDir + "/" + GlobalConstant.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "] error!", e);
             throw e;
         }
 
@@ -516,7 +543,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Sys
             }
         }
 
-        String question = "Describe the legal battle between various recording artists and members of the record industry and the Internet music site Napster. What support, or lack thereof, have the litigants received?";
+        String question = "Linda Tripp, role that Linda Tripp play in the Clinton Lewinsky affair and the Ken Starr investigation?";
 
         File vecFile = FileUtils.getFile(workDir + "/" + DIR_VEC_FILE, vecFilename);
         log.info("Loading word vec[" + vecFile.getAbsolutePath() + "]");
@@ -534,7 +561,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Sys
             throw new Exception("Can't load any word vec[" + vecFile.getAbsolutePath() + "]");
         }
 
-        SummaryBuilderByPreVectorReRanker summaryBuilder = new SummaryBuilderByPreVectorReRanker(workDir, "0", "D0714D.txt", 10, idfValues, question, wordVecs, 0.2f, 3.6f);
+        SummaryBuilderByPreVectorReRanker summaryBuilder = new SummaryBuilderByPreVectorReRanker(workDir, "0", "D0731G.txt", 10, idfValues, question, wordVecs, 0.2f, 3.6f, 1.19f);
         ExecutorService es = Executors.newSingleThreadExecutor();
         Future<Boolean> future = es.submit(summaryBuilder);
         try {

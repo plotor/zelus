@@ -28,8 +28,6 @@ import org.apache.log4j.Logger;
 import edu.stanford.nlp.dcoref.CorefChain;
 import edu.stanford.nlp.dcoref.CorefChain.CorefMention;
 import edu.stanford.nlp.trees.Tree;
-import edu.whu.cs.nlp.mts.base.biz.ModelLoader;
-import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.domain.ChunkPhrase;
 import edu.whu.cs.nlp.mts.base.domain.CoreferenceElement;
 import edu.whu.cs.nlp.mts.base.domain.Event;
@@ -39,6 +37,9 @@ import edu.whu.cs.nlp.mts.base.domain.EventWithWord;
 import edu.whu.cs.nlp.mts.base.domain.ParseItem;
 import edu.whu.cs.nlp.mts.base.domain.Vector;
 import edu.whu.cs.nlp.mts.base.domain.Word;
+import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
+import edu.whu.cs.nlp.mts.base.global.GlobalParam;
+import edu.whu.cs.nlp.mts.base.loader.ModelLoader;
 import edu.whu.cs.nlp.mts.base.nlp.StanfordNLPTools;
 import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
 import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
@@ -57,15 +58,12 @@ import opennlp.tools.util.Span;
  * @author ZhenchaoWang 2015-10-26 19:38:22
  *
  */
-public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Boolean> {
+public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boolean> {
 
     private final Logger log = Logger.getLogger(this.getClass());
 
     /** 输入文件所在目录 */
-    private final String textDir;
-
-    /** 工作目录 */
-    private final String workDir;
+    private final String topicDir;
 
     /** 专题名 */
     private final String topicName;
@@ -79,35 +77,28 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Boo
      * @param textDir
      *            输入文件目录
      */
-    public EventsExtractBasedOnGraphV2(String textDir, String workDir, EhCacheUtil ehCacheUtil) {
-        this.textDir = textDir;
-        this.workDir = workDir;
-        this.topicName = textDir.substring(Math.max(textDir.lastIndexOf("\\"), textDir.lastIndexOf("/")));
+    public EventsExtractBasedOnGraphV2(String topicDir, EhCacheUtil ehCacheUtil) {
+        this.topicDir = topicDir;
+        this.topicName = this.topicDir.substring(Math.max(this.topicDir.lastIndexOf("\\"), this.topicDir.lastIndexOf("/")));
         this.ehCacheUtil = ehCacheUtil;
     }
 
     @Override
     public Boolean call() throws Exception {
 
-        this.log.info(Thread.currentThread().getId() + "当前主题：" + this.textDir);
-
-        String topicName = this.textDir.substring(Math.max(this.textDir.lastIndexOf("/"), this.textDir.lastIndexOf("\\")));
-
-        /* 一个topic下的事件集合，按照文件进行组织，key为文件名 */
-        //Map<String, Map<Integer, List<EventWithPhrase>>> result = new HashMap<String, Map<Integer, List<EventWithPhrase>>>();
+        this.log.info(Thread.currentThread().getId() + " topic name：" + this.topicDir);
 
         /* 一个topic下所有词的向量字典 */
         Map<String, Vector> wordvecsInTopic = new HashMap<String, Vector>();
 
         // 获取指定文件夹下的所有文件
-        Collection<File> files = FileUtils.listFiles(FileUtils.getFile(this.textDir), null, false);
-
+        Collection<File> files = FileUtils.listFiles(FileUtils.getFile(this.topicDir), null, false);
         for (File file : files) {
 
             // 加载文件
             String absolutePath = file.getAbsolutePath(); // 当前处理的文件的绝对路径
-            String parentPath = file.getParentFile().getAbsolutePath(); // 文件所属文件夹的路径
-
+            /*String parentPath = file.getParentFile().getAbsolutePath(); // 文件所属文件夹的路径
+*/
             this.log.info(Thread.currentThread().getId() + "正在操作文件：" + absolutePath);
 
             try {
@@ -117,38 +108,8 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Boo
                 // 利用stanford的nlp核心工具进行处理
                 Map<String, Object> coreNlpResults = StanfordNLPTools.coreOperate(text);
 
-                // 获取句子切分后的文本
-                // String segedtext = (String)
-                // coreNlpResults.get(KEY_SEGED_TEXT);
-                /* 中间结果记录：记录句子切分后的文本 */
-                /*
-                 * FileUtils.writeStringToFile(FileUtils.getFile(parentPath +
-                 * "/" + DIR_SEG_TEXT, file.getName()), segedtext,
-                 * DEFAULT_CHARSET);
-                 */
-
-                // 获取句子切分后的文本详细信息
-                // String segedTextDetail = (String)
-                // coreNlpResults.get(KEY_SEGED_DETAIL_TEXT);
-                /* 中间结果记录：记录句子切分后的文本详细信息 */
-                /*
-                 * FileUtils.writeStringToFile(FileUtils.getFile(parentPath +
-                 * "/" + DIR_SEGDETAIL_TEXT, file.getName()), segedTextDetail,
-                 * DEFAULT_CHARSET);
-                 */
-
-                // 获取句子切分后的带有词性的文本信息
-                // String segedTextPOS = (String)
-                // coreNlpResults.get(KEY_SEGED_POS_TEXT);
-                /* 中间结果记录：记录句子切分后的带有词性的文本信息 */
-                /*
-                 * FileUtils.writeStringToFile( FileUtils.getFile(parentPath +
-                 * "/" + DIR_SEGDETAIL_TEXT + "/pos", file.getName()),
-                 * segedTextPOS, DEFAULT_CHARSET);
-                 */
-
                 List<Tree> syntacticTrees = (List<Tree>) coreNlpResults.get(StanfordNLPTools.KEY_SYNTACTICTREES);
-                File treeFile = new File(parentPath + "/" + OBJ + "/" + DIR_SYNTACTICTREES_OBJ, file.getName() + ".obj");
+                File treeFile = new File(GlobalParam.workDir + "/" + OBJ + "/" + DIR_SYNTACTICTREES_OBJ, file.getName() + ".obj");
                 try {
                     SerializeUtil.writeObj(syntacticTrees, treeFile);
                 } catch (IOException e) {
@@ -373,7 +334,7 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Boo
                         /*
                          * 序列化事件抽取结果
                          */
-                        File eventsObjFile = FileUtils.getFile(this.workDir + "/" + DIR_SERIALIZE_EVENTS + "/" + topicName, file.getName() + SUFFIX_SERIALIZE_FILE);
+                        File eventsObjFile = FileUtils.getFile(this.workDir + "/" + DIR_SERIALIZE_EVENTS + "/" + this.topicName, file.getName() + SUFFIX_SERIALIZE_FILE);
                         try{
                             SerializeUtil.writeObj(eventsAfterCRAndRPAndPEAndEF, eventsObjFile.getAbsoluteFile());
                         }catch (IOException e) {
@@ -694,7 +655,7 @@ public class EventsExtractBasedOnGraphV2 implements SystemConstant, Callable<Boo
 
             }
 
-            FileUtils.writeStringToFile(FileUtils.getFile(this.textDir + "/" + TEXT + "/" + DIR_CHUNKSIMPILY, events.get(0).getFilename()), sb_chunk.toString() + LINE_SPLITER, DEFAULT_CHARSET, true);
+            FileUtils.writeStringToFile(FileUtils.getFile(this.topicDir + "/" + TEXT + "/" + DIR_CHUNKSIMPILY, events.get(0).getFilename()), sb_chunk.toString() + LINE_SPLITER, DEFAULT_CHARSET, true);
 
             for (EventWithPhrase eventWithPhrase : events) {
                 // 谓语中第一个单词的序号

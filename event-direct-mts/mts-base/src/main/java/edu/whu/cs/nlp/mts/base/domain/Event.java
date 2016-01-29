@@ -1,6 +1,6 @@
 package edu.whu.cs.nlp.mts.base.domain;
 
-import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
+import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
 
 /**
  * 事件抽象类
@@ -8,7 +8,7 @@ import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
  * @author ZhenchaoWang 2015-10-28 10:49:56
  *
  */
-public abstract class Event implements SystemConstant {
+public abstract class Event implements GlobalConstant {
 
     /**
      * 事件类型判定

@@ -1,4 +1,4 @@
-package edu.whu.cs.nlp.mts.base.biz;
+package edu.whu.cs.nlp.mts.base.utils;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -15,14 +15,14 @@ import edu.whu.cs.nlp.mts.base.domain.EventType;
 import edu.whu.cs.nlp.mts.base.domain.EventWithPhrase;
 import edu.whu.cs.nlp.mts.base.domain.Vector;
 import edu.whu.cs.nlp.mts.base.domain.Word;
-import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
+import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
 
 /**
  * 向量操作相关类
  * @author Apache_xiaochao
  *
  */
-public class VectorOperator implements SystemConstant{
+public class VectorOperator implements GlobalConstant{
 
     private final Logger log = Logger.getLogger(this.getClass());
 
@@ -239,7 +239,7 @@ public class VectorOperator implements SystemConstant{
             //主-谓，将宾语的向量全部用1代替
             Float[] leftVec = this.phraseVector(eventWithPhrase.getLeftPhrases(), true);
             Float[] middleVec = this.phraseVector(eventWithPhrase.getMiddlePhrases(), false);
-            Float[] rightVec = new Float[SystemConstant.DIMENSION];
+            Float[] rightVec = new Float[GlobalConstant.DIMENSION];
             Arrays.fill(rightVec, 1.0f);
 
             eventVec = this.wordVecToEventVec(leftVec, middleVec, rightVec);
@@ -247,7 +247,7 @@ public class VectorOperator implements SystemConstant{
         } else if(EventType.LEFT_MISSING.equals(eventWithPhrase.eventType())){
 
             //谓-宾，将主语的向量全部用1代替
-            Float[] leftVec = new Float[SystemConstant.DIMENSION];
+            Float[] leftVec = new Float[GlobalConstant.DIMENSION];
             Arrays.fill(leftVec, 1.0f);
             Float[] middleVec = this.phraseVector(eventWithPhrase.getMiddlePhrases(), false);
             Float[] rightVec = this.phraseVector(eventWithPhrase.getRightPhrases(), true);

@@ -16,9 +16,9 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.log4j.Logger;
 
-import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.domain.AttributeInClassForSentenceSilimarity;
 import edu.whu.cs.nlp.mts.base.domain.SentNumSimiPair;
+import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
 import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
 
 /**
@@ -27,7 +27,7 @@ import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
  * @author Apache_xiaochao
  *
  */
-public class KeySentenceSelector2 implements Callable<Boolean>, SystemConstant {
+public class KeySentenceSelector2 implements Callable<Boolean>, GlobalConstant {
 
     private final Logger    log                = Logger.getLogger(this.getClass());
 

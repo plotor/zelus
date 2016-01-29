@@ -26,10 +26,10 @@ import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.CoreMap;
-import edu.whu.cs.nlp.mts.base.biz.ModelLoader;
-import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.domain.ParseItem;
 import edu.whu.cs.nlp.mts.base.domain.Word;
+import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
+import edu.whu.cs.nlp.mts.base.loader.ModelLoader;
 import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
 
 /**
@@ -38,7 +38,7 @@ import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
  * @author ZhenchaoWang 2015-10-27 16:38:29
  *
  */
-public class StanfordNLPTools implements SystemConstant{
+public class StanfordNLPTools implements GlobalConstant{
 
 
     /** 获取所有词的对象信息 */

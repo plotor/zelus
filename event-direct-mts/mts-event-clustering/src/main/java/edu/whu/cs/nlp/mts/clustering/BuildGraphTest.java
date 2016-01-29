@@ -16,12 +16,12 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import edu.stanford.nlp.trees.Tree;
-import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
-import edu.whu.cs.nlp.mts.base.biz.VectorOperator;
 import edu.whu.cs.nlp.mts.base.domain.EventWithPhrase;
 import edu.whu.cs.nlp.mts.base.domain.Vector;
 import edu.whu.cs.nlp.mts.base.domain.Word;
+import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
 import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
+import edu.whu.cs.nlp.mts.base.utils.VectorOperator;
 
 /**
  * 口哨算法聚类，用于构图测试
@@ -29,7 +29,7 @@ import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
  * @author ZhenchaoWang 2015-11-10 14:23:27
  *
  */
-public class BuildGraphTest implements SystemConstant {
+public class BuildGraphTest implements GlobalConstant {
 
     private final Logger log                   = Logger.getLogger(this.getClass());
 

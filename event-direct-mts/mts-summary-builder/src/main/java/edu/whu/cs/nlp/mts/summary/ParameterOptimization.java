@@ -19,9 +19,9 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
-import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.domain.CWRunParam;
 import edu.whu.cs.nlp.mts.base.domain.RougeAvg;
+import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
 import edu.whu.cs.nlp.mts.base.utils.C3P0Util;
 import edu.whu.cs.nlp.mts.clustering.ClusterByChineseWhispers;
 
@@ -30,7 +30,7 @@ import edu.whu.cs.nlp.mts.clustering.ClusterByChineseWhispers;
  * @author Apache_xiaochao
  *
  */
-public class ParameterOptimization implements SystemConstant{
+public class ParameterOptimization implements GlobalConstant{
 
     private static Logger log = Logger.getLogger(ParameterOptimization.class);
 

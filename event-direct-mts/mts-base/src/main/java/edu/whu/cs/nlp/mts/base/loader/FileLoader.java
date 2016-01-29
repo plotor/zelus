@@ -1,4 +1,4 @@
-package edu.whu.cs.nlp.mts.base.biz;
+package edu.whu.cs.nlp.mts.base.loader;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -18,6 +18,7 @@ import org.apache.log4j.Logger;
 
 import edu.whu.cs.nlp.mts.base.domain.EventWithWord;
 import edu.whu.cs.nlp.mts.base.domain.Word;
+import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
 import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
 
 /**
@@ -25,7 +26,7 @@ import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
  * @author Apache_xiaochao
  *
  */
-public class FileLoader implements SystemConstant{
+public class FileLoader implements GlobalConstant{
 
     private static Logger log = Logger.getLogger(FileLoader.class);
 

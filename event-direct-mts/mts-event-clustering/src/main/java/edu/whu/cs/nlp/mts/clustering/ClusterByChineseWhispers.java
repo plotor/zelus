@@ -17,8 +17,8 @@ import java.util.concurrent.Future;
 import org.apache.log4j.Logger;
 
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
-import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.domain.CWRunParam;
+import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
 import edu.whu.cs.nlp.mts.pretreatment.Pretreatment;
 
 /**
@@ -28,7 +28,7 @@ import edu.whu.cs.nlp.mts.pretreatment.Pretreatment;
  *
  */
 @Deprecated
-public class ClusterByChineseWhispers implements SystemConstant{
+public class ClusterByChineseWhispers implements GlobalConstant{
 
     private final Logger log = Logger.getLogger(this.getClass());
 

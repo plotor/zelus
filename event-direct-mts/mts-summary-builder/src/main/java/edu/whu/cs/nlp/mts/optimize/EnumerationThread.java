@@ -10,7 +10,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
 import edu.whu.cs.nlp.msc.domain.CompressUnit;
-import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
+import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
 
 /**
  * 穷举选择句子构建摘要
@@ -18,7 +18,7 @@ import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
  * @author ZhenchaoWang 2015-11-13 20:43:50
  *
  */
-public class EnumerationThread implements Callable<Boolean>, SystemConstant {
+public class EnumerationThread implements Callable<Boolean>, GlobalConstant {
 
     private final Logger                   log              = Logger.getLogger(this.getClass());
 

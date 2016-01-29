@@ -29,9 +29,9 @@ import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
 import edu.stanford.nlp.process.Tokenizer;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreebankLanguagePack;
-import edu.whu.cs.nlp.mts.base.biz.FileLoader;
-import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.domain.Word;
+import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
+import edu.whu.cs.nlp.mts.base.loader.FileLoader;
 import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
 import edu.whu.cs.nlp.mts.base.utils.Encipher;
 import edu.whu.cs.nlp.mts.base.utils.WordNetUtil;
@@ -42,7 +42,7 @@ import edu.whu.cs.nlp.mts.base.utils.WordNetUtil;
  *
  */
 @Deprecated
-public class SentenceExtractThread implements Callable<Boolean>, SystemConstant{
+public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant{
 
     private final Logger log = Logger.getLogger(this.getClass());
 

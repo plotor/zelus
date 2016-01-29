@@ -28,13 +28,13 @@ import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.CoreMap;
-import edu.whu.cs.nlp.mts.base.biz.FileLoader;
-import edu.whu.cs.nlp.mts.base.biz.ModelLoader;
-import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
 import edu.whu.cs.nlp.mts.base.domain.EventType;
 import edu.whu.cs.nlp.mts.base.domain.EventWithWord;
 import edu.whu.cs.nlp.mts.base.domain.ParseItem;
 import edu.whu.cs.nlp.mts.base.domain.Word;
+import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
+import edu.whu.cs.nlp.mts.base.loader.FileLoader;
+import edu.whu.cs.nlp.mts.base.loader.ModelLoader;
 import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
 import edu.whu.cs.nlp.mts.pretreatment.Pretreatment;
 
@@ -44,7 +44,7 @@ import edu.whu.cs.nlp.mts.pretreatment.Pretreatment;
  * @author Apache_xiaochao
  *
  */
-public class EventsExtractBasedOnGraph implements SystemConstant, Callable<Boolean> {
+public class EventsExtractBasedOnGraph implements GlobalConstant, Callable<Boolean> {
 
     private final Logger          log = Logger.getLogger(this.getClass());
 

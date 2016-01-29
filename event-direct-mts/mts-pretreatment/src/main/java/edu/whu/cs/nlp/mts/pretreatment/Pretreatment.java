@@ -26,9 +26,9 @@ import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
-import edu.whu.cs.nlp.mts.base.biz.FileLoader;
-import edu.whu.cs.nlp.mts.base.biz.ModelLoader;
-import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
+import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
+import edu.whu.cs.nlp.mts.base.loader.FileLoader;
+import edu.whu.cs.nlp.mts.base.loader.ModelLoader;
 import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
 
 /**
@@ -37,7 +37,7 @@ import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
  * @author Apache_xiaochao
  *
  */
-public class Pretreatment implements SystemConstant {
+public class Pretreatment implements GlobalConstant {
 
     /**获取句子切分文本的key*/
     public static final String KEY_SEG_TEXT = "key_seg_text";

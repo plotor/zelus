@@ -19,13 +19,12 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
-import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
-import edu.whu.cs.nlp.mts.base.biz.VectorOperator;
 import edu.whu.cs.nlp.mts.base.domain.EventWithPhrase;
 import edu.whu.cs.nlp.mts.base.domain.NumedEventWithPhrase;
 import edu.whu.cs.nlp.mts.base.domain.Vector;
-import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
+import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
 import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
+import edu.whu.cs.nlp.mts.base.utils.VectorOperator;
 import edu.whu.cs.nlp.mts.clustering.domain.CWEdge;
 
 /**
@@ -33,7 +32,7 @@ import edu.whu.cs.nlp.mts.clustering.domain.CWEdge;
  *
  * @author Apache_xiaochao
  */
-public class CalculateSimilarityThread implements Callable<Boolean>, SystemConstant {
+public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConstant {
 
     private static Logger log = Logger.getLogger(CalculateSimilarityThread.class);
 
@@ -219,7 +218,6 @@ public class CalculateSimilarityThread implements Callable<Boolean>, SystemConst
         } else {
             System.out.println("failed!");
         }
-        EhCacheUtil.close();
         es.shutdown();
     }
 

@@ -2,7 +2,7 @@ package edu.whu.cs.nlp.mts.base.domain;
 
 import java.io.Serializable;
 
-import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
+import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
 
 /**
  * 单词
@@ -10,7 +10,7 @@ import edu.whu.cs.nlp.mts.base.biz.SystemConstant;
  * @author Apache_xiaochao
  *
  */
-public class Word implements Serializable, SystemConstant, Cloneable {
+public class Word implements Serializable, GlobalConstant, Cloneable {
 
     private static final long serialVersionUID = -4747705721887890597L;
 
