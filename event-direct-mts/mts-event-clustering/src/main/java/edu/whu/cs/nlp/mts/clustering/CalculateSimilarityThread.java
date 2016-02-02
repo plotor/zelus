@@ -23,6 +23,7 @@ import edu.whu.cs.nlp.mts.base.domain.EventWithPhrase;
 import edu.whu.cs.nlp.mts.base.domain.NumedEventWithPhrase;
 import edu.whu.cs.nlp.mts.base.domain.Vector;
 import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
+import edu.whu.cs.nlp.mts.base.global.GlobalParam;
 import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
 import edu.whu.cs.nlp.mts.base.utils.VectorOperator;
 import edu.whu.cs.nlp.mts.clustering.domain.CWEdge;
@@ -38,15 +39,12 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
 
     private final String topicDir;
 
-    private final String workDir;
-
     private final VectorOperator vectorOperator;
 
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#0.000000");
 
-    public CalculateSimilarityThread(String topicDir, String workDir) {
+    public CalculateSimilarityThread(String topicDir) {
         this.topicDir = topicDir;
-        this.workDir = workDir;
         this.vectorOperator = new VectorOperator();
     }
 
@@ -61,16 +59,13 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
         int index = Math.max(this.topicDir.lastIndexOf("/"), this.topicDir.lastIndexOf("\\"));
         String topicName = this.topicDir.substring(index);
 
-        String seralizeFilepath = this.workDir + "/" + DIR_WORDS_VECTOR + "/" + topicName + ".obj";
+        String seralizeFilepath = GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT + "/" + DIR_WORDS_VECTOR + "/" + topicName + ".obj";
         Map<String, Vector> wordvecsInTopic = null;
         try{
-            wordvecsInTopic = (Map<String, Vector>) SerializeUtil.readObj(this.workDir + "/" + DIR_WORDS_VECTOR + "/" + topicName + ".obj");
+            wordvecsInTopic = (Map<String, Vector>) SerializeUtil.readObj(seralizeFilepath);
         } catch(Exception e) {
-
             log.error("Load seralize file[" + seralizeFilepath + "] error!", e);
-
             throw e;
-
         }
 
         if(MapUtils.isEmpty(wordvecsInTopic)) {
@@ -86,11 +81,8 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
         Collection<File> eventFiles = FileUtils.listFiles(FileUtils.getFile(this.topicDir), null, false);
 
         for (File eventFile : eventFiles) {
-
             try {
-
                 log.info("Loading serialize file: " + eventFile.getAbsolutePath());
-
                 @SuppressWarnings("unchecked")
                 Map<Integer, List<EventWithPhrase>> eventsInFile = (Map<Integer, List<EventWithPhrase>>) SerializeUtil.readObj(eventFile.getAbsolutePath());
 
@@ -118,38 +110,20 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
                 }
 
             } catch (IOException e) {
-
                 log.error("操作文件出错：" + eventFile.getAbsolutePath(), e);
-
             }
 
         }
 
         //将编号的事件保存
         if (eventWithNums.size() > 0) {
-            File nodeFile = FileUtils.getFile(this.workDir + "/" + DIR_NODES, topicName + ".node.obj");
+            File nodeFile = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + DIR_NODES, topicName + ".node.obj");
             try {
                 SerializeUtil.writeObj(eventWithNums, nodeFile);
             } catch (IOException e) {
                 log.error("Serilize file error:" + nodeFile.getAbsolutePath(), e);
                 throw e;
             }
-
-            // 将事件及其序号信息，写入文件
-            /*StringBuilder sb_nodes = new StringBuilder();
-            StringBuilder sb_nodes_simplify = new StringBuilder();
-            for (Entry<Integer, NumedEventWithPhrase> entry : eventWithNums.entrySet()) {
-                NumedEventWithPhrase numedEventWithPhrase = entry.getValue();
-                sb_nodes.append((numedEventWithPhrase.getNum() + 1) + "\t" + numedEventWithPhrase.getEvent().toString() + LINE_SPLITER);
-                sb_nodes_simplify.append((numedEventWithPhrase.getNum() + 1) + "\t" + numedEventWithPhrase.getEvent().toShortString() + LINE_SPLITER);
-            }
-
-            try {
-                FileUtils.writeStringToFile(FileUtils.getFile(workDir + "/" + DIR_NODES, topicName + ".node"), CommonUtil.cutLastLineSpliter(sb_nodes.toString()), SystemConstant.DEFAULT_CHARSET);
-                FileUtils.writeStringToFile(FileUtils.getFile(workDir + "/" + DIR_NODES, topicName + ".node.simplify"), CommonUtil.cutLastLineSpliter(sb_nodes_simplify.toString()), SystemConstant.DEFAULT_CHARSET);
-            } catch (IOException e) {
-                log.error("写文件出错：" + workDir + "/" + DIR_NODES + "/" + topicName + ".node", e);
-            }*/
 
         } else {
 
@@ -181,12 +155,6 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
 
                     CWEdge cwEdge = new CWEdge(Integer.valueOf(i), Integer.valueOf(j), Float.valueOf((float)approx));
                     cwEdges.add(cwEdge);
-                    //FileUtils.writeStringToFile(edgeFile, (i + 1) + "\t" + (j + 1) + "\t" + approx + LINE_SPLITER, DEFAULT_CHARSET, true);
-                    /*FileUtils.writeStringToFile(edgeFile, (j + 1) + "\t" + (i + 1) + "\t" + approx + LINE_SPLITER, DEFAULT_CHARSET, true);*/
-                    // 对数据进行整数化（*1000）
-                    /*int intVal = (int) (approx * 1000);
-                    FileUtils.writeStringToFile(intEdgeFile, (i + 1) + "\t" + (j + 1) + "\t" + intVal + LINE_SPLITER, DEFAULT_CHARSET, true);*/
-                    /*FileUtils.writeStringToFile(intEdgeFile, (j + 1) + "\t" + (i + 1) + "\t" + intVal + LINE_SPLITER, DEFAULT_CHARSET, true);*/
 
                 } catch (Exception e) {
 
@@ -196,7 +164,7 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
             }
         }
 
-        File edgeFile = FileUtils.getFile(this.workDir + "/" + DIR_EDGES, topicName + ".edge.obj");
+        File edgeFile = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + DIR_EDGES, topicName + ".edge.obj");
         try {
 
             SerializeUtil.writeObj(cwEdges, edgeFile);
@@ -212,7 +180,7 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
     public static void main(String[] args) throws InterruptedException, ExecutionException {
         ExecutorService es = Executors.newSingleThreadExecutor();
         //Future<Boolean> future = es.submit(new CalculateSimilarityThread("E:/workspace/test/serializable-events/D0732H", "db_cache_vec", "local"));
-        Future<Boolean> future = es.submit(new CalculateSimilarityThread("E:/workspace/test/example/serializable-events/text", "E:/workspace/test/example"));
+        Future<Boolean> future = es.submit(new CalculateSimilarityThread("E:/workspace/test/example"));
         if(future.get()){
             System.out.println("success!");
         } else {

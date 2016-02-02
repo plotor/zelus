@@ -29,6 +29,7 @@ import edu.whu.cs.nlp.mts.base.domain.Pair;
 import edu.whu.cs.nlp.mts.base.domain.Vector;
 import edu.whu.cs.nlp.mts.base.domain.Word;
 import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
+import edu.whu.cs.nlp.mts.base.global.GlobalParam;
 import edu.whu.cs.nlp.mts.base.nlp.StanfordNLPTools;
 import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
 import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
@@ -45,9 +46,6 @@ import edu.whu.cs.nlp.mts.domain.ClustItemPlus;
 public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, GlobalConstant {
 
     private static Logger     log              = Logger.getLogger(SummaryBuilderByPreVectorReRanker.class);
-
-    /** 工作目录 */
-    private final String      workDir;
 
     /** 分类目录，用于同时跑多个任务 */
     private final String numDir;
@@ -82,9 +80,8 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
     /** 每个主题下面选取的句子的数量 */
     private Integer           sentCountInClust = 10;
 
-    public SummaryBuilderByPreVectorReRanker(String workDir, String numDir, String filename, int sentCountInClust, Map<String, Double> idfValues, String question, Map<String, Vector> wordVecs, float alpha, float beta, float similarityThresh) {
+    public SummaryBuilderByPreVectorReRanker(String numDir, String filename, int sentCountInClust, Map<String, Double> idfValues, String question, Map<String, Vector> wordVecs, float alpha, float beta, float similarityThresh) {
         super();
-        this.workDir = workDir;
         this.numDir = StringUtils.isEmpty(numDir) ? "" : ("/" + numDir.trim());
         this.filename = filename;
         this.topicname = this.filename.substring(0, this.filename.length() - 4);
@@ -100,7 +97,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
     @Override
     public Boolean call() throws Exception {
 
-        log.info("[Thread id:" + Thread.currentThread().getId() + "] is building summary for[" + this.workDir + "/" + GlobalConstant.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "]");
+        log.info("[Thread id:" + Thread.currentThread().getId() + "] is building summary for[" + GlobalParam.workDir + "/" + DIR_SUMMARY_RESULTS + "/" + DIR_SENTENCES_COMPRESSION + "/" + this.filename + "]");
 
         // 加载当前主题下面的句子，每个类别控制句子数量
         List<ClustItemPlus> candidateSentences = this.loadSentences(this.sentCountInClust);
@@ -109,7 +106,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
         Collections.sort(candidateSentences);
 
         // 加载每个clust的权值
-        String clusterWeightFilepath = this.workDir + "/" + GlobalConstant.DIR_CLUSTER_WEIGHT + "/" + this.filename.substring(0, this.filename.length() - 4) + "." + GlobalConstant.OBJ;
+        String clusterWeightFilepath = GlobalParam.workDir + "/" + DIR_SUMMARY_RESULTS + "/" + DIR_CLUSTER_WEIGHT + "/" + this.filename.substring(0, this.filename.length() - 4) + "." + OBJ;
         log.info("Loading serilized file[" + clusterWeightFilepath + "]");
         Map<String, Float> clusterWeights = null;
         try {
@@ -361,7 +358,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
         int indexOfPoint = this.filename.lastIndexOf(".");
         String summaryFilename = this.filename.substring(0, indexOfPoint - 1).toUpperCase() + ".M.250." + this.filename.substring(indexOfPoint - 1, indexOfPoint).toUpperCase() + ".3";
         try {
-            File file = FileUtils.getFile(this.workDir + "/" + DIR_SUMMARIES_V2 + this.numDir, summaryFilename);
+            File file = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_SUMMARY_RESULTS + "/" + DIR_SUMMARIES_V2 + this.numDir, summaryFilename);
             log.info("Saving summary to file[" + file.getAbsolutePath() + "]");
             FileUtils.writeStringToFile(file, summary.toString().trim(), DEFAULT_CHARSET);
         } catch (IOException e) {
@@ -456,8 +453,8 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
         Pattern pattern = Pattern.compile("(classes_\\d+):");
 
         try {
-            log.info("Loading msc file[" + this.workDir + "/" + GlobalConstant.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "]");
-            LineIterator lineIterator = FileUtils.lineIterator(FileUtils.getFile(this.workDir + '/' + GlobalConstant.DIR_SENTENCES_COMPRESSION, this.filename), GlobalConstant.DEFAULT_CHARSET.toString());
+            log.info("Loading msc file[" + GlobalParam.workDir + "/" + DIR_SUMMARY_RESULTS + "/" + DIR_SENTENCES_COMPRESSION + "/" + this.filename + "]");
+            LineIterator lineIterator = FileUtils.lineIterator(FileUtils.getFile(GlobalParam.workDir + "/" + DIR_SUMMARY_RESULTS + '/' + DIR_SENTENCES_COMPRESSION, this.filename), DEFAULT_CHARSET.toString());
 
             String currentKey = "";
             int sentCount = 0; // 存储当前选择的句子数
@@ -502,7 +499,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
             log.info("Load msc file finished[sentence count:" + totalCount + "]");
 
         } catch (IOException e) {
-            log.error("Load msc file[" + this.workDir + "/" + GlobalConstant.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "] error!", e);
+            log.error("Load msc file[" + GlobalParam.workDir + "/" + DIR_SUMMARY_RESULTS + "/" + DIR_SENTENCES_COMPRESSION + "/" + this.filename + "] error!", e);
             throw e;
         }
 
@@ -561,7 +558,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
             throw new Exception("Can't load any word vec[" + vecFile.getAbsolutePath() + "]");
         }
 
-        SummaryBuilderByPreVectorReRanker summaryBuilder = new SummaryBuilderByPreVectorReRanker(workDir, "0", "D0731G.txt", 10, idfValues, question, wordVecs, 0.2f, 3.6f, 1.19f);
+        SummaryBuilderByPreVectorReRanker summaryBuilder = new SummaryBuilderByPreVectorReRanker("0", "D0731G.txt", 10, idfValues, question, wordVecs, 0.2f, 3.6f, 1.19f);
         ExecutorService es = Executors.newSingleThreadExecutor();
         Future<Boolean> future = es.submit(summaryBuilder);
         try {

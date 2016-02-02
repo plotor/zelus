@@ -103,9 +103,9 @@ public class MTSBOEC implements GlobalConstant {
             EhCacheUtil ehCacheUtil = new EhCacheUtil(GlobalParam.cacheName, GlobalParam.datasource);
 
             for (File dir : textDirFile.listFiles()) {
-
-                tasks.add(new EventsExtractBasedOnGraphV2(dir.getAbsolutePath(), ehCacheUtil));
-
+                String absoluteDir = dir.getAbsolutePath();
+                String topicName = absoluteDir.substring(Math.max(absoluteDir.lastIndexOf("\\"), absoluteDir.lastIndexOf("/")) + 1);
+                tasks.add(new EventsExtractBasedOnGraphV2(topicName, ehCacheUtil));
             }
 
             /* 执行完成之前，主线程阻塞 */
@@ -116,7 +116,7 @@ public class MTSBOEC implements GlobalConstant {
                     future.get();
                 }
             } catch (InterruptedException | ExecutionException e) {
-                MTSBOEC.log.error("There is an exception when extract events!", e);
+                log.error("There is an exception when extract events!", e);
                 return;
             } finally {
                 EhCacheUtil.close();
@@ -125,51 +125,48 @@ public class MTSBOEC implements GlobalConstant {
 
         } else {
 
-            MTSBOEC.log.info("Events extract is not enabled!");
+            log.info("Events extract is not enabled!");
 
         }
 
         /**
          * 计算事件之间的相似度
          */
-        int nThreadSimiarity = Integer.parseInt(properties.getProperty("nThreadSimiarity")); // 计算事件相似度的线程数量
-        if ("y".equalsIgnoreCase(properties.getProperty("isCalculateSimilarity"))) {
+        if ("y".equalsIgnoreCase(properties.getProperty("is_calculate_similarity"))) {
 
-            MTSBOEC.log.info("Starting calculate events similarity...");
+            log.info("Starting calculate events similarity...");
 
-            File eventDirFile = new File(GlobalParam.workDir + "/" + GlobalConstant.DIR_SERIALIZE_EVENTS);
+            File eventDirFile = new File(GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT + "/" + DIR_SERIALIZE_EVENTS);
             File[] topicDirs = eventDirFile.listFiles();
             List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
             for (File topicDir : topicDirs) {
-                tasks.add(new CalculateSimilarityThread(topicDir.getAbsolutePath(), workDir));
+                tasks.add(new CalculateSimilarityThread(topicDir.getAbsolutePath()));
             }
             if (CollectionUtils.isNotEmpty(tasks)) {
-                ExecutorService executorService = Executors.newFixedThreadPool(nThreadSimiarity);
+                ExecutorService executorService = Executors.newFixedThreadPool(threadNum);
                 try {
                     List<Future<Boolean>> futures = executorService.invokeAll(tasks);
                     for (Future<Boolean> future : futures) {
                         future.get();
                     }
                 } catch (InterruptedException | ExecutionException e) {
-                    MTSBOEC.log.error("There is an exception when calculate events similarity!", e);
+                    log.error("There is an exception when calculate events similarity!", e);
                 } finally {
                     executorService.shutdown();
                 }
             }
         } else {
-            MTSBOEC.log.info("Events similarity calculate is not enabled!");
+            log.info("Events similarity calculate is not enabled!");
         }
 
         /**
          * 对事件进行聚类，同时按类别抽取事件所在子句
          */
-        if ("y".equalsIgnoreCase(properties.getProperty("isEventCluster"))) {
+        if ("y".equalsIgnoreCase(properties.getProperty("is_event_cluster"))) {
 
-            MTSBOEC.log.info("Starting events clusting & sub sentences extracting...");
+            log.info("Starting events clusting & sub sentences extracting...");
 
-            String dictPath = properties.getProperty("dictPath");
-
-            File nodeFile = new File(GlobalParam.workDir + "/" + GlobalConstant.DIR_NODES);
+            File nodeFile = new File(GlobalParam.workDir + "/" + DIR_NODES);
             File[] nodes = nodeFile.listFiles(new FilenameFilter() {
 
                 @Override
@@ -188,10 +185,10 @@ public class MTSBOEC implements GlobalConstant {
                 List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
                 for (File file : nodes) {
                     String nodePath = file.getAbsolutePath();
-                    String edgePath = GlobalParam.workDir + "/" + GlobalConstant.DIR_EDGES + "/" + file.getName().replace("node", "edge");
-                    String wordvecDictPath = GlobalParam.workDir + "/" + GlobalConstant.DIR_WORDS_VECTOR + "/" + file.getName().replace(".node", "");
+                    String edgePath = GlobalParam.workDir + "/" + DIR_EDGES + "/" + file.getName().replace("node", "edge");
+                    String wordvecDictPath = GlobalParam.workDir + "/" + DIR_WORDS_VECTOR + "/" + file.getName().replace(".node", "");
                     String topicPath = GlobalParam.workDir + "/" + DIR_CORPUS + "/" + file.getName().substring(0, file.getName().indexOf("."));
-                    tasks.add(new ChineseWhispersCluster(topicPath, nodePath, edgePath, wordvecDictPath, dictPath));
+                    tasks.add(new ChineseWhispersCluster(topicPath, nodePath, edgePath, wordvecDictPath, GlobalParam.wordnetDictPath));
                 }
 
                 List<Future<Boolean>> futures = es.invokeAll(tasks);
@@ -201,7 +198,7 @@ public class MTSBOEC implements GlobalConstant {
 
             } catch (Throwable e) {
 
-                MTSBOEC.log.error("Event cluster & Sentence Extract error!", e);
+                log.error("Event cluster & Sentence Extract error!", e);
 
             } finally {
                 if (es != null) {
@@ -210,37 +207,36 @@ public class MTSBOEC implements GlobalConstant {
             }
 
         } else {
-            MTSBOEC.log.info("Events clusting is not enabled!");
+            log.info("Events clusting is not enabled!");
         }
 
         /**
          * 摘要生成
          */
-        if ("y".equalsIgnoreCase(properties.getProperty("isBuildSummary"))) {
+        if ("y".equalsIgnoreCase(properties.getProperty("is_build_summary"))) {
 
             // 加载question文件
             Properties prop = new Properties();
             try {
-                String questionFilename = properties.getProperty("question_filename");
-                MTSBOEC.log.info("Loading question file[" + questionFilename + "]...");
+                String questionFilename = GlobalParam.questionFilename;
+                log.info("Loading question file[" + questionFilename + "]...");
                 prop.load(new InputStreamReader(MTSBOEC.class.getClassLoader().getResourceAsStream(questionFilename)));
-                MTSBOEC.log.info("Loading question file[" + questionFilename + "] success!");
+                log.info("Loading question file[" + questionFilename + "] success!");
             } catch (IOException e) {
-                MTSBOEC.log.error("Load question file error!", e);
+                log.error("Load question file error!", e);
                 throw e;
             }
 
-            String buildMode = properties.getProperty("buildMode");
+            String runMode = GlobalParam.runMode;
 
-            float alpha = Float.parseFloat(properties.getProperty("alpha"));
-            float beta = Float.parseFloat(properties.getProperty("beta"));
+            float alpha = GlobalParam.alpha4summary;
+            float beta = GlobalParam.beta4summary;
 
             List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
-            File compressFiles = new File(GlobalParam.workDir + "/" + GlobalConstant.DIR_SENTENCES_COMPRESSION);
+            File compressFiles = new File(GlobalParam.workDir + "/" + DIR_SENTENCES_COMPRESSION);
 
             // 加载词向量
-            String vecFilename = properties.getProperty("vec_filename");
-            File vecFile = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_VEC_FILE, vecFilename);
+            File vecFile = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_VEC_FILE, GlobalParam.vecFilename);
             log.info("Loading word vec[" + vecFile.getAbsolutePath() + "]");
             Map<String, Vector> wordVecs = new HashMap<String, Vector>();
             try {
@@ -256,39 +252,32 @@ public class MTSBOEC implements GlobalConstant {
                 throw new Exception("Can't load any word vec[" + vecFile.getAbsolutePath() + "]");
             }
 
-            if ("old-np".equalsIgnoreCase(buildMode)) {
+            if ("old-np".equalsIgnoreCase(runMode)) {
                 // 采用老的reranker策略构建摘要
                 log.info("Summary build mode: old-np");
-                // ngram 模型所在路径
-                String ngramModelPath = properties.getProperty("ngramModelPath");
                 for (File file : compressFiles.listFiles()) {
                     String topicName = file.getName().substring(0, file.getName().lastIndexOf("."));
-                    tasks.add(new NomParamSentenceReRanker(prop.getProperty(topicName), file.getAbsolutePath(), numDir, wordVecs, ngramModelPath));
+                    tasks.add(new NomParamSentenceReRanker(prop.getProperty(topicName), file.getAbsolutePath(), numDir, wordVecs, GlobalParam.ngramModelPath));
                 }
 
-            } else if ("old".equalsIgnoreCase(buildMode)) {
+            } else if ("old".equalsIgnoreCase(runMode)) {
 
                 // 采用老的reranker策略构建摘要
-                // ngram 模型所在路径
-                String ngramModelPath = properties.getProperty("ngramModelPath");
                 for (File file : compressFiles.listFiles()) {
                     String topicName = file.getName().substring(0, file.getName().lastIndexOf("."));
-                    tasks.add(new SentenceReRanker(prop.getProperty(topicName), file.getAbsolutePath(), numDir, wordVecs, ngramModelPath, alpha, beta));
+                    tasks.add(new SentenceReRanker(prop.getProperty(topicName), file.getAbsolutePath(), numDir, wordVecs, GlobalParam.ngramModelPath, alpha, beta));
                 }
 
-            } else if ("new".equalsIgnoreCase(buildMode)) {
+            } else if ("new".equalsIgnoreCase(runMode)) {
                 // 采用子模函数构建摘要
                 log.info("Summary build mode: new");
-
-                int sentenceCount = Integer.parseInt(properties.getProperty("sentenceCount"));
-                String idfFilename = properties.getProperty("idf_filename");
 
                 // 加载每个词的IDF值
                 /** Google 总页面数估值 */
                 final double TOTAL_PAGE_COUNT = 30000000000.0D;
 
                 Map<String, Double> idfValues = new HashMap<String, Double>();
-                File idfFIle = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_IDF_FILE, idfFilename);
+                File idfFIle = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_IDF_FILE, GlobalParam.idfFilename);
                 log.info("Loading idf value file[" + idfFIle.getAbsolutePath() + "]");
                 LineIterator lineIterator = null;
                 try {
@@ -312,45 +301,33 @@ public class MTSBOEC implements GlobalConstant {
                     }
                 }
 
-                // 相似度上限
-                float similarityThresh = Float.parseFloat(properties.getProperty("similarity_thresh"));
-
                 for (File file : compressFiles.listFiles()) {
                     String topicName = file.getName().substring(0, file.getName().lastIndexOf("."));
-                    // tasks.add(new SummaryBuilder(workDir, file.getName(),
-                    // sentenceCount, idfValues, prop.getProperty(topicName),
-                    // alpha, beta));
-                    // tasks.add(new SummaryBuilderByVector(workDir, numDir,
-                    // file.getName(), sentenceCount, idfValues,
-                    // prop.getProperty(topicName), ehCacheUtil, alpha, beta));
-                    tasks.add(new SummaryBuilderByPreVectorReRanker(workDir, numDir, file.getName(), sentenceCount, idfValues, prop.getProperty(topicName), wordVecs, alpha, beta, similarityThresh));
+                    tasks.add(new SummaryBuilderByPreVectorReRanker(numDir, file.getName(), GlobalParam.sentenceCountThresh, idfValues, prop.getProperty(topicName), wordVecs, alpha, beta, GlobalParam.similarityThresh));
                 }
 
             }
 
             ExecutorService es = null;
             try {
-
                 es = Executors.newFixedThreadPool(threadNum);
                 List<Future<Boolean>> futures = es.invokeAll(tasks);
                 for (Future<Boolean> future : futures) {
                     future.get();
                 }
-
             } catch (Throwable e) {
                 log.error("Build summary error!", e);
             } finally {
                 if (es != null) {
                     es.shutdown();
                 }
-                // EhCacheUtil.close();
             }
 
         } else {
-            MTSBOEC.log.info("Build summary is not enabled!");
+            log.info("Build summary is not enabled!");
         }
 
-        log.info("-----------------------finished----------------------");
+        log.info("-----------------------finished-----------------------");
 
     }
 

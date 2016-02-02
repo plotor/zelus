@@ -63,7 +63,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
     private final Logger log = Logger.getLogger(this.getClass());
 
     /** 输入文件所在目录 */
-    private final String topicDir;
+    private final String eventExtractWorkDir;
 
     /** 专题名 */
     private final String topicName;
@@ -77,29 +77,29 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * @param textDir
      *            输入文件目录
      */
-    public EventsExtractBasedOnGraphV2(String topicDir, EhCacheUtil ehCacheUtil) {
-        this.topicDir = topicDir;
-        this.topicName = this.topicDir.substring(Math.max(this.topicDir.lastIndexOf("\\"), this.topicDir.lastIndexOf("/")));
+    public EventsExtractBasedOnGraphV2(String topicName, EhCacheUtil ehCacheUtil) {
+        this.topicName = topicName;
         this.ehCacheUtil = ehCacheUtil;
+        this.eventExtractWorkDir = GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT;
     }
 
     @Override
     public Boolean call() throws Exception {
 
-        this.log.info(Thread.currentThread().getId() + " topic name：" + this.topicDir);
+        this.log.info(Thread.currentThread().getId() + " topic name：" + this.topicName);
 
         /* 一个topic下所有词的向量字典 */
         Map<String, Vector> wordvecsInTopic = new HashMap<String, Vector>();
 
         // 获取指定文件夹下的所有文件
-        Collection<File> files = FileUtils.listFiles(FileUtils.getFile(this.topicDir), null, false);
+        Collection<File> files = FileUtils.listFiles(FileUtils.getFile(GlobalParam.workDir + "/" + DIR_CORPUS  + "/" + this.topicName), null, false);
         for (File file : files) {
 
             // 加载文件
             String absolutePath = file.getAbsolutePath(); // 当前处理的文件的绝对路径
             /*String parentPath = file.getParentFile().getAbsolutePath(); // 文件所属文件夹的路径
 */
-            this.log.info(Thread.currentThread().getId() + "正在操作文件：" + absolutePath);
+            this.log.info(Thread.currentThread().getId() + " event extracting for[" + absolutePath + "]");
 
             try {
                 // 加载正文
@@ -109,7 +109,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                 Map<String, Object> coreNlpResults = StanfordNLPTools.coreOperate(text);
 
                 List<Tree> syntacticTrees = (List<Tree>) coreNlpResults.get(StanfordNLPTools.KEY_SYNTACTICTREES);
-                File treeFile = new File(GlobalParam.workDir + "/" + OBJ + "/" + DIR_SYNTACTICTREES_OBJ, file.getName() + ".obj");
+                File treeFile = new File(this.eventExtractWorkDir + "/" + OBJ + "/" + DIR_SYNTACTICTREES_OBJ, file.getName() + ".obj");
                 try {
                     SerializeUtil.writeObj(syntacticTrees, treeFile);
                 } catch (IOException e) {
@@ -121,7 +121,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                 List<List<Word>> words = (List<List<Word>>) coreNlpResults.get(StanfordNLPTools.KEY_WORDS);
 
                 // 序列化词集合
-                File wordsFile = FileUtils.getFile(parentPath + "/" + OBJ + "/" + DIR_WORDS_OBJ + "/", file.getName() + ".obj");
+                File wordsFile = FileUtils.getFile(this.eventExtractWorkDir + "/" + OBJ + "/" + DIR_WORDS_OBJ + "/", file.getName() + ".obj");
                 try {
                     SerializeUtil.writeObj(words, wordsFile);
                 } catch (IOException e) {
@@ -159,13 +159,13 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                     sb_words_pos.append(sb_pos.toString().trim() + LINE_SPLITER);
                 }
                 /* 中间结果记录：词和词性分开按行存储 */
-                FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_SEGDETAIL_TEXT + "/pos2/", file.getName()), CommonUtil.cutLastLineSpliter(sb_words_pos.toString()), DEFAULT_CHARSET);
+                FileUtils.writeStringToFile(FileUtils.getFile(this.eventExtractWorkDir + "/" + TEXT + "/" + DIR_SEGDETAIL_TEXT + "/pos2/", file.getName()), CommonUtil.cutLastLineSpliter(sb_words_pos.toString()), DEFAULT_CHARSET);
 
                 // 获取依存分析结果
                 @SuppressWarnings("unchecked")
                 List<List<ParseItem>> parseItemList = (List<List<ParseItem>>) coreNlpResults.get(StanfordNLPTools.KEY_PARSED_ITEMS);
                 // 序列化依存分析对
-                File parseItemFile = FileUtils.getFile(parentPath + "/" + OBJ + "/" + DIR_PARSE_TEXT, file.getName() + ".obj");
+                File parseItemFile = FileUtils.getFile(this.eventExtractWorkDir + "/" + OBJ + "/" + DIR_PARSE_OBJ, file.getName() + ".obj");
                 try {
                     SerializeUtil.writeObj(words, parseItemFile);
                 } catch (IOException e) {
@@ -173,7 +173,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                     throw e;
                 }
                 // 以文本形式存储依存分析对
-                FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_PARSE_TEXT, file.getName()), CommonUtil.lists2String(parseItemList), DEFAULT_CHARSET);
+                FileUtils.writeStringToFile(FileUtils.getFile(this.eventExtractWorkDir + "/" + TEXT + "/" + DIR_PARSE_TEXT, file.getName()), CommonUtil.lists2String(parseItemList), DEFAULT_CHARSET);
 
                 /* 中间结果记录：记录依存分析简版结果 */
                 StringBuilder simplifyParsedResult = new StringBuilder();
@@ -182,7 +182,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                         simplifyParsedResult.append(parseItem.toShortString() + "\t");
                     simplifyParsedResult.append(LINE_SPLITER);
                 }
-                FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_PARSESIMPLIFY, file.getName()), CommonUtil.cutLastLineSpliter(simplifyParsedResult.toString()), DEFAULT_CHARSET);
+                FileUtils.writeStringToFile(FileUtils.getFile(this.eventExtractWorkDir + "/" + TEXT + "/" + DIR_PARSESIMPLIFY, file.getName()), CommonUtil.cutLastLineSpliter(simplifyParsedResult.toString()), DEFAULT_CHARSET);
 
                 // 对当前文本进行事件抽取
                 Map<Integer, List<EventWithWord>> events = this.extract(parseItemList, words, file.getName());
@@ -194,8 +194,8 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                     sb_events.append(entry.getKey() + "\t" + eventsInSentence + LINE_SPLITER);
                     sb_simplify_events.append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
                 }
-                FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_EVENTS, file.getName()), CommonUtil.cutLastLineSpliter(sb_events.toString()), DEFAULT_CHARSET);
-                FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_EVENTSSIMPLIFY, file.getName()), CommonUtil.cutLastLineSpliter(sb_simplify_events.toString()), DEFAULT_CHARSET);
+                FileUtils.writeStringToFile(FileUtils.getFile(this.eventExtractWorkDir + "/" + TEXT + "/" + DIR_EVENTS, file.getName()), CommonUtil.cutLastLineSpliter(sb_events.toString()), DEFAULT_CHARSET);
+                FileUtils.writeStringToFile(FileUtils.getFile(this.eventExtractWorkDir + "/" + TEXT + "/" + DIR_EVENTSSIMPLIFY, file.getName()), CommonUtil.cutLastLineSpliter(sb_simplify_events.toString()), DEFAULT_CHARSET);
 
                 /**
                  * 指代消解
@@ -238,8 +238,8 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                         sb_events_phrase.append(entry.getKey() + "\t" + CommonUtil.list2String(entry.getValue()) + LINE_SPLITER);
                         sb_simplify_events_phrase.append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
                     }
-                    FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_EVENTS, file.getName()), CommonUtil.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
-                    FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_EVENTSSIMPLIFY, file.getName()), CommonUtil.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(this.eventExtractWorkDir + "/" + TEXT + "/" + DIR_CR_EVENTS, file.getName()), CommonUtil.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(this.eventExtractWorkDir + "/" + TEXT + "/" + DIR_CR_EVENTSSIMPLIFY, file.getName()), CommonUtil.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
 
                 } catch (Throwable e) {
 
@@ -266,8 +266,8 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                         sb_events_phrase.append(entry.getKey() + "\t" + CommonUtil.list2String(entry.getValue()) + LINE_SPLITER);
                         sb_simplify_events_phrase.append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
                     }
-                    FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_RP_EVENTS, file.getName()), CommonUtil.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
-                    FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_RP_EVENTSSIMPLIFY, file.getName()), CommonUtil.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(this.eventExtractWorkDir + "/" + TEXT + "/" + DIR_CR_RP_EVENTS, file.getName()), CommonUtil.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(this.eventExtractWorkDir + "/" + TEXT + "/" + DIR_CR_RP_EVENTSSIMPLIFY, file.getName()), CommonUtil.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
 
                 } catch (Throwable e) {
 
@@ -295,8 +295,8 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                         sb_events_phrase.append(entry.getKey() + "\t" + CommonUtil.list2String(entry.getValue()) + LINE_SPLITER);
                         sb_simplify_events_phrase.append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
                     }
-                    FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_RP_PE_EVENTS, file.getName()), CommonUtil.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
-                    FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_RP_PE_EVENTSSIMPLIFY, file.getName()), CommonUtil.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(this.eventExtractWorkDir + "/" + TEXT + "/" + DIR_CR_RP_PE_EVENTS, file.getName()), CommonUtil.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(this.eventExtractWorkDir + "/" + TEXT + "/" + DIR_CR_RP_PE_EVENTSSIMPLIFY, file.getName()), CommonUtil.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
 
                 } catch (Throwable e) {
 
@@ -327,14 +327,14 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                         sb_events_phrase.append(entry.getKey() + "\t" + CommonUtil.list2String(entry.getValue()) + LINE_SPLITER);
                         sb_simplify_events_phrase.append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
                     }
-                    FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_RP_PE_EF_EVENTS, file.getName()), CommonUtil.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
-                    FileUtils.writeStringToFile(FileUtils.getFile(parentPath + "/" + TEXT + "/" + DIR_CR_RP_PE_EF_EVENTSSIMPLIFY, file.getName()), CommonUtil.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(this.eventExtractWorkDir + "/" + TEXT + "/" + DIR_CR_RP_PE_EF_EVENTS, file.getName()), CommonUtil.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(this.eventExtractWorkDir + "/" + TEXT + "/" + DIR_CR_RP_PE_EF_EVENTSSIMPLIFY, file.getName()), CommonUtil.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
 
                     if(MapUtils.isNotEmpty(eventsAfterCRAndRPAndPEAndEF)) {
                         /*
                          * 序列化事件抽取结果
                          */
-                        File eventsObjFile = FileUtils.getFile(this.workDir + "/" + DIR_SERIALIZE_EVENTS + "/" + this.topicName, file.getName() + SUFFIX_SERIALIZE_FILE);
+                        File eventsObjFile = FileUtils.getFile(this.eventExtractWorkDir + "/" + OBJ + "/" + DIR_SERIALIZE_EVENTS + "/" + this.topicName, file.getName() + SUFFIX_SERIALIZE_FILE);
                         try{
                             SerializeUtil.writeObj(eventsAfterCRAndRPAndPEAndEF, eventsObjFile.getAbsoluteFile());
                         }catch (IOException e) {
@@ -362,7 +362,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
             /*
              * 序列化词向量字典
              */
-            File wordvecFile = FileUtils.getFile(this.workDir + "/" + DIR_WORDS_VECTOR, this.topicName + ".obj");
+            File wordvecFile = FileUtils.getFile(this.eventExtractWorkDir + "/" + DIR_WORDS_VECTOR, this.topicName + ".obj");
             try{
 
                 SerializeUtil.writeObj(wordvecsInTopic, wordvecFile);
@@ -400,9 +400,6 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
             CoreferenceElement corefElement = crChains.get(key);
             if (corefElement != null) {
                 CoreferenceElement ref = corefElement.getRef();
-                // System.out.println(key + "\t" + inWord.getName() + "\t" +
-                // inWord.getSentenceNum() + "\t" + inWord.getNumInLine() + "\t"
-                // + (inWord.getNumInLine() + 1) + "\t->\t" + ref.getElement());
                 List<Word> wordsInSent = new ArrayList<Word>(words.get(ref.getSentNum() - 1));
                 for (int i = ref.getStartIndex(); i < ref.getEndIndex(); i++) {
                     phrase.add(wordsInSent.get(i));
@@ -655,7 +652,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
 
             }
 
-            FileUtils.writeStringToFile(FileUtils.getFile(this.topicDir + "/" + TEXT + "/" + DIR_CHUNKSIMPILY, events.get(0).getFilename()), sb_chunk.toString() + LINE_SPLITER, DEFAULT_CHARSET, true);
+            FileUtils.writeStringToFile(FileUtils.getFile(this.eventExtractWorkDir + "/" + TEXT + "/" + DIR_CHUNKSIMPILY, events.get(0).getFilename()), sb_chunk.toString() + LINE_SPLITER, DEFAULT_CHARSET, true);
 
             for (EventWithPhrase eventWithPhrase : events) {
                 // 谓语中第一个单词的序号
@@ -1058,7 +1055,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
 
         ExecutorService es = Executors.newSingleThreadExecutor();
         EhCacheUtil ehCacheUtil = new EhCacheUtil("db_cache_vec", "local");
-        Future<Boolean> future = es.submit(new EventsExtractBasedOnGraphV2("E:/workspace/test/example/text", "E:/workspace/test/example", ehCacheUtil));
+        Future<Boolean> future = es.submit(new EventsExtractBasedOnGraphV2("E:/dev_workspace/tmp/test/duc2007/D0701A", ehCacheUtil));
 
         if (future.get()) {
             System.out.println("success!");

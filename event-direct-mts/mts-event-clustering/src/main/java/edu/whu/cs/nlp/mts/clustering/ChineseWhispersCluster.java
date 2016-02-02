@@ -32,6 +32,7 @@ import edu.whu.cs.nlp.mts.base.domain.Pair;
 import edu.whu.cs.nlp.mts.base.domain.Vector;
 import edu.whu.cs.nlp.mts.base.domain.Word;
 import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
+import edu.whu.cs.nlp.mts.base.global.GlobalParam;
 import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
 import edu.whu.cs.nlp.mts.base.utils.Encipher;
 import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
@@ -150,7 +151,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         /**
          * 加载当前主题下所有的文本
          */
-        File objWordsDir = new File(this.topicDir + "/" + GlobalConstant.OBJ + "/" + GlobalConstant.DIR_WORDS_OBJ);
+        File objWordsDir = new File(this.topicDir + "/" + OBJ + "/" + DIR_WORDS_OBJ);
         File[] objfiles = objWordsDir.listFiles();
         Map<String, List<List<Word>>> texts = new HashMap<String, List<List<Word>>>(25);
         for (File file : objfiles) {
@@ -167,7 +168,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         /**
          * 加载当前主题下所有文本中句子的句法分析树
          */
-        File objSyntacticTreesDir = new File(this.topicDir + "/" + GlobalConstant.OBJ + "/" + GlobalConstant.DIR_SYNTACTICTREES_OBJ);
+        File objSyntacticTreesDir = new File(this.topicDir + "/" + OBJ + "/" + DIR_SYNTACTICTREES_OBJ);
         File[] objSyntacticTreefiles = objSyntacticTreesDir.listFiles();
         Map<String, List<Tree>> syntacticTrees = new HashMap<String, List<Tree>>(25);
         for (File file : objSyntacticTreefiles) {
@@ -265,11 +266,10 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
 
         }
 
-        String workDir = this.nodeFilePath.substring(0, this.nodeFilePath.indexOf(GlobalConstant.DIR_NODES));
         String filename = this.nodeFilePath.substring(Math.max(this.nodeFilePath.lastIndexOf("/"), this.nodeFilePath.lastIndexOf("\\"))).replace("node.obj", "txt");
 
         // 序列化cluster权重
-        File clusterWeightsFile = FileUtils.getFile(workDir + '/' + GlobalConstant.DIR_CLUSTER_WEIGHT , filename.replaceAll("txt", OBJ));
+        File clusterWeightsFile = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + '/' + DIR_CLUSTER_WEIGHT , filename.replaceAll("txt", OBJ));
         try{
             this.log.info("Serilizing cluster weight to file[" + clusterWeightsFile.getAbsolutePath() + "]");
             SerializeUtil.writeObj(clusterWeights, clusterWeightsFile);
@@ -292,9 +292,9 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
             }
 
             List<Pair<NumedEventWithPhrase, Double>> pairs = clusterEventWeihts.get(entry.getKey());
-            sbClustedSentences.append(ChineseWhispersCluster.CLASS_PREFIX + entry.getKey() + ":" + GlobalConstant.LINE_SPLITER);
-            taggedClustedSentences.append(ChineseWhispersCluster.CLASS_PREFIX + entry.getKey() + ":" + GlobalConstant.LINE_SPLITER);
-            taggedWeightedClustedSentences.append(ChineseWhispersCluster.CLASS_PREFIX + entry.getKey() + ":" + GlobalConstant.LINE_SPLITER);
+            sbClustedSentences.append(ChineseWhispersCluster.CLASS_PREFIX + entry.getKey() + ":" + LINE_SPLITER);
+            taggedClustedSentences.append(ChineseWhispersCluster.CLASS_PREFIX + entry.getKey() + ":" + LINE_SPLITER);
+            taggedWeightedClustedSentences.append(ChineseWhispersCluster.CLASS_PREFIX + entry.getKey() + ":" + LINE_SPLITER);
             for (List<Word> words : entry.getValue()) {
                 StringBuilder inner = new StringBuilder();
                 StringBuilder tagged = new StringBuilder();
@@ -325,24 +325,24 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
                     tagged.append(word.getName() + "/" + (word.getPos().equals(word.getName()) ? "PUNCT" : word.getPos()) + " ");
                     weighted.append(word.getName() + "/" + (word.getPos().equals(word.getName()) ? "PUNCT" : word.getPos()) + "/" + wordWeight + " ");
                 }
-                sbClustedSentences.append(inner.toString().trim() + GlobalConstant.LINE_SPLITER);
-                taggedClustedSentences.append(tagged.toString().trim() + GlobalConstant.LINE_SPLITER);
-                taggedWeightedClustedSentences.append(weighted.toString().trim() + GlobalConstant.LINE_SPLITER);
+                sbClustedSentences.append(inner.toString().trim() + LINE_SPLITER);
+                taggedClustedSentences.append(tagged.toString().trim() + LINE_SPLITER);
+                taggedWeightedClustedSentences.append(weighted.toString().trim() + LINE_SPLITER);
             }
         }
 
-        File extractedSentences = FileUtils.getFile(workDir + "/" + GlobalConstant.DIR_SUB_SENTENCES_EXTRACTED, filename);
-        File taggedExtractedSentences = FileUtils.getFile(workDir + "/" + GlobalConstant.DIR_SUB_SENTENCES_EXTRACTED + "/tagged/", filename);
-        File weightedExtractedSentences = FileUtils.getFile(workDir + "/" + GlobalConstant.DIR_SUB_SENTENCES_EXTRACTED + "/weighted/", filename);
+        File extractedSentences = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + DIR_SUB_SENTENCES_EXTRACTED, filename);
+        File taggedExtractedSentences = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + DIR_SUB_SENTENCES_EXTRACTED + "/tagged/", filename);
+        File weightedExtractedSentences = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + DIR_SUB_SENTENCES_EXTRACTED + "/weighted/", filename);
 
         try{
             this.log.info("Saving clusted sentences to file[" + extractedSentences.getAbsolutePath() + "]");
 
-            FileUtils.writeStringToFile(extractedSentences, CommonUtil.cutLastLineSpliter(sbClustedSentences.toString()), GlobalConstant.DEFAULT_CHARSET);
+            FileUtils.writeStringToFile(extractedSentences, CommonUtil.cutLastLineSpliter(sbClustedSentences.toString()), DEFAULT_CHARSET);
 
-            FileUtils.writeStringToFile(taggedExtractedSentences, CommonUtil.cutLastLineSpliter(taggedClustedSentences.toString()), GlobalConstant.DEFAULT_CHARSET);
+            FileUtils.writeStringToFile(taggedExtractedSentences, CommonUtil.cutLastLineSpliter(taggedClustedSentences.toString()), DEFAULT_CHARSET);
 
-            FileUtils.writeStringToFile(weightedExtractedSentences, CommonUtil.cutLastLineSpliter(taggedWeightedClustedSentences.toString()), GlobalConstant.DEFAULT_CHARSET);
+            FileUtils.writeStringToFile(weightedExtractedSentences, CommonUtil.cutLastLineSpliter(taggedWeightedClustedSentences.toString()), DEFAULT_CHARSET);
 
             this.log.info("Save clusted sentences to file [" + extractedSentences.getAbsolutePath() + "] succeed!");
 
@@ -412,7 +412,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
             Set<String> wordSet = new HashSet<String>(Arrays.asList(sentStr.split("\\s+")));
             if (CollectionUtils.isNotEmpty(leftphrase)) {
                 for (Word word : leftphrase) {
-                    if (!word.getName().equals(word.getPos()) && !GlobalConstant.STOPWORDS.contains(word.getLemma()) && wordSet.contains(word.getName())) {
+                    if (!word.getName().equals(word.getPos()) && !STOPWORDS.contains(word.getLemma()) && wordSet.contains(word.getName())) {
                         ++count;
                         break;
                     }
@@ -421,7 +421,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
             }
             if (CollectionUtils.isNotEmpty(middlephrase)) {
                 for (Word word : middlephrase) {
-                    if (!word.getName().equals(word.getPos()) && !GlobalConstant.STOPWORDS.contains(word.getLemma()) && wordSet.contains(word.getName())) {
+                    if (!word.getName().equals(word.getPos()) && !STOPWORDS.contains(word.getLemma()) && wordSet.contains(word.getName())) {
                         ++count;
                         break;
                     }
@@ -429,7 +429,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
             }
             if (CollectionUtils.isNotEmpty(rightphrase)) {
                 for (Word word : rightphrase) {
-                    if (!word.getName().equals(word.getPos()) && !GlobalConstant.STOPWORDS.contains(word.getLemma()) && wordSet.contains(word.getName())) {
+                    if (!word.getName().equals(word.getPos()) && !STOPWORDS.contains(word.getLemma()) && wordSet.contains(word.getName())) {
                         ++count;
                         break;
                     }

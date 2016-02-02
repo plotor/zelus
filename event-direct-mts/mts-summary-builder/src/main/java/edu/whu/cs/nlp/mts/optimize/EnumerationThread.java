@@ -86,7 +86,7 @@ public class EnumerationThread implements Callable<Boolean>, GlobalConstant {
             // 存储摘要
             int[] subCounter = Arrays.copyOfRange(counter, 0, classCount);
             String filename = Arrays.toString(subCounter).substring(1, Arrays.toString(subCounter).length() - 1).replaceAll(",\\s+", "-");
-            File summaryFile = FileUtils.getFile(this.workDir + "/" + DIR_SUMMARIES + "/" + this.topicName, filename);
+            File summaryFile = FileUtils.getFile(this.workDir + "/" + DIR_SUMMARY_RESULTS + "/" + this.topicName, filename);
             try {
 
                 FileUtils.writeStringToFile(summaryFile, summary.toString().trim(), DEFAULT_CHARSET);

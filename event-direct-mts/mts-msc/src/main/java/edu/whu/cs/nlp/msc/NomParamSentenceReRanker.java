@@ -255,7 +255,7 @@ public class NomParamSentenceReRanker implements Callable<Boolean>, GlobalConsta
         int indexOfPoint = filename.lastIndexOf(".");
         String summaryFilename = filename.substring(0, indexOfPoint - 1).toUpperCase() + ".M.250." + filename.substring(indexOfPoint - 1, indexOfPoint).toUpperCase() + ".3";
         try {
-            FileUtils.writeStringToFile(FileUtils.getFile(dir + "/" + DIR_SUMMARIES + this.numDir, summaryFilename), summary.toString().trim(), DEFAULT_CHARSET);
+            FileUtils.writeStringToFile(FileUtils.getFile(dir + "/" + DIR_SUMMARY_RESULTS + this.numDir, summaryFilename), summary.toString().trim(), DEFAULT_CHARSET);
         } catch (IOException e) {
             this.log.error("Save summary[" + filename + "] error!", e);
             throw e;

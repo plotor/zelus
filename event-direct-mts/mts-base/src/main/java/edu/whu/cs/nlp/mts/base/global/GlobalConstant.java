@@ -27,7 +27,7 @@ public interface GlobalConstant {
     public final static String      WORD_ATTRBUTE_CONNECTOR            = "__";
 
     /** 目录名：事件抽取 */
-    public final static String      DIR_EVENTS_EXTRACT                  = "event-extract";
+    public final static String      DIR_EVENTS_EXTRACT                 = "event-extract";
 
     /** 文本结果上层路径 */
     public static final String      TEXT                               = "text";
@@ -134,13 +134,14 @@ public interface GlobalConstant {
     /** 目录名：chunk处理得到的短语集合（简版） */
     public static final String      DIR_CHUNKSIMPILY                   = "chunk-simpily";
 
-    //public static final String      DIR_
-
     /** 目录名：摘要结果 */
-    public static final String      DIR_SUMMARIES_V1                      = "v1";
+    public static final String      DIR_SUMMARY_RESULTS                      = "summary-results";
+
+    /** 目录名：原始摘要结果 */
+    public static final String      DIR_SUMMARIES_V1                   = "v1";
 
     /** 目录名：采用子模函数的摘要结果 */
-    public static final String      DIR_SUMMARIES_V2                  = "v2";
+    public static final String      DIR_SUMMARIES_V2                   = "v2";
 
     /** 事件中词之间的连接符 */
     public final static String      WORD_CONNECTOR_IN_EVENTS           = "#";
