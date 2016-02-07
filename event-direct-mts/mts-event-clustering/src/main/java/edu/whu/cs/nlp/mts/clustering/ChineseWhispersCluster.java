@@ -13,10 +13,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -63,18 +59,13 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
     private final String edgeFilePath;
     /**词向量字典文件所在路径*/
     private final String wordvecDictPath;
-    /**wordnet词典文件所在路径*/
-    private final String wordnetDataPath;
-    /** 允许入边的阈值 */
-    private final Float  EDGE_WEIGHT_THRESHOLD = 1.39f;
 
-    public ChineseWhispersCluster(String topicDir, String nodeFilePath, String edgeFilePath, String wordvecDictPath, String wordnetDataPath) {
+    public ChineseWhispersCluster(String topicDir, String nodeFilePath, String edgeFilePath, String wordvecDictPath) {
         super();
         this.topicDir = topicDir;
         this.nodeFilePath = nodeFilePath;
         this.edgeFilePath = edgeFilePath;
         this.wordvecDictPath = wordvecDictPath;
-        this.wordnetDataPath = wordnetDataPath;
     }
 
     @Override
@@ -135,7 +126,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         float avgWeight = totalWeight / cwEdges.size();
         // 添加边
         for (CWEdge cwEdge : cwEdges) {
-            if(cwEdge.getWeight() >= avgWeight * this.EDGE_WEIGHT_THRESHOLD) {
+            if(cwEdge.getWeight() >= avgWeight * GlobalParam.edgeWeightThresh) {
                 graph.addEdgeUndirected(cwEdge.getFrom(), cwEdge.getTo(), cwEdge.getWeight());
             }
         }
@@ -151,7 +142,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         /**
          * 加载当前主题下所有的文本
          */
-        File objWordsDir = new File(this.topicDir + "/" + OBJ + "/" + DIR_WORDS_OBJ);
+        File objWordsDir = new File(GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT + "/" + OBJ + "/" + DIR_WORDS_OBJ);
         File[] objfiles = objWordsDir.listFiles();
         Map<String, List<List<Word>>> texts = new HashMap<String, List<List<Word>>>(25);
         for (File file : objfiles) {
@@ -168,7 +159,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         /**
          * 加载当前主题下所有文本中句子的句法分析树
          */
-        File objSyntacticTreesDir = new File(this.topicDir + "/" + OBJ + "/" + DIR_SYNTACTICTREES_OBJ);
+        File objSyntacticTreesDir = new File(GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT + "/" + OBJ + "/" + DIR_SYNTACTICTREES_OBJ);
         File[] objSyntacticTreefiles = objSyntacticTreesDir.listFiles();
         Map<String, List<Tree>> syntacticTrees = new HashMap<String, List<Tree>>(25);
         for (File file : objSyntacticTreefiles) {
@@ -269,7 +260,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         String filename = this.nodeFilePath.substring(Math.max(this.nodeFilePath.lastIndexOf("/"), this.nodeFilePath.lastIndexOf("\\"))).replace("node.obj", "txt");
 
         // 序列化cluster权重
-        File clusterWeightsFile = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + '/' + DIR_CLUSTER_WEIGHT , filename.replaceAll("txt", OBJ));
+        File clusterWeightsFile = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + '/' + OBJ + "/" + DIR_CLUSTER_WEIGHT , filename.replaceAll("txt", OBJ));
         try{
             this.log.info("Serilizing cluster weight to file[" + clusterWeightsFile.getAbsolutePath() + "]");
             SerializeUtil.writeObj(clusterWeights, clusterWeightsFile);
@@ -331,25 +322,20 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
             }
         }
 
-        File extractedSentences = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + DIR_SUB_SENTENCES_EXTRACTED, filename);
-        File taggedExtractedSentences = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + DIR_SUB_SENTENCES_EXTRACTED + "/tagged/", filename);
-        File weightedExtractedSentences = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + DIR_SUB_SENTENCES_EXTRACTED + "/weighted/", filename);
+        File extractedSentences = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + TEXT + "/" + DIR_SUB_SENTENCES_EXTRACTED, filename);
+        File taggedExtractedSentences = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + TEXT + "/" + DIR_SUB_SENTENCES_EXTRACTED + "/tagged/", filename);
+        File weightedExtractedSentences = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + TEXT + "/" + DIR_SUB_SENTENCES_EXTRACTED + "/weighted/", filename);
 
         try{
+
             this.log.info("Saving clusted sentences to file[" + extractedSentences.getAbsolutePath() + "]");
-
             FileUtils.writeStringToFile(extractedSentences, CommonUtil.cutLastLineSpliter(sbClustedSentences.toString()), DEFAULT_CHARSET);
-
             FileUtils.writeStringToFile(taggedExtractedSentences, CommonUtil.cutLastLineSpliter(taggedClustedSentences.toString()), DEFAULT_CHARSET);
-
             FileUtils.writeStringToFile(weightedExtractedSentences, CommonUtil.cutLastLineSpliter(taggedWeightedClustedSentences.toString()), DEFAULT_CHARSET);
-
             this.log.info("Save clusted sentences to file [" + extractedSentences.getAbsolutePath() + "] succeed!");
 
         } catch(IOException e) {
-
             this.log.error("Save clusted sentences to file[" + extractedSentences.getAbsolutePath() + "] error!", e);
-
         }
 
         /**
@@ -528,7 +514,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
     private List<Word> synonymReplacement(List<Word> sentence, Set<String> selectedWordsKey) throws Exception{
         List<Word> outSent = new ArrayList<Word>();
         try {
-            IDictionary dict = WordNetUtil.openDictionary(this.wordnetDataPath);
+            IDictionary dict = WordNetUtil.openDictionary(GlobalParam.wordnetDictPath);
             for (Word word : sentence) {
                 try {
                     List<Word> synonymsWords = WordNetUtil.getSynonyms(dict, word);
@@ -563,21 +549,10 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
             }
 
         } catch (IOException e) {
-            this.log.error("Get dictionary[" + this.wordnetDataPath + "] error!", e);
+            this.log.error("Get dictionary[" + GlobalParam.wordnetDictPath + "] error!", e);
             throw e;
         }
         return outSent;
-    }
-
-    public static void main(String[] args) throws InterruptedException, ExecutionException {
-        ExecutorService es = Executors.newSingleThreadExecutor();
-        Future<Boolean> future = es.submit(new ChineseWhispersCluster("E:/workspace/test/corpus/D0732H", "E:/workspace/test/nodes/D0732H.node.obj", "E:/workspace/test/edges/D0732H.edge.obj","E:/workspace/test/word-vector-dict/D0732H.obj", "D:/Program Files (x86)/WordNet/2.1/dict"));
-        if(future.get()) {
-            System.out.println("success");
-        } else {
-            System.out.println("false");
-        }
-        es.shutdown();
     }
 
 }

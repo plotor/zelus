@@ -77,6 +77,7 @@ public class MTSBOEC implements GlobalConstant {
         GlobalParam.setCacheName(properties.getProperty("cachename"));
         GlobalParam.setDatasource(properties.getProperty("datasource"));
         GlobalParam.setWordnetDictPath(properties.getProperty("wordnet_dict_path"));
+        GlobalParam.setEdgeWeightThresh(Float.parseFloat(properties.getProperty("edge_weight_thresh")));
         GlobalParam.setNgramModelPath(properties.getProperty("ngram_model_path"));
         GlobalParam.setQuestionFilename(properties.getProperty("question_filename"));
         GlobalParam.setIdfFilename(properties.getProperty("idf_filename"));
@@ -88,7 +89,7 @@ public class MTSBOEC implements GlobalConstant {
         GlobalParam.setBeta4summary(Float.parseFloat(properties.getProperty("beta_summary").trim()));
 
         /**
-         * 执行事件抽取操作
+         * 1.执行事件抽取操作
          */
         if ("y".equalsIgnoreCase(properties.getProperty("is_extract_event"))) {
 
@@ -130,13 +131,13 @@ public class MTSBOEC implements GlobalConstant {
         }
 
         /**
-         * 计算事件之间的相似度
+         * 2.计算事件之间的相似度
          */
         if ("y".equalsIgnoreCase(properties.getProperty("is_calculate_similarity"))) {
 
-            log.info("Starting calculate events similarity...");
+            log.info("Calculating events similarity...");
 
-            File eventDirFile = new File(GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT + "/" + DIR_SERIALIZE_EVENTS);
+            File eventDirFile = new File(GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT + "/" + OBJ + "/" + DIR_SERIALIZE_EVENTS);
             File[] topicDirs = eventDirFile.listFiles();
             List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
             for (File topicDir : topicDirs) {
@@ -160,13 +161,13 @@ public class MTSBOEC implements GlobalConstant {
         }
 
         /**
-         * 对事件进行聚类，同时按类别抽取事件所在子句
+         * 3.对事件进行聚类，同时按类别抽取事件所在子句
          */
         if ("y".equalsIgnoreCase(properties.getProperty("is_event_cluster"))) {
 
             log.info("Starting events clusting & sub sentences extracting...");
 
-            File nodeFile = new File(GlobalParam.workDir + "/" + DIR_NODES);
+            File nodeFile = new File(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + OBJ + "/" + DIR_NODES);
             File[] nodes = nodeFile.listFiles(new FilenameFilter() {
 
                 @Override
@@ -185,10 +186,10 @@ public class MTSBOEC implements GlobalConstant {
                 List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
                 for (File file : nodes) {
                     String nodePath = file.getAbsolutePath();
-                    String edgePath = GlobalParam.workDir + "/" + DIR_EDGES + "/" + file.getName().replace("node", "edge");
-                    String wordvecDictPath = GlobalParam.workDir + "/" + DIR_WORDS_VECTOR + "/" + file.getName().replace(".node", "");
+                    String edgePath = GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + OBJ + "/" + DIR_EDGES + "/" + file.getName().replace("node", "edge");
+                    String wordvecDictPath = GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT + "/" + OBJ + "/" + DIR_WORDS_VECTOR + "/" + file.getName().replace(".node", "");
                     String topicPath = GlobalParam.workDir + "/" + DIR_CORPUS + "/" + file.getName().substring(0, file.getName().indexOf("."));
-                    tasks.add(new ChineseWhispersCluster(topicPath, nodePath, edgePath, wordvecDictPath, GlobalParam.wordnetDictPath));
+                    tasks.add(new ChineseWhispersCluster(topicPath, nodePath, edgePath, wordvecDictPath));
                 }
 
                 List<Future<Boolean>> futures = es.invokeAll(tasks);
@@ -197,9 +198,7 @@ public class MTSBOEC implements GlobalConstant {
                 }
 
             } catch (Throwable e) {
-
                 log.error("Event cluster & Sentence Extract error!", e);
-
             } finally {
                 if (es != null) {
                     es.shutdown();
@@ -211,7 +210,7 @@ public class MTSBOEC implements GlobalConstant {
         }
 
         /**
-         * 摘要生成
+         * 4.摘要生成
          */
         if ("y".equalsIgnoreCase(properties.getProperty("is_build_summary"))) {
 

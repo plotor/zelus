@@ -10,10 +10,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
@@ -59,7 +55,7 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
         int index = Math.max(this.topicDir.lastIndexOf("/"), this.topicDir.lastIndexOf("\\"));
         String topicName = this.topicDir.substring(index);
 
-        String seralizeFilepath = GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT + "/" + DIR_WORDS_VECTOR + "/" + topicName + ".obj";
+        String seralizeFilepath = GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT + "/" + OBJ + "/" + DIR_WORDS_VECTOR + "/" + topicName + ".obj";
         Map<String, Vector> wordvecsInTopic = null;
         try{
             wordvecsInTopic = (Map<String, Vector>) SerializeUtil.readObj(seralizeFilepath);
@@ -117,7 +113,8 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
 
         //将编号的事件保存
         if (eventWithNums.size() > 0) {
-            File nodeFile = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + DIR_NODES, topicName + ".node.obj");
+
+            File nodeFile = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + OBJ + "/" + DIR_NODES, topicName + ".node.obj");
             try {
                 SerializeUtil.writeObj(eventWithNums, nodeFile);
             } catch (IOException e) {
@@ -126,9 +123,7 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
             }
 
         } else {
-
             log.error("Can't find any event in[" + this.topicDir + "]");
-
         }
 
         // 计算事件之间的相似度，并保存成文件
@@ -164,29 +159,15 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
             }
         }
 
-        File edgeFile = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + DIR_EDGES, topicName + ".edge.obj");
+        File edgeFile = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + OBJ + "/" + DIR_EDGES, topicName + ".edge.obj");
         try {
-
             SerializeUtil.writeObj(cwEdges, edgeFile);
-
         } catch (IOException e) {
             log.error("Serilize file error:" + edgeFile.getAbsolutePath(), e);
             throw e;
         }
 
         return true;
-    }
-
-    public static void main(String[] args) throws InterruptedException, ExecutionException {
-        ExecutorService es = Executors.newSingleThreadExecutor();
-        //Future<Boolean> future = es.submit(new CalculateSimilarityThread("E:/workspace/test/serializable-events/D0732H", "db_cache_vec", "local"));
-        Future<Boolean> future = es.submit(new CalculateSimilarityThread("E:/workspace/test/example"));
-        if(future.get()){
-            System.out.println("success!");
-        } else {
-            System.out.println("failed!");
-        }
-        es.shutdown();
     }
 
 }

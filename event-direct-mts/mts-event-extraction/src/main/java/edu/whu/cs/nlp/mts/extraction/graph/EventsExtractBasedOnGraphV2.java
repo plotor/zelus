@@ -362,7 +362,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
             /*
              * 序列化词向量字典
              */
-            File wordvecFile = FileUtils.getFile(this.eventExtractWorkDir + "/" + DIR_WORDS_VECTOR, this.topicName + ".obj");
+            File wordvecFile = FileUtils.getFile(this.eventExtractWorkDir + "/" + OBJ + "/" + DIR_WORDS_VECTOR, this.topicName + ".obj");
             try{
 
                 SerializeUtil.writeObj(wordvecsInTopic, wordvecFile);

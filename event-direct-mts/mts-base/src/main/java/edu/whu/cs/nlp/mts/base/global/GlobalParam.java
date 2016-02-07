@@ -20,6 +20,9 @@ public abstract class GlobalParam {
     /** wordnet词向量所在路径 */
     public static String wordnetDictPath;
 
+    /** 口哨算法聚类选边阈值 */
+    public static float edgeWeightThresh;
+
     /** n-gram模型所在路径 */
     public static String ngramModelPath;
 
@@ -61,6 +64,10 @@ public abstract class GlobalParam {
 
     public static void setWordnetDictPath(String wordnetDictPath) {
         GlobalParam.wordnetDictPath = wordnetDictPath;
+    }
+
+    public static void setEdgeWeightThresh(float edgeWeightThresh) {
+        GlobalParam.edgeWeightThresh = edgeWeightThresh;
     }
 
     public static void setNgramModelPath(String ngramModelPath) {
