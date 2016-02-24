@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -116,7 +115,7 @@ public class MTSBOEC implements GlobalConstant {
                 for (Future<Boolean> future : futures) {
                     future.get();
                 }
-            } catch (InterruptedException | ExecutionException e) {
+            } catch (Throwable e) {
                 log.error("There is an exception when extract events!", e);
                 return;
             } finally {
@@ -137,8 +136,8 @@ public class MTSBOEC implements GlobalConstant {
 
             log.info("Calculating events similarity...");
 
-            File eventDirFile = new File(GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT + "/" + OBJ + "/" + DIR_SERIALIZE_EVENTS);
-            File[] topicDirs = eventDirFile.listFiles();
+            File objFile = new File(GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT + "/" + OBJ + "/" + DIR_SERIALIZE_EVENTS);
+            File[] topicDirs = objFile.listFiles();
             List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
             for (File topicDir : topicDirs) {
                 tasks.add(new CalculateSimilarityThread(topicDir.getAbsolutePath()));
@@ -150,7 +149,7 @@ public class MTSBOEC implements GlobalConstant {
                     for (Future<Boolean> future : futures) {
                         future.get();
                     }
-                } catch (InterruptedException | ExecutionException e) {
+                } catch (Throwable e) {
                     log.error("There is an exception when calculate events similarity!", e);
                 } finally {
                     executorService.shutdown();

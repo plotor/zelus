@@ -71,6 +71,8 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
     @Override
     public Boolean call() throws Exception {
 
+        String topicName = this.topicDir.substring(Math.max(this.topicDir.lastIndexOf("/"), this.topicDir.lastIndexOf("\\")));
+
         // 数字格式化器
         DecimalFormat decimalFormat = new DecimalFormat("0.######");
         decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
@@ -80,7 +82,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         /**
          * 加载node文件
          */
-        this.log.info("[" + Thread.currentThread().getName() + "]Loading serilized file:" + this.nodeFilePath);
+        this.log.info("Thread " + Thread.currentThread().getId() + " -> loading serilized file:" + this.nodeFilePath);
         @SuppressWarnings("unchecked")
         Map<Integer, NumedEventWithPhrase> eventWithNums = (Map<Integer, NumedEventWithPhrase>) SerializeUtil.readObj(this.nodeFilePath);
         if (MapUtils.isEmpty(eventWithNums)) {
@@ -91,7 +93,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         /**
          * 加载edge文件
          */
-        this.log.info("[" + Thread.currentThread().getName() + "]Loading serilized file:" + this.edgeFilePath);
+        this.log.info("Thread " + Thread.currentThread().getId() + " -> loading serilized file:" + this.edgeFilePath);
         @SuppressWarnings("unchecked")
         List<CWEdge> cwEdges = (List<CWEdge>) SerializeUtil.readObj(this.edgeFilePath);
         if (CollectionUtils.isEmpty(cwEdges)) {
@@ -102,7 +104,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         /**
          * 加载词向量字典文件
          */
-        this.log.info("[" + Thread.currentThread().getName() + "]Loading serilized file:" + this.wordvecDictPath);
+        this.log.info("Thread " + Thread.currentThread().getId() + " -> loading serilized file:" + this.wordvecDictPath);
         @SuppressWarnings("unchecked")
         Map<String, Vector> vecDict = (Map<String, Vector>) SerializeUtil.readObj(this.wordvecDictPath);
         if (MapUtils.isEmpty(vecDict)) {
@@ -134,24 +136,24 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         /**
          * 采用口哨算法进行聚类
          */
-        this.log.info("Chinese Whispers clusting...[" + this.topicDir + "]");
+        this.log.info("Thread " + Thread.currentThread().getId() + " -> Chinese Whispers clusting[" + this.topicDir + "]");
         CW<Integer> cw = new CW<Integer>();
         Map<Integer, Set<Integer>> clusterEvents = cw.findClusters(graph);
-        this.log.info("Chinese Whispers clust finished[" + this.topicDir + "]");
+        this.log.info("Thread " + Thread.currentThread().getId() + " -> Chinese Whispers clust finished[" + this.topicDir + "]");
 
         /**
          * 加载当前主题下所有的文本
          */
-        File objWordsDir = new File(GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT + "/" + OBJ + "/" + DIR_WORDS_OBJ);
+        File objWordsDir = new File(GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT + "/" + OBJ + "/" + DIR_WORDS_OBJ + "/" + topicName);
         File[] objfiles = objWordsDir.listFiles();
         Map<String, List<List<Word>>> texts = new HashMap<String, List<List<Word>>>(25);
         for (File file : objfiles) {
             try{
-                this.log.info("[" + Thread.currentThread().getName() + "]Loading serilized file:" + file.getAbsolutePath());
+                this.log.info("Thread " + Thread.currentThread().getId() + " -> loading serilized file:" + file.getAbsolutePath());
                 List<List<Word>> words = (List<List<Word>>) SerializeUtil.readObj(file.getAbsolutePath());
                 texts.put(file.getName().substring(0, file.getName().lastIndexOf(".")), words);
             } catch (Exception e) {
-                this.log.error("Load serilized file error [" + this.edgeFilePath + "]", e);
+                this.log.error("Thread " + Thread.currentThread().getId() + " -> load serilized file error [" + this.edgeFilePath + "]", e);
                 throw e;
             }
         }
@@ -159,16 +161,16 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         /**
          * 加载当前主题下所有文本中句子的句法分析树
          */
-        File objSyntacticTreesDir = new File(GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT + "/" + OBJ + "/" + DIR_SYNTACTICTREES_OBJ);
+        File objSyntacticTreesDir = new File(GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT + "/" + OBJ + "/" + DIR_SYNTACTICTREES_OBJ + "/" + topicName);
         File[] objSyntacticTreefiles = objSyntacticTreesDir.listFiles();
         Map<String, List<Tree>> syntacticTrees = new HashMap<String, List<Tree>>(25);
         for (File file : objSyntacticTreefiles) {
             try{
-                this.log.info("[" + Thread.currentThread().getName() + "]Loading serilized file:" + file.getAbsolutePath());
+                this.log.info("Thread " + Thread.currentThread().getId() + " -> loading serilized file:" + file.getAbsolutePath());
                 List<Tree> syntacticTree = (List<Tree>) SerializeUtil.readObj(file.getAbsolutePath());
                 syntacticTrees.put(file.getName().substring(0, file.getName().lastIndexOf(".")), syntacticTree);
             } catch (Exception e) {
-                this.log.error("Load serilized file error [" + this.edgeFilePath + "]", e);
+                this.log.error("Thread " + Thread.currentThread().getId() + " -> load serilized file error [" + this.edgeFilePath + "]", e);
                 throw e;
             }
         }
@@ -206,7 +208,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
             }
 
             // 以一个类包含的总的文件数量来度量该类的权重
-            clusterWeights.put(ChineseWhispersCluster.CLASS_PREFIX + entry.getKey(), (float)filenames4ClusterWeight.size());
+            clusterWeights.put(CLASS_PREFIX + entry.getKey(), (float)filenames4ClusterWeight.size());
 
             // 计算向量中心
             Double[] centralVec = VectorOperator.centralVector(vectorsInCluster);
@@ -262,10 +264,10 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         // 序列化cluster权重
         File clusterWeightsFile = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + '/' + OBJ + "/" + DIR_CLUSTER_WEIGHT , filename.replaceAll("txt", OBJ));
         try{
-            this.log.info("Serilizing cluster weight to file[" + clusterWeightsFile.getAbsolutePath() + "]");
+            this.log.info("Thread " + Thread.currentThread().getId() + " -> serilizing cluster weight to file[" + clusterWeightsFile.getAbsolutePath() + "]");
             SerializeUtil.writeObj(clusterWeights, clusterWeightsFile);
         } catch(IOException e) {
-            this.log.error("Serilizing cluster weight to file[" + clusterWeightsFile.getAbsolutePath() + "] error!", e);
+            this.log.error("Thread " + Thread.currentThread().getId() + " -> serilizing cluster weight to file[" + clusterWeightsFile.getAbsolutePath() + "] error!", e);
             throw e;
         }
 
@@ -283,9 +285,9 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
             }
 
             List<Pair<NumedEventWithPhrase, Double>> pairs = clusterEventWeihts.get(entry.getKey());
-            sbClustedSentences.append(ChineseWhispersCluster.CLASS_PREFIX + entry.getKey() + ":" + LINE_SPLITER);
-            taggedClustedSentences.append(ChineseWhispersCluster.CLASS_PREFIX + entry.getKey() + ":" + LINE_SPLITER);
-            taggedWeightedClustedSentences.append(ChineseWhispersCluster.CLASS_PREFIX + entry.getKey() + ":" + LINE_SPLITER);
+            sbClustedSentences.append(CLASS_PREFIX + entry.getKey() + ":" + LINE_SPLITER);
+            taggedClustedSentences.append(CLASS_PREFIX + entry.getKey() + ":" + LINE_SPLITER);
+            taggedWeightedClustedSentences.append(CLASS_PREFIX + entry.getKey() + ":" + LINE_SPLITER);
             for (List<Word> words : entry.getValue()) {
                 StringBuilder inner = new StringBuilder();
                 StringBuilder tagged = new StringBuilder();
@@ -328,14 +330,14 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
 
         try{
 
-            this.log.info("Saving clusted sentences to file[" + extractedSentences.getAbsolutePath() + "]");
+            this.log.info("Thread " + Thread.currentThread().getId() + " -> saving clusted sentences to file[" + extractedSentences.getAbsolutePath() + "]");
             FileUtils.writeStringToFile(extractedSentences, CommonUtil.cutLastLineSpliter(sbClustedSentences.toString()), DEFAULT_CHARSET);
             FileUtils.writeStringToFile(taggedExtractedSentences, CommonUtil.cutLastLineSpliter(taggedClustedSentences.toString()), DEFAULT_CHARSET);
             FileUtils.writeStringToFile(weightedExtractedSentences, CommonUtil.cutLastLineSpliter(taggedWeightedClustedSentences.toString()), DEFAULT_CHARSET);
-            this.log.info("Save clusted sentences to file [" + extractedSentences.getAbsolutePath() + "] succeed!");
+            this.log.info("Thread " + Thread.currentThread().getId() + " -> save clusted sentences to file [" + extractedSentences.getAbsolutePath() + "] succeed!");
 
         } catch(IOException e) {
-            this.log.error("Save clusted sentences to file[" + extractedSentences.getAbsolutePath() + "] error!", e);
+            this.log.error("Thread " + Thread.currentThread().getId() + " -> save clusted sentences to file[" + extractedSentences.getAbsolutePath() + "] error!", e);
         }
 
         /**

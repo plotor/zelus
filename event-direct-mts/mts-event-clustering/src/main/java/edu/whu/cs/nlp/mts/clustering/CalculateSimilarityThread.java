@@ -47,14 +47,16 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
     @Override
     public Boolean call() throws Exception {
 
-        log.info(Thread.currentThread().getId() +  " - calculating event similarity, dir:" + this.topicDir);
+        log.info("Thread " + Thread.currentThread().getId() +  " -> calculating event similarity, dir:" + this.topicDir);
+
+        String objBaseDir = GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + OBJ;
+        String textBaseDir = GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + TEXT;
 
         /*
          * 加载当前主题下的词向量字典
          */
         int index = Math.max(this.topicDir.lastIndexOf("/"), this.topicDir.lastIndexOf("\\"));
         String topicName = this.topicDir.substring(index);
-
         String seralizeFilepath = GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT + "/" + OBJ + "/" + DIR_WORDS_VECTOR + "/" + topicName + ".obj";
         Map<String, Vector> wordvecsInTopic = null;
         try{
@@ -113,15 +115,13 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
 
         //将编号的事件保存
         if (eventWithNums.size() > 0) {
-
-            File nodeFile = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + OBJ + "/" + DIR_NODES, topicName + ".node.obj");
+            File nodeFile = FileUtils.getFile(objBaseDir + "/" + DIR_NODES, topicName + ".node.obj");
             try {
                 SerializeUtil.writeObj(eventWithNums, nodeFile);
             } catch (IOException e) {
                 log.error("Serilize file error:" + nodeFile.getAbsolutePath(), e);
                 throw e;
             }
-
         } else {
             log.error("Can't find any event in[" + this.topicDir + "]");
         }
@@ -152,14 +152,12 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
                     cwEdges.add(cwEdge);
 
                 } catch (Exception e) {
-
                     log.error("计算事件相似度出错，事件1：" + eventWithNums.get(i).getEvent() + "， 事件2：" + eventWithNums.get(j).getEvent(), e);
-
                 }
             }
         }
 
-        File edgeFile = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + OBJ + "/" + DIR_EDGES, topicName + ".edge.obj");
+        File edgeFile = FileUtils.getFile(objBaseDir + "/" + DIR_EDGES, topicName + ".edge.obj");
         try {
             SerializeUtil.writeObj(cwEdges, edgeFile);
         } catch (IOException e) {
