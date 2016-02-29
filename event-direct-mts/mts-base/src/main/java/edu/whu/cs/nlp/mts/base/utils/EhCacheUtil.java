@@ -46,6 +46,7 @@ public class EhCacheUtil {
      * @return
      * @throws SQLException
      */
+    @Deprecated
     public synchronized List<Vector> getVec(Word word) throws SQLException {
 
         List<Vector> vecs = new ArrayList<Vector>();
@@ -124,7 +125,7 @@ public class EhCacheUtil {
      *
      * @param word
      * @return
-     * @throws SQLException
+     * @throws Exception
      */
     public synchronized Vector getMostSimilarVec(Word word) throws Exception {
 
@@ -145,49 +146,34 @@ public class EhCacheUtil {
 
         Element element = cache.get(word.getName().toLowerCase());
         if (element != null) {
-
             /**
              * 命中
              */
             vector = (Vector) element.getObjectValue();
-
         } else {
-
             /**
              * 未命中
              */
             Connection connection = null;
-
             String sql = "SELECT * FROM word2vec WHERE word = ?";
-
             String queryType = null;
-
             try {
-
                 connection = C3P0Util.getConnection(this.datasource);
-
                 QueryRunner queryRunner = new QueryRunner();
-
                 // 利用Name查询
-                List<Vector> vectors = queryRunner.query(connection, sql, new BeanListHandler<Vector>(Vector.class),
-                        word.getName());
+                List<Vector> vectors = queryRunner.query(connection, sql, new BeanListHandler<Vector>(Vector.class), word.getName());
                 queryType = word.getName();
                 if (CollectionUtils.isEmpty(vectors)) {
-
                     // 利用Lemma查询
-                    vectors = queryRunner.query(connection, sql, new BeanListHandler<Vector>(Vector.class),
-                            word.getLemma());
+                    vectors = queryRunner.query(connection, sql, new BeanListHandler<Vector>(Vector.class), word.getLemma());
                     queryType = word.getLemma();
                     if (CollectionUtils.isEmpty(vectors)) {
-
                         if (!"O".equalsIgnoreCase(word.getNer())) {
                             // 利用命名实体进行查询
-                            vectors = queryRunner.query(connection, sql, new BeanListHandler<Vector>(Vector.class),
-                                    word.getNer());
+                            vectors = queryRunner.query(connection, sql, new BeanListHandler<Vector>(Vector.class), word.getNer());
                             if (CollectionUtils.isNotEmpty(vectors)) {
                                 queryType = word.getNer();
                             }
-
                         }
                     }
                 }
@@ -197,18 +183,16 @@ public class EhCacheUtil {
                     vector = this.mostSimilarVec(queryType, vectors);
                 }
 
-                // 缓存当前得到的词向量
-                cache.put(new Element(word.getName().toLowerCase(), vector));
-
+            } catch (SQLException e) {
+                log.error("Get word[" + word.getName() + "] vector from database error!", e);
+                throw e;
             } finally {
-
-                if (connection != null) {
-
+                if (null != connection) {
                     connection.close();
-
                 }
-
             }
+            // 缓存当前得到的词向量
+            cache.put(new Element(word.getName().toLowerCase(), vector));
         }
 
         return vector;
