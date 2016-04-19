@@ -1,28 +1,24 @@
 package edu.whu.cs.nlp.mts.clustering;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
-import java.util.concurrent.Callable;
-
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
-
 import edu.whu.cs.nlp.mts.base.domain.EventWithPhrase;
 import edu.whu.cs.nlp.mts.base.domain.NumedEventWithPhrase;
 import edu.whu.cs.nlp.mts.base.domain.Vector;
 import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
 import edu.whu.cs.nlp.mts.base.global.GlobalParam;
+import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
 import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
 import edu.whu.cs.nlp.mts.base.utils.VectorOperator;
 import edu.whu.cs.nlp.mts.clustering.domain.CWEdge;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.Callable;
 
 /**
  * 计算事件之间的相似度
@@ -31,7 +27,7 @@ import edu.whu.cs.nlp.mts.clustering.domain.CWEdge;
  */
 public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConstant {
 
-    private static Logger log = Logger.getLogger(CalculateSimilarityThread.class);
+    private static final Logger log = Logger.getLogger(CalculateSimilarityThread.class);
 
     private final String topicDir;
 
@@ -47,7 +43,7 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
     @Override
     public Boolean call() throws Exception {
 
-        log.info("Thread " + Thread.currentThread().getId() +  " -> calculating event similarity, dir:" + this.topicDir);
+        log.info("Thread " + Thread.currentThread().getId() + " -> calculating event similarity, dir:" + this.topicDir);
 
         String objBaseDir = GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + OBJ;
         String textBaseDir = GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + TEXT;
@@ -59,14 +55,14 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
         String topicName = this.topicDir.substring(index);
         String seralizeFilepath = GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT + "/" + OBJ + "/" + DIR_WORDS_VECTOR + "/" + topicName + ".obj";
         Map<String, Vector> wordvecsInTopic = null;
-        try{
+        try {
             wordvecsInTopic = (Map<String, Vector>) SerializeUtil.readObj(seralizeFilepath);
-        } catch(Exception e) {
+        } catch (Exception e) {
             log.error("Load seralize file[" + seralizeFilepath + "] error!", e);
             throw e;
         }
 
-        if(MapUtils.isEmpty(wordvecsInTopic)) {
+        if (MapUtils.isEmpty(wordvecsInTopic)) {
             log.error("The word vector dict is empty:" + seralizeFilepath);
             return false;
         }
@@ -91,7 +87,7 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
                     for (EventWithPhrase eventWithPhrase : event.getValue()) {
 
                         Double[] eventVec = this.vectorOperator.eventToVecPlus(eventWithPhrase, wordvecsInTopic);
-                        if(eventVec == null) {
+                        if (eventVec == null) {
                             log.warn("The event[" + eventWithPhrase + "]'s vector is null, ignore it!");
                             continue;
                         }
@@ -128,7 +124,10 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
 
         // 计算事件之间的相似度，并保存成文件
         List<CWEdge> cwEdges = new ArrayList<CWEdge>();
+        StringBuilder sb_nodes = new StringBuilder();
+        StringBuilder sb_edges = new StringBuilder();
         for (int i = 0; i < num; ++i) {
+            sb_nodes.append(i + "\t" + eventWithNums.get(i).getEvent().toShortString() + "\n");
             for (int j = i + 1; j < num; ++j) {
                 try {
                     // 计算向量的余弦值
@@ -139,16 +138,19 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
 
                     approx = Float.parseFloat(DECIMAL_FORMAT.format(approx));
 
-                    if(approx < 0.0f) {
+                    if (approx < 0.0f) {
                         log.warn("[approx=" + approx + "]There is an error when calculate distence between [" + eventWithNums.get(i) + "] and [" + eventWithNums.get(j) + "], ignore it!");
                         continue;
                     }
 
-                    if(approx == 0.0f) {
+                    if (approx == 0.0f) {
                         continue;
                     }
 
-                    CWEdge cwEdge = new CWEdge(Integer.valueOf(i), Integer.valueOf(j), Float.valueOf((float)approx));
+                    int int_approx = (int) (approx * 1000000);
+                    sb_edges.append(i + "\t" + j + "\t" + int_approx + "\n");
+
+                    CWEdge cwEdge = new CWEdge(Integer.valueOf(i), Integer.valueOf(j), Float.valueOf((float) approx));
                     cwEdges.add(cwEdge);
 
                 } catch (Exception e) {
@@ -156,6 +158,12 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
                 }
             }
         }
+
+        File text_nodeFile = FileUtils.getFile(textBaseDir + "/" + DIR_NODES, topicName + ".node.txt");
+        FileUtils.writeStringToFile(text_nodeFile, CommonUtil.cutLastLineSpliter(sb_nodes.toString()), DEFAULT_ENCODING);
+
+        File text_edgeFile = FileUtils.getFile(textBaseDir + "/" + DIR_EDGES, topicName + ".edge.txt");
+        FileUtils.writeStringToFile(text_edgeFile, CommonUtil.cutLastLineSpliter(sb_edges.toString()), DEFAULT_ENCODING);
 
         File edgeFile = FileUtils.getFile(objBaseDir + "/" + DIR_EDGES, topicName + ".edge.obj");
         try {

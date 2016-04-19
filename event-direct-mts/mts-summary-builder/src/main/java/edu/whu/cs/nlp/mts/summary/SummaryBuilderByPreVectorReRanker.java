@@ -1,30 +1,5 @@
 package edu.whu.cs.nlp.mts.summary;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.LineIterator;
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-
 import edu.whu.cs.nlp.mts.base.domain.Pair;
 import edu.whu.cs.nlp.mts.base.domain.Vector;
 import edu.whu.cs.nlp.mts.base.domain.Word;
@@ -35,50 +10,83 @@ import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
 import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
 import edu.whu.cs.nlp.mts.base.utils.VectorOperator;
 import edu.whu.cs.nlp.mts.domain.ClustItemPlus;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 基于子模函数生成多文档摘要(利用向量来度量句子之间的相似度)<br>
  * 向量不实时获取，采用预处理， 并且先对clust按照path得分均值排序
  *
  * @author zhenchao.wang 2016-1-27 20:24:18
- *
  */
 public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, GlobalConstant {
 
-    private static Logger     log              = Logger.getLogger(SummaryBuilderByPreVectorReRanker.class);
+    private static final Logger log = Logger.getLogger(SummaryBuilderByPreVectorReRanker.class);
 
-    /** 分类目录，用于同时跑多个任务 */
+    /**
+     * 分类目录，用于同时跑多个任务
+     */
     private final String numDir;
 
-    /** 主题文件名 */
-    private final String      filename;
+    /**
+     * 主题文件名
+     */
+    private final String filename;
 
-    /** 主题名称 */
-    private final String      topicname;
+    /**
+     * 主题名称
+     */
+    private final String topicname;
 
-    /** IDF值 */
-    Map<String, Double>       idfValues;
+    /**
+     * IDF值
+     */
+    Map<String, Double> idfValues;
 
-    /** topic query */
-    private final String      question;
+    /**
+     * topic query
+     */
+    private final String question;
 
     /** 词向量获取器 */
     /*private final EhCacheUtil ehCacheUtil;*/
 
-    /** 当前duc下所有词的词向量 */
+    /**
+     * 当前duc下所有词的词向量
+     */
     private final Map<String, Vector> wordVecs;
 
-    /** alpha 参数 */
-    private final float       alpha;
+    /**
+     * alpha 参数
+     */
+    private final float alpha;
 
-    /** beta 参数 */
-    private final float       beta;
+    /**
+     * beta 参数
+     */
+    private final float beta;
 
-    /** 相似度上限 */
+    /**
+     * 相似度上限
+     */
     private final float similarityThresh;
 
-    /** 每个主题下面选取的句子的数量 */
-    private Integer           sentCountInClust = 10;
+    /**
+     * 每个主题下面选取的句子的数量
+     */
+    private Integer sentCountInClust = 10;
 
     public SummaryBuilderByPreVectorReRanker(String numDir, String filename, int sentCountInClust, Map<String, Double> idfValues, String question, Map<String, Vector> wordVecs, float alpha, float beta, float similarityThresh) {
         super();
@@ -106,21 +114,20 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
         Collections.sort(candidateSentences);
 
         // 加载每个clust的权值
-        String clusterWeightFilepath = GlobalParam.workDir + "/" + DIR_SUMMARY_RESULTS + "/" + DIR_CLUSTER_WEIGHT + "/" + this.filename.substring(0, this.filename.length() - 4) + "." + OBJ;
-        log.info("Loading serilized file[" + clusterWeightFilepath + "]");
+        String clusterWeightFilepath = GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + OBJ + "/" + DIR_CLUSTER_WEIGHT + "/" + this.filename.substring(0, this.filename.length() - 4) + "." + OBJ;
+        log.info("loading serilized file[" + clusterWeightFilepath + "]");
         Map<String, Float> clusterWeights = null;
         try {
             clusterWeights = (Map<String, Float>) SerializeUtil.readObj(clusterWeightFilepath);
         } catch (IOException e) {
-            log.error("Load serilized file[" + clusterWeightFilepath + "] error!", e);
+            log.error("load serilized file[" + clusterWeightFilepath + "] error!", e);
             throw e;
         }
-        log.info("Load serilized file[" + clusterWeightFilepath + "] successed!");
+        log.info("load serilized file[" + clusterWeightFilepath + "] successed!");
 
         /*
          * 在保证摘要总字数不超过规定字数的前提下， 按照句子的综合得分（主题贡献分，查询覆盖度，多样性得分）循环从候选句子中选取句子
          */
-
         // 当前摘要字数
         int summaryWordCount = 0;
 
@@ -134,8 +141,8 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
         List<Word> questionWords = StanfordNLPTools.segmentWord(this.question.trim());
         Double[] questionVec = this.sentenceToVector(questionWords);
 
-        if(questionVec == null) {
-            log.error("The question[" + this.question + "] vector is null!" );
+        if (questionVec == null) {
+            log.error("The question[" + this.question + "] vector is null!");
             return false;
         }
 
@@ -208,14 +215,14 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
                     List<Word> words = StanfordNLPTools.segmentWord(sentence.trim());
 
                     // 计算当前句子的长度，忽略长度小于8的句子
-                    if(CommonUtil.lessThanEight(words)) {
+                    if (CommonUtil.lessThanEight(words)) {
                         pairItr.remove();
                         continue;
                     }
 
                     Double[] sentVec = this.sentenceToVector(words);
 
-                    if(null == sentVec) {
+                    if (null == sentVec) {
                         log.info("The sentence[" + sentence + "] vector is null, ingore it!");
                         pairItr.remove();
                         continue;
@@ -231,7 +238,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
                     boolean tooSimilarity = false; // 如果候选句子中存在与当前句子在词语构成一模一样的句子则为true
                     for (Double[] psVec : psVectors) {
                         double sps = VectorOperator.cosineDistence(sentVec, psVec);
-                        if(sps > this.similarityThresh) {
+                        if (sps > this.similarityThresh) {
                             tooSimilarity = true;
                             break;
                         }
@@ -240,7 +247,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
                         }
                     }
 
-                    if(tooSimilarity) {
+                    if (tooSimilarity) {
                         // 说明当前句子与已经选取的句子在词语构成上相同，忽略
                         pairItr.remove();
                         continue;
@@ -305,7 +312,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
             // 更新相关数据
             List<Word> words = StanfordNLPTools.segmentWord(ss.getRight());
             Double[] sentvec = this.sentenceToVector(words);
-            if(sentvec == null) {
+            if (sentvec == null) {
                 continue;
             }
             psVectors.add(sentvec);
@@ -315,7 +322,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
                 if (CommonUtil.isPunctuation(word)) {
                     continue;
                 }
-                if("'s".equals(word.getName())) {
+                if ("'s".equals(word.getName())) {
                     continue;
                 }
                 ++summaryWordCount;
@@ -383,7 +390,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
     /**
      * 计算输入句子的向量
      *
-     * @param sentence
+     * @param words
      * @return
      */
     private Double[] sentenceToVector(List<Word> words) {
@@ -407,7 +414,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
 
             try {
                 /*Vector vec = this.ehCacheUtil.getMostSimilarVec(word);*/
-                Vector vec = this.wordVecs.get(word.getName() + "/-/" + word.getPos());
+                Vector vec = this.wordVecs.get(word.getName() + "-" + word.getPos());
                 if (vec == null) {
                     // 如果在词向量中找不到当前的词向量，则跳过
                     continue;
@@ -415,7 +422,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
                 Float[] floatVec = vec.floatVecs();
                 for (int i = 0; i < DIMENSION; i++) {
                     vector[i] += floatVec[i];
-                    if(!flag) {
+                    if (!flag) {
                         flag = true;
                     }
                 }
@@ -431,7 +438,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
             }
         }
 
-        if(!flag) {
+        if (!flag) {
             return null;
         }
 
@@ -441,8 +448,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
     /**
      * 加载压缩后的句子，按类别组织
      *
-     * @param count:
-     *            每个类别下选取的句子数量
+     * @param count: 每个类别下选取的句子数量
      * @return
      * @throws IOException
      */
@@ -553,7 +559,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
         }
         log.info("Load word vec[" + vecFile.getAbsolutePath() + "] success!");
 
-        if(MapUtils.isEmpty(wordVecs)) {
+        if (MapUtils.isEmpty(wordVecs)) {
             log.error("Can't load any word vec[" + vecFile.getAbsolutePath() + "]");
             throw new Exception("Can't load any word vec[" + vecFile.getAbsolutePath() + "]");
         }

@@ -1,26 +1,5 @@
 package edu.whu.cs.nlp.mts.summary;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.LineIterator;
-import org.apache.log4j.Logger;
-
 import edu.whu.cs.nlp.msc.NomParamSentenceReRanker;
 import edu.whu.cs.nlp.msc.SentenceReRanker;
 import edu.whu.cs.nlp.mts.base.domain.Vector;
@@ -31,12 +10,23 @@ import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
 import edu.whu.cs.nlp.mts.clustering.CalculateSimilarityThread;
 import edu.whu.cs.nlp.mts.clustering.ChineseWhispersCluster;
 import edu.whu.cs.nlp.mts.extraction.graph.EventsExtractBasedOnGraphV2;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
+import org.apache.log4j.Logger;
+
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * 驱动类
  *
  * @author ZhenchaoWang 2015-10-20 10:55:06
- *
  */
 public class MTSBOEC implements GlobalConstant {
 
@@ -217,38 +207,39 @@ public class MTSBOEC implements GlobalConstant {
             Properties prop = new Properties();
             try {
                 String questionFilename = GlobalParam.questionFilename;
-                log.info("Loading question file[" + questionFilename + "]...");
+                log.info("loading question file[" + questionFilename + "]...");
                 prop.load(new InputStreamReader(MTSBOEC.class.getClassLoader().getResourceAsStream(questionFilename)));
-                log.info("Loading question file[" + questionFilename + "] success!");
+                log.info("loading question file[" + questionFilename + "] success!");
             } catch (IOException e) {
-                log.error("Load question file error!", e);
+                log.error("load question file error!", e);
                 throw e;
             }
-
-            String runMode = GlobalParam.runMode;
-
-            float alpha = GlobalParam.alpha4summary;
-            float beta = GlobalParam.beta4summary;
-
-            List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
-            File compressFiles = new File(GlobalParam.workDir + "/" + DIR_SENTENCES_COMPRESSION);
 
             // 加载词向量
-            File vecFile = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_VEC_FILE, GlobalParam.vecFilename);
-            log.info("Loading word vec[" + vecFile.getAbsolutePath() + "]");
+            File wordVecDir = new File(GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT + "/" + OBJ + "/" + DIR_WORDS_VECTOR);
+            File[] wordVecFiles = wordVecDir.listFiles();
             Map<String, Vector> wordVecs = new HashMap<String, Vector>();
-            try {
-                wordVecs = (Map<String, Vector>) SerializeUtil.readObj(vecFile.getAbsolutePath());
-            } catch (ClassNotFoundException e) {
-                log.error("Load word vec[" + vecFile.getAbsolutePath() + "] error!", e);
-                throw e;
+            for (File wordVecFile : wordVecFiles) {
+                log.info("loading word vec[" + wordVecFile.getAbsolutePath() + "]");
+                Map<String, Vector> wordVecsInTopic = (Map<String, Vector>) SerializeUtil.readObj(wordVecFile.getAbsolutePath());
+                if (MapUtils.isEmpty(wordVecsInTopic)) {
+                    log.error("Can't find any vector in file[" + wordVecFile.getAbsolutePath() + "]");
+                    throw new Exception("Can't find any vector in file[" + wordVecFile.getAbsolutePath() + "]");
+                }
+                for (Map.Entry<String, Vector> entry : wordVecsInTopic.entrySet()) {
+                    if (wordVecs.containsKey(entry.getKey())) {
+                        continue;
+                    }
+                    wordVecs.put(entry.getKey(), entry.getValue());
+                }
             }
-            log.info("Load word vec[" + vecFile.getAbsolutePath() + "] success!");
+            log.info("load word vector finish, vector size[" + wordVecs.size() + "]");
 
-            if (MapUtils.isEmpty(wordVecs)) {
-                log.error("Can't load any word vec[" + vecFile.getAbsolutePath() + "]");
-                throw new Exception("Can't load any word vec[" + vecFile.getAbsolutePath() + "]");
-            }
+            List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
+            File compressFiles = new File(GlobalParam.workDir + "/" + DIR_SUMMARY_RESULTS + "/" + DIR_SENTENCES_COMPRESSION);
+            float alpha = GlobalParam.alpha4summary;
+            float beta = GlobalParam.beta4summary;
+            String runMode = GlobalParam.runMode;
 
             if ("old-np".equalsIgnoreCase(runMode)) {
                 // 采用老的reranker策略构建摘要
@@ -259,7 +250,6 @@ public class MTSBOEC implements GlobalConstant {
                 }
 
             } else if ("old".equalsIgnoreCase(runMode)) {
-
                 // 采用老的reranker策略构建摘要
                 for (File file : compressFiles.listFiles()) {
                     String topicName = file.getName().substring(0, file.getName().lastIndexOf("."));
@@ -267,29 +257,32 @@ public class MTSBOEC implements GlobalConstant {
                 }
 
             } else if ("new".equalsIgnoreCase(runMode)) {
+
                 // 采用子模函数构建摘要
                 log.info("Summary build mode: new");
 
                 // 加载每个词的IDF值
                 /** Google 总页面数估值 */
                 final double TOTAL_PAGE_COUNT = 30000000000.0D;
-
                 Map<String, Double> idfValues = new HashMap<String, Double>();
                 File idfFIle = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_IDF_FILE, GlobalParam.idfFilename);
-                log.info("Loading idf value file[" + idfFIle.getAbsolutePath() + "]");
+                log.info("loading idf value file[" + idfFIle.getAbsolutePath() + "]");
+
                 LineIterator lineIterator = null;
                 try {
+
                     lineIterator = FileUtils.lineIterator(idfFIle, DEFAULT_CHARSET.toString());
                     while (lineIterator.hasNext()) {
                         String line = lineIterator.nextLine();
                         String[] strs = line.split("###");
                         if (strs.length != 2) {
-                            log.warn("Line[" + line + "] format is illegal, ignore it!");
+                            log.warn("line[" + line + "] format is illegal, ignore it!");
                             continue;
                         }
                         idfValues.put(strs[0].trim(), Long.parseLong(strs[1]) / TOTAL_PAGE_COUNT);
                     }
-                    log.info("Load idf value file[" + idfFIle.getAbsolutePath() + "] finished!");
+                    log.info("load idf value file[" + idfFIle.getAbsolutePath() + "] finished!");
+
                 } catch (IOException e) {
                     log.error("Load idf value file[" + idfFIle.getAbsolutePath() + "] error!", e);
                     throw e;
