@@ -1,22 +1,7 @@
 package edu.whu.cs.nlp.mts.base.nlp;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
-
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation;
-import edu.stanford.nlp.ling.CoreAnnotations.LemmaAnnotation;
-import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
-import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
-import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
-import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
-import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.*;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
@@ -31,39 +16,46 @@ import edu.whu.cs.nlp.mts.base.domain.Word;
 import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
 import edu.whu.cs.nlp.mts.base.loader.ModelLoader;
 import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 斯坦福NLP工具类
  *
  * @author ZhenchaoWang 2015-10-27 16:38:29
- *
  */
-public class StanfordNLPTools implements GlobalConstant{
+public class StanfordNLPTools implements GlobalConstant {
 
 
     /** 获取所有词的对象信息 */
-    public static final String    KEY_WORDS          = "WORDS";
+    public static final String KEY_WORDS = "WORDS";
 
     /** 获取所有词的依存关系集合 */
-    public static final String    KEY_PARSED_ITEMS   = "PARSED_ITEMS";
+    public static final String KEY_PARSED_ITEMS = "PARSED_ITEMS";
 
     /** 获取句法分析树 */
-    public static final String    KEY_SYNTACTICTREES = "SYNTACTICTREES";
+    public static final String KEY_SYNTACTICTREES = "SYNTACTICTREES";
 
     /** 获取依存分析图 */
-    public static final String    KEY_SEMANTICGRAPHS = "SEMANTICGRAPHS";
+    public static final String KEY_SEMANTICGRAPHS = "SEMANTICGRAPHS";
 
     /** 获取指代链图 */
-    public static final String    KEY_COREFCHAIN_GRAPH = "COREFCHAIN_GRAPH";
+    public static final String KEY_COREFCHAIN_GRAPH = "COREFCHAIN_GRAPH";
 
     /**
      * 利用stanford的nlp处理工具coreNlp对传入的正文进行处理，主要包括：<br>
      * 句子切分；词性标注，命名实体识别，依存分析等
      *
-     * @param text
-     *            输入文本
-     * @return 结果信息全部存在一个map集合中返回，通过key来获取
+     * @param text 输入文本
      *
+     * @return 结果信息全部存在一个map集合中返回，通过key来获取
      */
     public synchronized static Map<String, Object> coreOperate(final String text) {
 
@@ -163,7 +155,9 @@ public class StanfordNLPTools implements GlobalConstant{
 
     /**
      * 对输入文本进行分句、分词处理
+     *
      * @param sentence
+     *
      * @return
      */
     public synchronized static List<Word> segmentWord(final String sentence) {
@@ -208,21 +202,6 @@ public class StanfordNLPTools implements GlobalConstant{
         String[] dirs = topics.list();
         StanfordCoreNLP pipeline = ModelLoader.getPipeLine();
 
-        /*String text = "Turkish warplanes have shot down a Russian military aircraft on the border with Syria. " +
-                "Turkey says it has shot down a Russian made warplane on the Syrian border for violating Turkish airspace. " +
-                "A Turkish Air Force F16 fighter jet shot down a Russian Sukhoi Su24M bomber aircraft near the Syria border on 24 November 2015. " +
-                "A Russian warplane has crashed in Syria near the Turkish border on 24 November, according to local reports. " +
-                "Turkey apparently shot down a Russian bomber which they say was in their air space this morning.";
-
-        List<List<Word>> words = (List<List<Word>>) StanfordNLPTools.coreOperate(text).get(KEY_WORDS);
-        for (List<Word> list : words) {
-            StringBuilder sb = new StringBuilder();
-            for (Word word : list) {
-                sb.append(word.getName() + "/" + word.getPos() + " ");
-            }
-            System.out.println(sb.toString());
-        }*/
-
         for (String dir : dirs) {
             File topic = new File(corpusDir + "/" + dir);
             File[] files = topic.listFiles();
@@ -230,7 +209,7 @@ public class StanfordNLPTools implements GlobalConstant{
                 try {
                     String text = FileUtils.readFileToString(file, "utf-8");
 
-                    if(StringUtils.isNotBlank(text)) {
+                    if (StringUtils.isNotBlank(text)) {
                         System.out.println("processing:" + file.getAbsolutePath());
                         Annotation document = new Annotation(text);
                         pipeline.annotate(document);
@@ -245,7 +224,7 @@ public class StanfordNLPTools implements GlobalConstant{
                                 String word = coreLabel.get(TextAnnotation.class);
                                 String lemma = coreLabel.get(LemmaAnnotation.class);
                                 String pos = coreLabel.get(PartOfSpeechAnnotation.class);
-                                if(pos.equals(lemma)) {
+                                if (pos.equals(lemma)) {
                                     pos = "PUNCT";
                                 }
                                 seg_sent.append(word + " ");
@@ -257,18 +236,18 @@ public class StanfordNLPTools implements GlobalConstant{
 
                         String segText = CommonUtil.cutLastLineSpliter(seg.toString());
                         File segWriteFile = FileUtils.getFile("E:/workspace/corpus/duc07.results.data/testdata/duc2007_testdocs/tmp/seg/" + dir, file.getName());
-                        try{
+                        try {
                             FileUtils.writeStringToFile(segWriteFile, segText, "utf-8");
-                        } catch(IOException e) {
+                        } catch (IOException e) {
                             System.out.println("Save file[" + segWriteFile.getAbsolutePath() + "] error!");
                             e.printStackTrace();
                         }
 
                         String segAndPosText = CommonUtil.cutLastLineSpliter(seg_pos.toString());
                         File segPosWriteFile = FileUtils.getFile("E:/workspace/corpus/duc07.results.data/testdata/duc2007_testdocs/tmp/seg-pos/" + dir, file.getName());
-                        try{
+                        try {
                             FileUtils.writeStringToFile(segPosWriteFile, segAndPosText, "utf-8");
-                        } catch(IOException e) {
+                        } catch (IOException e) {
                             System.out.println("Save file[" + segPosWriteFile.getAbsolutePath() + "] error!");
                             e.printStackTrace();
                         }

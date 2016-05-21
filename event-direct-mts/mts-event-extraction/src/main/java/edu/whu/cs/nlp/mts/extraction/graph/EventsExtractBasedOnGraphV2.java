@@ -1,42 +1,10 @@
 package edu.whu.cs.nlp.mts.extraction.graph;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.lang.Thread.UncaughtExceptionHandler;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
-
 import edu.stanford.nlp.dcoref.CorefChain;
 import edu.stanford.nlp.dcoref.CorefChain.CorefMention;
 import edu.stanford.nlp.trees.Tree;
-import edu.whu.cs.nlp.mts.base.domain.ChunkPhrase;
-import edu.whu.cs.nlp.mts.base.domain.CoreferenceElement;
-import edu.whu.cs.nlp.mts.base.domain.Event;
-import edu.whu.cs.nlp.mts.base.domain.EventType;
-import edu.whu.cs.nlp.mts.base.domain.EventWithPhrase;
-import edu.whu.cs.nlp.mts.base.domain.EventWithWord;
-import edu.whu.cs.nlp.mts.base.domain.ParseItem;
+import edu.whu.cs.nlp.mts.base.domain.*;
 import edu.whu.cs.nlp.mts.base.domain.Vector;
-import edu.whu.cs.nlp.mts.base.domain.Word;
 import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
 import edu.whu.cs.nlp.mts.base.global.GlobalParam;
 import edu.whu.cs.nlp.mts.base.loader.ModelLoader;
@@ -48,15 +16,30 @@ import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
 import opennlp.tools.chunker.ChunkerME;
 import opennlp.tools.chunker.ChunkerModel;
 import opennlp.tools.util.Span;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.lang.Thread.UncaughtExceptionHandler;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * 基于依存关系来构建词图，在词图的基础上基于规则进行事件抽取<br>
  * 规则如下：<br>
  * 1.先进行事件抽取，再进行指代消解
  *
- * @version 2.0
  * @author ZhenchaoWang 2015-10-26 19:38:22
- *
+ * @version 2.0
  */
 public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boolean> {
 
@@ -68,14 +51,14 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
     /** 专题名 */
     private final String topicName;
 
-    /**词向量获取器*/
+    /** 词向量获取器 */
     private final EhCacheUtil ehCacheUtil;
 
     /**
      * 构造函数
      *
-     * @param textDir
-     *            输入文件目录
+     * @param topicName
+     * @param ehCacheUtil
      */
     public EventsExtractBasedOnGraphV2(String topicName, EhCacheUtil ehCacheUtil) {
         this.topicName = topicName;
@@ -98,7 +81,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
         Map<String, Vector> wordvecsInTopic = new HashMap<String, Vector>();
 
         // 获取指定文件夹下的所有文件
-        Collection<File> files = FileUtils.listFiles(FileUtils.getFile(GlobalParam.workDir + "/" + DIR_CORPUS  + "/" + this.topicName), null, false);
+        Collection<File> files = FileUtils.listFiles(FileUtils.getFile(GlobalParam.workDir + "/" + DIR_CORPUS + "/" + this.topicName), null, false);
         for (File file : files) {
 
             // 加载文件
@@ -141,12 +124,12 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                 for (List<Word> wordsInSent : words) {
                     for (Word word : wordsInSent) {
                         String key = word.dictKey();
-                        if(wordvecsInTopic.containsKey(key)) {
+                        if (wordvecsInTopic.containsKey(key)) {
                             continue;
                         }
                         // 获取当前词的词向量
                         Vector vector = this.ehCacheUtil.getMostSimilarVec(word);
-                        if(null != vector) {
+                        if (null != vector) {
                             wordvecsInTopic.put(key, vector);
                         }
                     }
@@ -165,7 +148,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                     sb_words_pos.append(sb_pos.toString().trim() + LINE_SPLITER);
                 }
                 /* 中间结果记录：词和词性分开按行存储 */
-                FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_SEGDETAIL_TEXT + "/pos2/"  + "/" + this.topicName, file.getName()), CommonUtil.cutLastLineSpliter(sb_words_pos.toString()), DEFAULT_CHARSET);
+                FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_SEGDETAIL_TEXT + "/pos2/" + "/" + this.topicName, file.getName()), CommonUtil.cutLastLineSpliter(sb_words_pos.toString()), DEFAULT_CHARSET);
 
                 // 获取依存分析结果
                 @SuppressWarnings("unchecked")
@@ -332,14 +315,14 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                     FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_CR_RP_PE_EF_EVENTS + "/" + this.topicName, file.getName()), CommonUtil.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
                     FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_CR_RP_PE_EF_EVENTSSIMPLIFY + "/" + this.topicName, file.getName()), CommonUtil.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
 
-                    if(MapUtils.isNotEmpty(eventsAfterCRAndRPAndPEAndEF)) {
+                    if (MapUtils.isNotEmpty(eventsAfterCRAndRPAndPEAndEF)) {
                         /*
                          * 序列化事件抽取结果
                          */
                         File eventsObjFile = FileUtils.getFile(objBaseDir + "/" + DIR_SERIALIZE_EVENTS + "/" + this.topicName, file.getName() + SUFFIX_SERIALIZE_FILE);
-                        try{
+                        try {
                             SerializeUtil.writeObj(eventsAfterCRAndRPAndPEAndEF, eventsObjFile.getAbsoluteFile());
-                        }catch (IOException e) {
+                        } catch (IOException e) {
                             this.log.error("Seralize error:" + eventsObjFile.getAbsolutePath(), e);
                             throw e;
                         }
@@ -357,14 +340,14 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
             }
         }
 
-        if(MapUtils.isNotEmpty(wordvecsInTopic)) {
+        if (MapUtils.isNotEmpty(wordvecsInTopic)) {
             /*
              * 序列化词向量字典
              */
             File wordvecFile = FileUtils.getFile(this.eventExtractWorkDir + "/" + OBJ + "/" + DIR_WORDS_VECTOR, this.topicName + ".obj");
-            try{
+            try {
                 SerializeUtil.writeObj(wordvecsInTopic, wordvecFile);
-            } catch(IOException e) {
+            } catch (IOException e) {
                 this.log.error("Serialize word vector file[" + wordvecFile.getAbsolutePath() + "] error!", e);
                 throw e;
             }
@@ -380,6 +363,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * @param inWord
      * @param crChains
      * @param words
+     *
      * @return
      */
     private List<Word> changeToCorefWord(Word inWord, Map<String, CoreferenceElement> crChains, List<List<Word>> words) {
@@ -418,6 +402,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      *
      * @param parseItems
      * @param wordsCount
+     *
      * @return
      */
     public String[][] buildWordGraph(List<ParseItem> parseItems, int wordsCount) {
@@ -435,8 +420,8 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * 以指代链中最先出现的指代作为被指代的词（短语)<br>
      * key:MD5(element + sentNum + startIndex + endIndex)
      *
-     * @param graph
-     *            指代链
+     * @param graph 指代链
+     *
      * @return
      */
     private Map<String, CoreferenceElement> cr(Map<Integer, CorefChain> graph) {
@@ -447,7 +432,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
         }
 
         Set<Map.Entry<Integer, CorefChain>> set = graph.entrySet();
-        for (Iterator<Map.Entry<Integer, CorefChain>> it = set.iterator(); it.hasNext();) {
+        for (Iterator<Map.Entry<Integer, CorefChain>> it = set.iterator(); it.hasNext(); ) {
 
             Map.Entry<Integer, CorefChain> entry = it.next();
 
@@ -484,6 +469,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * @param parsedList
      * @param words
      * @param filename
+     *
      * @return
      */
     public Map<Integer, List<EventWithWord>> extract(List<List<ParseItem>> parsedList, List<List<Word>> words, final String filename) {
@@ -608,11 +594,11 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * 将事件中的词扩充成短语<br>
      * 按行处理
      *
-     * @param events
-     *            由词构成的事件
-     * @param words
-     *            当前句子中的词语
+     * @param events 由词构成的事件
+     * @param words  当前句子中的词语
+     *
      * @return
+     *
      * @throws Exception
      */
     private List<EventWithPhrase> phraseExpansion(List<EventWithPhrase> events, List<Word> words) throws Exception {
@@ -705,7 +691,9 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * 利用open nlp进行chunk，并添加一些修正规则
      *
      * @param words
+     *
      * @return
+     *
      * @throws IOException
      */
     private List<ChunkPhrase> chunk(List<Word> words) throws Exception {
@@ -748,6 +736,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * @param eventWithPhrases
      * @param words
      * @param sentNum
+     *
      * @return
      */
     private List<EventWithPhrase> eventRepair(List<EventWithPhrase> eventWithPhrases, List<Word> words, int sentNum) {
@@ -951,6 +940,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * 事件过滤函数，对于不符合要求的事件，返回null
      *
      * @param event
+     *
      * @return
      */
     private EventWithPhrase eventFilter(EventWithPhrase event) {
@@ -977,6 +967,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * 将词语集合转换成句子，
      *
      * @param words
+     *
      * @return
      */
     private String words2Sentence(List<Word> words) {
@@ -992,6 +983,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * 将词语集合转换成句子，
      *
      * @param words
+     *
      * @return
      */
     private String words2SentenceSimply(List<Word> words) {
@@ -1007,6 +999,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * 将事件以精简的形式转化成字符串
      *
      * @param events
+     *
      * @return
      */
     private String getSimpilyEvents(List<? extends Event> events) {
@@ -1025,8 +1018,8 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * 事件抽取测试
      *
      * @param args
-     * @throws ExecutionException
-     * @throws InterruptedException
+     *
+     * @throws Exception
      */
     public static void main(String[] args) throws Exception {
 
