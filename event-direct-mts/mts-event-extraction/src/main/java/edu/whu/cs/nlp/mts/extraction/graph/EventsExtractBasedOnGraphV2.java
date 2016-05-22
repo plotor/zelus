@@ -7,15 +7,12 @@ import edu.whu.cs.nlp.mts.base.domain.*;
 import edu.whu.cs.nlp.mts.base.domain.Vector;
 import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
 import edu.whu.cs.nlp.mts.base.global.GlobalParam;
-import edu.whu.cs.nlp.mts.base.loader.ModelLoader;
+import edu.whu.cs.nlp.mts.base.nlp.OpenNLPTools;
 import edu.whu.cs.nlp.mts.base.nlp.StanfordNLPTools;
 import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
 import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
 import edu.whu.cs.nlp.mts.base.utils.Encipher;
 import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
-import opennlp.tools.chunker.ChunkerME;
-import opennlp.tools.chunker.ChunkerModel;
-import opennlp.tools.util.Span;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
@@ -609,7 +606,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
         try {
 
             /* 利用open nlp进行chunk */
-            List<ChunkPhrase> phrases = this.chunk(words);
+            List<ChunkPhrase> phrases = OpenNLPTools.chunk(words);
 
             /* chunk 中间结果记录 */
             StringBuilder sb_chunk = new StringBuilder();
@@ -685,49 +682,6 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
             throw new Exception(e);
         }
         return eventsInSentence;
-    }
-
-    /**
-     * 利用open nlp进行chunk，并添加一些修正规则
-     *
-     * @param words
-     *
-     * @return
-     *
-     * @throws IOException
-     */
-    private List<ChunkPhrase> chunk(List<Word> words) throws Exception {
-        List<ChunkPhrase> phrases = new ArrayList<ChunkPhrase>();
-        int wordsCount = words.size();
-        String[] toks = new String[wordsCount - 1]; // 忽略第一个单词Root
-        String[] tags = new String[wordsCount - 1];
-        for (int i = 1; i < words.size(); i++) {
-            toks[i - 1] = words.get(i).getName();
-            tags[i - 1] = words.get(i).getPos();
-        }
-        // 采用open nlp进行chunk
-        ChunkerModel chunkerModel;
-        try {
-            chunkerModel = ModelLoader.getChunkerModel();
-        } catch (Exception e) {
-            this.log.error("Failed to load chunk model!", e);
-            throw e;
-        }
-        ChunkerME chunkerME = new ChunkerME(chunkerModel);
-        Span[] spans = chunkerME.chunkAsSpans(toks, tags);
-        for (Span span : spans) {
-            Word word = words.get(span.getStart() + 1);
-            if ("'s".equals(word.getName())) {
-                ChunkPhrase prePhrase = phrases.get(phrases.size() - 1);
-                prePhrase.setRightIndex(span.getEnd());
-                prePhrase.getWords().addAll(words.subList(span.getStart() + 1, span.getEnd() + 1));
-                phrases.set(phrases.size() - 1, prePhrase);
-            } else {
-                ChunkPhrase chunkPhrase = new ChunkPhrase(span.getStart() + 1, span.getEnd(), new ArrayList<Word>(words.subList(span.getStart() + 1, span.getEnd() + 1)));
-                phrases.add(chunkPhrase);
-            }
-        }
-        return phrases;
     }
 
     /**
