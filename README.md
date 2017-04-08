@@ -1,1 +1,1 @@
-### 基于事件指导的多文档生成式摘要算法
+# An Event-Guided Method for Abstractive Multi-Document Summarzation
