@@ -5,8 +5,8 @@ import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
 
-import edu.whu.cs.nlp.mts.base.domain.Word;
-import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
+import org.zhenchao.zelus.common.domain.Word;
+import org.zhenchao.zelus.common.util.CommonUtil;
 
 /**
  * 压缩输出语句单元

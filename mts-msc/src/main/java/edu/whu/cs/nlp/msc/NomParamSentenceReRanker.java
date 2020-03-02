@@ -21,13 +21,13 @@ import org.apache.log4j.Logger;
 import edu.whu.cs.nlp.msc.domain.CompressUnit;
 import edu.whu.cs.nlp.msc.giga.GrammarScorer;
 import edu.whu.cs.nlp.msc.giga.NGramScore;
-import edu.whu.cs.nlp.mts.base.domain.Pair;
-import edu.whu.cs.nlp.mts.base.domain.Vector;
-import edu.whu.cs.nlp.mts.base.domain.Word;
-import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
-import edu.whu.cs.nlp.mts.base.nlp.StanfordNLPTools;
-import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
-import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
+import org.zhenchao.zelus.common.domain.Pair;
+import org.zhenchao.zelus.common.domain.Vector;
+import org.zhenchao.zelus.common.domain.Word;
+import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.nlp.StanfordNLPTools;
+import org.zhenchao.zelus.common.util.CommonUtil;
+import org.zhenchao.zelus.common.util.SerializeUtil;
 
 /**
  * 从压缩输出语句集合中选择关键句构建摘要（非参）

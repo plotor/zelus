@@ -3,7 +3,7 @@ package edu.whu.cs.nlp.mts.domain;
 import java.io.Serializable;
 import java.util.List;
 
-import edu.whu.cs.nlp.mts.base.domain.Pair;
+import org.zhenchao.zelus.common.domain.Pair;
 
 /**
  * 类别实体增强版

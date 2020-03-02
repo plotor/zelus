@@ -1,5 +1,16 @@
 package edu.whu.cs.nlp.mts.summary;
 
+import edu.whu.cs.nlp.mts.domain.ClustItem;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
+import org.apache.log4j.Logger;
+import org.zhenchao.zelus.common.domain.Pair;
+import org.zhenchao.zelus.common.domain.Word;
+import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.nlp.StanfordNLPTools;
+import org.zhenchao.zelus.common.util.SerializeUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -16,54 +27,41 @@ import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.LineIterator;
-import org.apache.log4j.Logger;
-
-import edu.whu.cs.nlp.mts.base.domain.Pair;
-import edu.whu.cs.nlp.mts.base.domain.Word;
-import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
-import edu.whu.cs.nlp.mts.base.nlp.StanfordNLPTools;
-import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
-import edu.whu.cs.nlp.mts.domain.ClustItem;
-
 /**
  * 基于子模函数生成多文档摘要（利用TF-IDF度量句子之间的相似度）
  *
  * @author zhenchao.wang 2016-1-17 17:06:39
- *
  */
 public class SummaryBuilder implements Callable<Boolean>, GlobalConstant {
 
-    private static Logger log              = Logger.getLogger(SummaryBuilder.class);
+    private static Logger log = Logger.getLogger(SummaryBuilder.class);
 
     /** 工作目录 */
-    private final String  workDir;
+    private final String workDir;
 
     /** 主题文件名 */
-    private final String  filename;
+    private final String filename;
 
     /** 主题名称 */
-    private final String  topicname;
+    private final String topicname;
 
     /** IDF值 */
-    Map<String, Double>   idfValues;
+    Map<String, Double> idfValues;
 
     /** topic query */
-    private final String  question;
+    private final String question;
 
     /** 词向量获取器 */
     // private final EhCacheUtil ehCacheUtil;
 
     /** alpha 参数 */
-    private final float   alpha;
+    private final float alpha;
 
     /** beta 参数 */
-    private final float   beta;
+    private final float beta;
 
     /** 每个主题下面选取的句子的数量 */
-    private Integer       sentCountInClust = 10;
+    private Integer sentCountInClust = 10;
 
     public SummaryBuilder(String workDir, String filename, int sentCountInClust, Map<String, Double> idfValues, String question, float alpha, float beta) {
         super();
@@ -91,7 +89,7 @@ public class SummaryBuilder implements Callable<Boolean>, GlobalConstant {
         log.info("Loading serilized file[" + clusterWeightFilepath + "]");
         Map<String, Float> clusterWeights = null;
         try {
-            clusterWeights = (Map<String, Float>) SerializeUtil.readObj(clusterWeightFilepath);
+            clusterWeights = (Map<String, Float>) SerializeUtils.readObj(clusterWeightFilepath);
         } catch (IOException e) {
             log.error("Load serilized file[" + clusterWeightFilepath + "] error!", e);
             throw e;
@@ -283,13 +281,13 @@ public class SummaryBuilder implements Callable<Boolean>, GlobalConstant {
             int num = -1;
             for (int i = 0; i < sentences.size(); i++) {
                 Pair<Float, String> sent = sentences.get(i);
-                if(selectedSentence.getRight().equals(sent.getRight())) {
+                if (selectedSentence.getRight().equals(sent.getRight())) {
                     num = i;
                     break;
                 }
             }
 
-            if(num == -1) {
+            if (num == -1) {
                 log.error("The sentence num is illegal:" + num);
                 return false;
             }
@@ -307,7 +305,7 @@ public class SummaryBuilder implements Callable<Boolean>, GlobalConstant {
             List<Word> words = StanfordNLPTools.segmentWord(ss.getRight());
             // 1.更新摘要字数
             for (Word word : words) {
-                if(word.getName().equals(word.getPos())) {
+                if (word.getName().equals(word.getPos())) {
                     continue;
                 }
                 ++summaryWordCount;
@@ -409,8 +407,7 @@ public class SummaryBuilder implements Callable<Boolean>, GlobalConstant {
     /**
      * 加载压缩后的句子，按类别组织
      *
-     * @param count:
-     *            每个类别下选取的句子数量
+     * @param count: 每个类别下选取的句子数量
      * @return
      * @throws IOException
      */

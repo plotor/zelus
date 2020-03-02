@@ -1,23 +1,27 @@
 package edu.whu.cs.nlp.mts.clustering;
 
-import edu.whu.cs.nlp.mts.base.domain.EventWithPhrase;
-import edu.whu.cs.nlp.mts.base.domain.NumedEventWithPhrase;
-import edu.whu.cs.nlp.mts.base.domain.Vector;
-import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
-import edu.whu.cs.nlp.mts.base.global.GlobalParam;
-import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
-import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
-import edu.whu.cs.nlp.mts.base.utils.VectorOperator;
 import edu.whu.cs.nlp.mts.clustering.domain.CWEdge;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.zhenchao.zelus.common.domain.EventWithPhrase;
+import org.zhenchao.zelus.common.domain.NumedEventWithPhrase;
+import org.zhenchao.zelus.common.domain.Vector;
+import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.global.GlobalParam;
+import org.zhenchao.zelus.common.util.CommonUtil;
+import org.zhenchao.zelus.common.util.SerializeUtil;
+import org.zhenchao.zelus.common.util.VectorOperator;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.concurrent.Callable;
 
 /**

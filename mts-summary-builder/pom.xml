@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>edu.whu.cs.nlp</groupId>
-        <artifactId>event-direct-mts</artifactId>
+        <artifactId>zelus</artifactId>
         <version>1.0.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -69,9 +69,9 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>edu.whu.cs.nlp.mts.summary.MTSBOEC</mainClass>
-                            <!-- <mainClass>edu.whu.cs.nlp.mts.optimize.Optimizer</mainClass> -->
-                            <!-- <mainClass>edu.whu.cs.nlp.msc.giga.GrammarScorer</mainClass> -->
+                            <mainClass>org.zhenchao.mts.summary.MTSBOEC</mainClass>
+                            <!-- <mainClass>org.zhenchao.mts.optimize.Optimizer</mainClass> -->
+                            <!-- <mainClass>org.zhenchao.msc.giga.GrammarScorer</mainClass> -->
                         </manifest>
                     </archive>
                 </configuration>

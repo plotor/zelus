@@ -1,38 +1,36 @@
 package edu.whu.cs.nlp.mts.optimize;
 
+import edu.whu.cs.nlp.msc.domain.CompressUnit;
+import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
+import org.zhenchao.zelus.common.global.GlobalConstant;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
-
-import edu.whu.cs.nlp.msc.domain.CompressUnit;
-import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
-
 /**
  * 穷举选择句子构建摘要
  *
  * @author ZhenchaoWang 2015-11-13 20:43:50
- *
  */
 public class EnumerationThread implements Callable<Boolean>, GlobalConstant {
 
-    private final Logger                   log              = Logger.getLogger(this.getClass());
+    private final Logger log = Logger.getLogger(this.getClass());
 
     /** 按照类别组织的句子 */
     private final List<List<CompressUnit>> rerankedClustedCompressUnits;
     /** 工作目录 */
-    private final String                   workDir;
+    private final String workDir;
     /** 当前主题名 */
-    private final String                   topicName;
+    private final String topicName;
     /** 每个类别下面的最大句子数 */
-    private Integer                        maxSentenceCount = 5;
+    private Integer maxSentenceCount = 5;
 
     /** 最大摘要数 */
-    private Integer                  maxSummaries     = 50000;
+    private Integer maxSummaries = 50000;
 
     public EnumerationThread(List<List<CompressUnit>> rerankedClustedCompressUnits, String workDir, String topicName, int maxSentenceCount, int maxSummaries) {
         super();
@@ -120,7 +118,7 @@ public class EnumerationThread implements Callable<Boolean>, GlobalConstant {
             return false;
         }
 
-        for (int i = 0;; i++) {
+        for (int i = 0; ; i++) {
             if (i >= counter.length) {
                 return false;
             }

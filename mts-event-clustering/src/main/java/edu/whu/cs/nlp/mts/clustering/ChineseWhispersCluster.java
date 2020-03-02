@@ -1,5 +1,29 @@
 package edu.whu.cs.nlp.mts.clustering;
 
+import edu.mit.jwi.IDictionary;
+import edu.stanford.nlp.trees.Tree;
+import edu.whu.cs.nlp.mts.clustering.cw.CW;
+import edu.whu.cs.nlp.mts.clustering.cw.graph.ArrayBackedGraph;
+import edu.whu.cs.nlp.mts.clustering.cw.graph.Graph;
+import edu.whu.cs.nlp.mts.clustering.domain.CWEdge;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.zhenchao.zelus.common.domain.EventWithPhrase;
+import org.zhenchao.zelus.common.domain.NumedEventWithPhrase;
+import org.zhenchao.zelus.common.domain.Pair;
+import org.zhenchao.zelus.common.domain.Vector;
+import org.zhenchao.zelus.common.domain.Word;
+import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.global.GlobalParam;
+import org.zhenchao.zelus.common.util.CommonUtil;
+import org.zhenchao.zelus.common.util.Encipher;
+import org.zhenchao.zelus.common.util.SerializeUtil;
+import org.zhenchao.zelus.common.util.VectorOperator;
+import org.zhenchao.zelus.common.util.WordNetUtil;
+
 import java.io.File;
 import java.io.IOException;
 import java.math.RoundingMode;
@@ -14,40 +38,14 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-
-import edu.mit.jwi.IDictionary;
-import edu.stanford.nlp.trees.Tree;
-import edu.whu.cs.nlp.mts.base.domain.EventWithPhrase;
-import edu.whu.cs.nlp.mts.base.domain.NumedEventWithPhrase;
-import edu.whu.cs.nlp.mts.base.domain.Pair;
-import edu.whu.cs.nlp.mts.base.domain.Vector;
-import edu.whu.cs.nlp.mts.base.domain.Word;
-import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
-import edu.whu.cs.nlp.mts.base.global.GlobalParam;
-import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
-import edu.whu.cs.nlp.mts.base.utils.Encipher;
-import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
-import edu.whu.cs.nlp.mts.base.utils.VectorOperator;
-import edu.whu.cs.nlp.mts.base.utils.WordNetUtil;
-import edu.whu.cs.nlp.mts.clustering.cw.CW;
-import edu.whu.cs.nlp.mts.clustering.cw.graph.ArrayBackedGraph;
-import edu.whu.cs.nlp.mts.clustering.cw.graph.Graph;
-import edu.whu.cs.nlp.mts.clustering.domain.CWEdge;
-
 /**
  * 口哨算法聚类
  *
  * @author ZhenchaoWang 2015-11-10 14:23:27
- *
  */
 public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant {
 
-    private final Logger log                   = Logger.getLogger(this.getClass());
+    private final Logger log = Logger.getLogger(this.getClass());
 
     private static final String CLASS_PREFIX = "classes_";
 
@@ -57,7 +55,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
     private final String nodeFilePath;
     /** edge文件所在路径 */
     private final String edgeFilePath;
-    /**词向量字典文件所在路径*/
+    /** 词向量字典文件所在路径 */
     private final String wordvecDictPath;
 
     public ChineseWhispersCluster(String topicDir, String nodeFilePath, String edgeFilePath, String wordvecDictPath) {
@@ -128,7 +126,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         float avgWeight = totalWeight / cwEdges.size();
         // 添加边
         for (CWEdge cwEdge : cwEdges) {
-            if(cwEdge.getWeight() >= avgWeight * GlobalParam.edgeWeightThresh) {
+            if (cwEdge.getWeight() >= avgWeight * GlobalParam.edgeWeightThresh) {
                 graph.addEdgeUndirected(cwEdge.getFrom(), cwEdge.getTo(), cwEdge.getWeight());
             }
         }
@@ -148,7 +146,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         File[] objfiles = objWordsDir.listFiles();
         Map<String, List<List<Word>>> texts = new HashMap<String, List<List<Word>>>(25);
         for (File file : objfiles) {
-            try{
+            try {
                 this.log.info("Thread " + Thread.currentThread().getId() + " -> loading serilized file:" + file.getAbsolutePath());
                 List<List<Word>> words = (List<List<Word>>) SerializeUtil.readObj(file.getAbsolutePath());
                 texts.put(file.getName().substring(0, file.getName().lastIndexOf(".")), words);
@@ -165,7 +163,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         File[] objSyntacticTreefiles = objSyntacticTreesDir.listFiles();
         Map<String, List<Tree>> syntacticTrees = new HashMap<String, List<Tree>>(25);
         for (File file : objSyntacticTreefiles) {
-            try{
+            try {
                 this.log.info("Thread " + Thread.currentThread().getId() + " -> loading serilized file:" + file.getAbsolutePath());
                 List<Tree> syntacticTree = (List<Tree>) SerializeUtil.readObj(file.getAbsolutePath());
                 syntacticTrees.put(file.getName().substring(0, file.getName().lastIndexOf(".")), syntacticTree);
@@ -193,7 +191,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         //获取当前句子所有的子句集合
         for (Entry<Integer, Set<Integer>> entry : clusterEvents.entrySet()) {
 
-            if(CollectionUtils.isEmpty(entry.getValue())) {
+            if (CollectionUtils.isEmpty(entry.getValue())) {
                 continue;
             }
 
@@ -201,18 +199,18 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
 
             List<Double[]> vectorsInCluster = new ArrayList<Double[]>();
             for (Integer eventNum : entry.getValue()) {
-                NumedEventWithPhrase numedEventWithPhrase =  eventWithNums.get(eventNum);
+                NumedEventWithPhrase numedEventWithPhrase = eventWithNums.get(eventNum);
                 vectorsInCluster.add(numedEventWithPhrase.getVec());
                 // 以文件名来计算一个cluster的包含的来源文件的数目，以此度量一个cluster的主题贡献
                 filenames4ClusterWeight.add(numedEventWithPhrase.getEvent().getFilename());
             }
 
             // 以一个类包含的总的文件数量来度量该类的权重
-            clusterWeights.put(CLASS_PREFIX + entry.getKey(), (float)filenames4ClusterWeight.size());
+            clusterWeights.put(CLASS_PREFIX + entry.getKey(), (float) filenames4ClusterWeight.size());
 
             // 计算向量中心
             Double[] centralVec = VectorOperator.centralVector(vectorsInCluster);
-            if(centralVec == null) {
+            if (centralVec == null) {
                 this.log.error("[" + entry.getKey() + "]Calculate central vector error!");
                 continue;
             }
@@ -241,13 +239,13 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
                 // 获取当前事件所属句子的词集合
                 List<Word> words = texts.get(eventWithPhrase.getFilename()).get(eventWithPhrase.getSentNum() - 1);
                 List<Word> subObjSentence = this.sentenceObjectified(subSentence, words);
-                if(CollectionUtils.isNotEmpty(subObjSentence)) {
+                if (CollectionUtils.isNotEmpty(subObjSentence)) {
                     subSentences.add(subObjSentence);
                 }
 
                 // 对句子进行同义词替换
-                List<Word> subSynObjSentence  = this.synonymReplacement(subObjSentence, selectedWordsKey);
-                if(CollectionUtils.isNotEmpty(subSynObjSentence)) {
+                List<Word> subSynObjSentence = this.synonymReplacement(subObjSentence, selectedWordsKey);
+                if (CollectionUtils.isNotEmpty(subSynObjSentence)) {
                     subSynSentences.add(subSynObjSentence);
                 }
 
@@ -262,11 +260,11 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         String filename = this.nodeFilePath.substring(Math.max(this.nodeFilePath.lastIndexOf("/"), this.nodeFilePath.lastIndexOf("\\"))).replace("node.obj", "txt");
 
         // 序列化cluster权重
-        File clusterWeightsFile = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + '/' + OBJ + "/" + DIR_CLUSTER_WEIGHT , filename.replaceAll("txt", OBJ));
-        try{
+        File clusterWeightsFile = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + '/' + OBJ + "/" + DIR_CLUSTER_WEIGHT, filename.replaceAll("txt", OBJ));
+        try {
             this.log.info("Thread " + Thread.currentThread().getId() + " -> serilizing cluster weight to file[" + clusterWeightsFile.getAbsolutePath() + "]");
             SerializeUtil.writeObj(clusterWeights, clusterWeightsFile);
-        } catch(IOException e) {
+        } catch (IOException e) {
             this.log.error("Thread " + Thread.currentThread().getId() + " -> serilizing cluster weight to file[" + clusterWeightsFile.getAbsolutePath() + "] error!", e);
             throw e;
         }
@@ -279,7 +277,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         StringBuilder taggedWeightedClustedSentences = new StringBuilder();
         for (Entry<Integer, List<List<Word>>> entry : clusterSubSentence.entrySet()) {
 
-            if(CollectionUtils.isEmpty(entry.getValue()) || entry.getValue().size() < 5) {
+            if (CollectionUtils.isEmpty(entry.getValue()) || entry.getValue().size() < 5) {
                 // 跳过小于5个句子的类
                 continue;
             }
@@ -299,12 +297,12 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
                      */
                     Vector wordVec = vecDict.get(word.dictKey());
                     double wordWeight = 0.0D;
-                    if(wordVec != null) {
+                    if (wordVec != null) {
                         for (Pair<NumedEventWithPhrase, Double> pair : pairs) {
                             Double[] eventVec = pair.getLeft().getVec();
-                            if(null != eventVec) {
+                            if (null != eventVec) {
                                 double distence = VectorOperator.cosineDistence(wordVec.doubleVecs(), eventVec);
-                                if(distence > 0) {
+                                if (distence > 0) {
                                     wordWeight += distence * pair.getRight();
                                 }
                             }
@@ -328,7 +326,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         File taggedExtractedSentences = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + TEXT + "/" + DIR_SUB_SENTENCES_EXTRACTED + "/tagged/", filename);
         File weightedExtractedSentences = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + TEXT + "/" + DIR_SUB_SENTENCES_EXTRACTED + "/weighted/", filename);
 
-        try{
+        try {
 
             this.log.info("Thread " + Thread.currentThread().getId() + " -> saving clusted sentences to file[" + extractedSentences.getAbsolutePath() + "]");
             FileUtils.writeStringToFile(extractedSentences, CommonUtil.cutLastLineSpliter(sbClustedSentences.toString()), DEFAULT_CHARSET);
@@ -336,7 +334,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
             FileUtils.writeStringToFile(weightedExtractedSentences, CommonUtil.cutLastLineSpliter(taggedWeightedClustedSentences.toString()), DEFAULT_CHARSET);
             this.log.info("Thread " + Thread.currentThread().getId() + " -> save clusted sentences to file [" + extractedSentences.getAbsolutePath() + "] succeed!");
 
-        } catch(IOException e) {
+        } catch (IOException e) {
             this.log.error("Thread " + Thread.currentThread().getId() + " -> save clusted sentences to file[" + extractedSentences.getAbsolutePath() + "] error!", e);
         }
 
@@ -376,8 +374,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
      * 事件到子句的映射
      *
      * @param eventWithPhrase
-     * @param subSentences
-     *            当前事件所在句子的子句集合
+     * @param subSentences 当前事件所在句子的子句集合
      * @return
      */
     private String eventToSubSentence(EventWithPhrase eventWithPhrase, List<String> subSentList) {
@@ -484,24 +481,24 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
      */
     private List<Word> sentenceObjectified(String strSentence, List<Word> words) {
         List<Word> objSentence = new ArrayList<Word>();
-        if(StringUtils.isBlank(strSentence)) {
+        if (StringUtils.isBlank(strSentence)) {
             return objSentence;
         }
         String[] strs = strSentence.split("\\s+");
         int num = 0;
         for (Word word : words) {
-            if(strs[num].equals(word.getName())) {
+            if (strs[num].equals(word.getName())) {
                 objSentence.add(word);
                 num++;
-                if(num == strs.length) {
+                if (num == strs.length) {
                     break;
                 }
-            } else if(num > 0) {
+            } else if (num > 0) {
                 num = 0;
                 objSentence.clear();
             }
         }
-        if(num != strs.length) {
+        if (num != strs.length) {
             objSentence.clear();
         }
         return objSentence;
@@ -513,37 +510,37 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
      * @param inSent
      * @return
      */
-    private List<Word> synonymReplacement(List<Word> sentence, Set<String> selectedWordsKey) throws Exception{
+    private List<Word> synonymReplacement(List<Word> sentence, Set<String> selectedWordsKey) throws Exception {
         List<Word> outSent = new ArrayList<Word>();
         try {
             IDictionary dict = WordNetUtil.openDictionary(GlobalParam.wordnetDictPath);
             for (Word word : sentence) {
                 try {
                     List<Word> synonymsWords = WordNetUtil.getSynonyms(dict, word);
-                    if(CollectionUtils.isEmpty(synonymsWords)) {
+                    if (CollectionUtils.isEmpty(synonymsWords)) {
                         // 不存在同义词
-                        outSent.add((Word)word.clone());
+                        outSent.add((Word) word.clone());
                         selectedWordsKey.add(Encipher.MD5(word.getLemma() + word.getPos()));
                     } else {
                         // 存在同义词
                         boolean flag = false;
                         for (Word synonymsWord : synonymsWords) {
                             String fingerprint = Encipher.MD5(synonymsWord.getLemma() + synonymsWord.getPos());
-                            if(selectedWordsKey.contains(fingerprint)) {
+                            if (selectedWordsKey.contains(fingerprint)) {
                                 outSent.add(synonymsWord);
                                 flag = true;
                                 break;
                             }
                         }
 
-                        if(!flag) {
+                        if (!flag) {
                             // 将自己作为同义词
-                            outSent.add((Word)word.clone());
+                            outSent.add((Word) word.clone());
                             selectedWordsKey.add(Encipher.MD5(word.getLemma() + word.getPos()));
                         }
 
                     }
-                } catch(CloneNotSupportedException e) {
+                } catch (CloneNotSupportedException e) {
                     this.log.error("Synonymr replacement with word[" + word + "] error!", e);
                     throw e;
                 }

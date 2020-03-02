@@ -1,24 +1,22 @@
 package edu.whu.cs.nlp.mts.clustering;
 
+import edu.whu.cs.nlp.mts.clustering.domain.SentenceApprox;
+import edu.whu.cs.nlp.mts.clustering.domain.SentenceVector;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.zhenchao.zelus.common.util.SerializeUtil;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.LineIterator;
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-
-import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
-import edu.whu.cs.nlp.mts.clustering.domain.SentenceApprox;
-import edu.whu.cs.nlp.mts.clustering.domain.SentenceVector;
-
 /**
  * 句子聚类，用于对比试验
  *
  * @author ZhenchaoWang 2015-11-29 18:30:10
- *
  */
 public class SentencesCluster {
 
@@ -28,20 +26,20 @@ public class SentencesCluster {
 
         double value = -1;
 
-        if(vec1 == null || vec2 == null) {
+        if (vec1 == null || vec2 == null) {
             return value;
         }
 
         //利用向量余弦值来计算事件之间的相似度
         double scalar = 0;  //两个向量的内积
         double module_1 = 0, module_2 = 0;  //向量vec_1和vec_2的模
-        for(int i = 0; i < 300; i++){
+        for (int i = 0; i < 300; i++) {
             scalar += vec1[i] * vec2[i];
             module_1 += vec1[i] * vec1[i];
             module_2 += vec2[i] * vec2[i];
         }
 
-        if(module_1 > 0 && module_2 > 0) {
+        if (module_1 > 0 && module_2 > 0) {
             value = scalar / (Math.sqrt(module_1) * Math.sqrt(module_2)) + 1;
         }
 
@@ -73,7 +71,7 @@ public class SentencesCluster {
                 LineIterator lineIterator = null;
                 try {
                     lineIterator = FileUtils.lineIterator(textFile, "UTF-8");
-                    while(lineIterator.hasNext()) {
+                    while (lineIterator.hasNext()) {
                         sentences.add(lineIterator.nextLine());
                     }
 
@@ -81,7 +79,7 @@ public class SentencesCluster {
                     log.error("Load file[" + textFile.getAbsolutePath() + "] error!", e);
                     //e.printStackTrace();
                 } finally {
-                    if(lineIterator != null) {
+                    if (lineIterator != null) {
                         lineIterator.close();
                     }
                 }
@@ -92,14 +90,14 @@ public class SentencesCluster {
                 try {
                     lineIterator = FileUtils.lineIterator(vectorFile, "UTF-8");
                     int num = 0;
-                    while(lineIterator.hasNext()) {
-                        if(num++ == 0) {
+                    while (lineIterator.hasNext()) {
+                        if (num++ == 0) {
                             lineIterator.nextLine();
                             continue;
                         }
 
                         String line = lineIterator.nextLine();
-                        if(StringUtils.isNotBlank(line)) {
+                        if (StringUtils.isNotBlank(line)) {
                             vectors.add(line);
                         }
                     }
@@ -107,17 +105,17 @@ public class SentencesCluster {
                     log.error("Load file[" + vectorFile.getAbsolutePath() + "] error!", e);
                     //e.printStackTrace();
                 } finally {
-                    if(lineIterator != null) {
+                    if (lineIterator != null) {
                         lineIterator.close();
                     }
                 }
 
-                if(sentences.size() != vectors.size()) {
+                if (sentences.size() != vectors.size()) {
                     log.error("The sentences is not match vectors in file:[" + filename + "], sentences:[" + sentences.size() + "], vectors:[" + vectors.size() + "]");
                     return;
                 }
 
-                for(int i = 0; i < sentences.size(); i++) {
+                for (int i = 0; i < sentences.size(); i++) {
                     String sentence = sentences.get(i);
                     String vector = vectors.get(i);
 
@@ -147,8 +145,8 @@ public class SentencesCluster {
             log.info("calculating approx:" + topicName);
             StringBuilder sentencesApprox = new StringBuilder();
             List<SentenceApprox> sentenceApproxs = new ArrayList<SentenceApprox>();
-            for(int i = 0; i < sentenceVecs.size(); i++) {
-                for(int j = i + 1; j < sentenceVecs.size(); j++) {
+            for (int i = 0; i < sentenceVecs.size(); i++) {
+                for (int j = i + 1; j < sentenceVecs.size(); j++) {
                     double approx = cosineDistence(sentenceVecs.get(i).getVector(), sentenceVecs.get(j).getVector());
                     sentencesApprox.append((i + 1) + "\t" + (j + 1) + "\t" + approx + "\n");
                     SentenceApprox sentenceApprox = new SentenceApprox(i + 1, j + 1, approx);

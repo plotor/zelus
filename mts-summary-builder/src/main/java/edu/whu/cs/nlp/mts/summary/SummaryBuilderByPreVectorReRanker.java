@@ -1,14 +1,5 @@
 package edu.whu.cs.nlp.mts.summary;
 
-import edu.whu.cs.nlp.mts.base.domain.Pair;
-import edu.whu.cs.nlp.mts.base.domain.Vector;
-import edu.whu.cs.nlp.mts.base.domain.Word;
-import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
-import edu.whu.cs.nlp.mts.base.global.GlobalParam;
-import edu.whu.cs.nlp.mts.base.nlp.StanfordNLPTools;
-import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
-import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
-import edu.whu.cs.nlp.mts.base.utils.VectorOperator;
 import edu.whu.cs.nlp.mts.domain.ClustItemPlus;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -16,12 +7,31 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.zhenchao.zelus.common.domain.Pair;
+import org.zhenchao.zelus.common.domain.Vector;
+import org.zhenchao.zelus.common.domain.Word;
+import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.global.GlobalParam;
+import org.zhenchao.zelus.common.nlp.StanfordNLPTools;
+import org.zhenchao.zelus.common.util.SerializeUtils;
+import org.zhenchao.zelus.common.util.VectorOperator;
+import org.zhenchao.zelus.common.util.ZelusUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -118,7 +128,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
         log.info("loading serilized file[" + clusterWeightFilepath + "]");
         Map<String, Float> clusterWeights = null;
         try {
-            clusterWeights = (Map<String, Float>) SerializeUtil.readObj(clusterWeightFilepath);
+            clusterWeights = (Map<String, Float>) SerializeUtils.readObj(clusterWeightFilepath);
         } catch (IOException e) {
             log.error("load serilized file[" + clusterWeightFilepath + "] error!", e);
             throw e;
@@ -215,7 +225,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
                     List<Word> words = StanfordNLPTools.segmentWord(sentence.trim());
 
                     // 计算当前句子的长度，忽略长度小于8的句子
-                    if (CommonUtil.lessThanEight(words)) {
+                    if (ZelusUtils.lessThanEight(words)) {
                         pairItr.remove();
                         continue;
                     }
@@ -319,7 +329,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
 
             // 1.更新摘要字数
             for (Word word : words) {
-                if (CommonUtil.isPunctuation(word)) {
+                if (ZelusUtils.isPunctuation(word)) {
                     continue;
                 }
                 if ("'s".equals(word.getName())) {
@@ -402,7 +412,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
         boolean flag = false;
         for (Word word : words) {
 
-            if (CommonUtil.isPunctuation(word)) {
+            if (ZelusUtils.isPunctuation(word)) {
                 // 跳过标点
                 continue;
             }
@@ -552,7 +562,7 @@ public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Glo
         log.info("Loading word vec[" + vecFile.getAbsolutePath() + "]");
         Map<String, Vector> wordVecs = new HashMap<String, Vector>();
         try {
-            wordVecs = (Map<String, Vector>) SerializeUtil.readObj(vecFile.getAbsolutePath());
+            wordVecs = (Map<String, Vector>) SerializeUtils.readObj(vecFile.getAbsolutePath());
         } catch (ClassNotFoundException e) {
             log.error("Load word vec[" + vecFile.getAbsolutePath() + "] error!", e);
             throw e;

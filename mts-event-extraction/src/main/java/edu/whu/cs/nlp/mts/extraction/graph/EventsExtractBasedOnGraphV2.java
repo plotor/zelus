@@ -3,28 +3,42 @@ package edu.whu.cs.nlp.mts.extraction.graph;
 import edu.stanford.nlp.dcoref.CorefChain;
 import edu.stanford.nlp.dcoref.CorefChain.CorefMention;
 import edu.stanford.nlp.trees.Tree;
-import edu.whu.cs.nlp.mts.base.domain.*;
-import edu.whu.cs.nlp.mts.base.domain.Vector;
-import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
-import edu.whu.cs.nlp.mts.base.global.GlobalParam;
-import edu.whu.cs.nlp.mts.base.nlp.OpenNLPTools;
-import edu.whu.cs.nlp.mts.base.nlp.StanfordNLPTools;
-import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
-import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
-import edu.whu.cs.nlp.mts.base.utils.Encipher;
-import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.zhenchao.zelus.common.domain.ChunkPhrase;
+import org.zhenchao.zelus.common.domain.CoreferenceElement;
+import org.zhenchao.zelus.common.domain.Event;
+import org.zhenchao.zelus.common.domain.EventType;
+import org.zhenchao.zelus.common.domain.EventWithPhrase;
+import org.zhenchao.zelus.common.domain.EventWithWord;
+import org.zhenchao.zelus.common.domain.ParseItem;
+import org.zhenchao.zelus.common.domain.Vector;
+import org.zhenchao.zelus.common.domain.Word;
+import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.global.GlobalParam;
+import org.zhenchao.zelus.common.nlp.OpenNLPTools;
+import org.zhenchao.zelus.common.nlp.StanfordNLPTools;
+import org.zhenchao.zelus.common.util.CommonUtil;
+import org.zhenchao.zelus.common.util.EhCacheUtil;
+import org.zhenchao.zelus.common.util.Encipher;
+import org.zhenchao.zelus.common.util.SerializeUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -84,7 +98,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
             // 加载文件
             String absolutePath = file.getAbsolutePath(); // 当前处理的文件的绝对路径
             /*String parentPath = file.getParentFile().getAbsolutePath(); // 文件所属文件夹的路径
-*/
+             */
             this.log.info("Thread " + Thread.currentThread().getId() + " -> event extracting for[" + absolutePath + "]");
 
             try {
@@ -360,7 +374,6 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * @param inWord
      * @param crChains
      * @param words
-     *
      * @return
      */
     private List<Word> changeToCorefWord(Word inWord, Map<String, CoreferenceElement> crChains, List<List<Word>> words) {
@@ -399,7 +412,6 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      *
      * @param parseItems
      * @param wordsCount
-     *
      * @return
      */
     public String[][] buildWordGraph(List<ParseItem> parseItems, int wordsCount) {
@@ -418,7 +430,6 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * key:MD5(element + sentNum + startIndex + endIndex)
      *
      * @param graph 指代链
-     *
      * @return
      */
     private Map<String, CoreferenceElement> cr(Map<Integer, CorefChain> graph) {
@@ -466,14 +477,13 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * @param parsedList
      * @param words
      * @param filename
-     *
      * @return
      */
     public Map<Integer, List<EventWithWord>> extract(List<List<ParseItem>> parsedList, List<List<Word>> words, final String filename) {
 
         Map<Integer, List<EventWithWord>> events = new HashMap<Integer, List<EventWithWord>>();
 
-        if (CollectionUtils.isNotEmpty(parsedList) && CollectionUtils.isNotEmpty(words))
+        if (CollectionUtils.isNotEmpty(parsedList) && CollectionUtils.isNotEmpty(words)) {
             for (int k = 0; k < parsedList.size(); ++k) {
                 /* 当前处理单位：句子 */
 
@@ -497,34 +507,42 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                     for (int j = 0; j < wordsCount; ++j) {
 
                         if (DEPENDENCY_AGENT.contains(edges[i][j]))
-                            // 施事
+                        // 施事
+                        {
                             agents.add(j);
+                        }
 
                         if (DEPENDENCY_OBJECT.contains(edges[i][j]))
-                            // 受事
+                        // 受事
+                        {
                             objects.add(j);
+                        }
 
                         // 缓存cop关系
-                        if ("cop".equals(edges[i][j]))
+                        if ("cop".equals(edges[i][j])) {
                             copWord = wordsInSentence.get(j);
+                        }
 
                         // 缓存prep关系
                         if ("prep".equals(edges[i][j]) || "prepc".equals(edges[i][j])) {
                             prepWord = wordsInSentence.get(j);
                             if (!POS_NOUN.contains(prepWord.getPos()) && "O".equals(prepWord.getNer()))
-                                // 如果不是名词或命名实体，则过滤掉
+                            // 如果不是名词或命名实体，则过滤掉
+                            {
                                 prepWord = null;
+                            }
                         }
 
                         // 缓存neg关系
-                        if ("neg".equals(edges[i][j]))
+                        if ("neg".equals(edges[i][j])) {
                             negWord = wordsInSentence.get(j);
+                        }
 
                     }
 
                     Word middleWord = wordsInSentence.get(i);
 
-                    if (CollectionUtils.isNotEmpty(agents) && CollectionUtils.isNotEmpty(objects))
+                    if (CollectionUtils.isNotEmpty(agents) && CollectionUtils.isNotEmpty(objects)) {
                         for (Integer agent : agents) {
 
                             Word leftWord = wordsInSentence.get(agent);
@@ -538,7 +556,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                             }
 
                         }
-                    else if (CollectionUtils.isNotEmpty(agents)) {
+                    } else if (CollectionUtils.isNotEmpty(agents)) {
                         /**
                          * 宾语缺失
                          */
@@ -584,6 +602,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                 }
                 events.put(k + 1, eventsInSentence);
             }
+        }
         return events;
     }
 
@@ -592,10 +611,8 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * 按行处理
      *
      * @param events 由词构成的事件
-     * @param words  当前句子中的词语
-     *
+     * @param words 当前句子中的词语
      * @return
-     *
      * @throws Exception
      */
     private List<EventWithPhrase> phraseExpansion(List<EventWithPhrase> events, List<Word> words) throws Exception {
@@ -690,7 +707,6 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * @param eventWithPhrases
      * @param words
      * @param sentNum
-     *
      * @return
      */
     private List<EventWithPhrase> eventRepair(List<EventWithPhrase> eventWithPhrases, List<Word> words, int sentNum) {
@@ -894,7 +910,6 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * 事件过滤函数，对于不符合要求的事件，返回null
      *
      * @param event
-     *
      * @return
      */
     private EventWithPhrase eventFilter(EventWithPhrase event) {
@@ -921,7 +936,6 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * 将词语集合转换成句子，
      *
      * @param words
-     *
      * @return
      */
     private String words2Sentence(List<Word> words) {
@@ -937,7 +951,6 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * 将词语集合转换成句子，
      *
      * @param words
-     *
      * @return
      */
     private String words2SentenceSimply(List<Word> words) {
@@ -953,7 +966,6 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * 将事件以精简的形式转化成字符串
      *
      * @param events
-     *
      * @return
      */
     private String getSimpilyEvents(List<? extends Event> events) {
@@ -972,7 +984,6 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * 事件抽取测试
      *
      * @param args
-     *
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {

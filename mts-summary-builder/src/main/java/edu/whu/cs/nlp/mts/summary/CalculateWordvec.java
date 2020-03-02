@@ -1,18 +1,17 @@
 package edu.whu.cs.nlp.mts.summary;
 
+import org.apache.commons.io.FileUtils;
+import org.zhenchao.zelus.common.domain.Vector;
+import org.zhenchao.zelus.common.domain.Word;
+import org.zhenchao.zelus.common.nlp.StanfordNLPTools;
+import org.zhenchao.zelus.common.util.EhcacheUtils;
+import org.zhenchao.zelus.common.util.SerializeUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.io.FileUtils;
-
-import edu.whu.cs.nlp.mts.base.domain.Vector;
-import edu.whu.cs.nlp.mts.base.domain.Word;
-import edu.whu.cs.nlp.mts.base.nlp.StanfordNLPTools;
-import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
-import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
 
 public class CalculateWordvec {
 
@@ -24,7 +23,7 @@ public class CalculateWordvec {
 
         String[] dirs = file.list();
 
-        EhCacheUtil ehCacheUtil = new EhCacheUtil("db_cache_vec", "lab");
+        EhcacheUtils ehCacheUtil = new EhcacheUtils("db_cache_vec", "lab");
 
         Map<String, Vector> wordvecs = new HashMap<String, Vector>();
 
@@ -38,7 +37,7 @@ public class CalculateWordvec {
                     List<Word> words = StanfordNLPTools.segmentWord(text);
                     for (Word word : words) {
                         String key = word.getName() + "/-/" + word.getPos();
-                        if(wordvecs.containsKey(key)) {
+                        if (wordvecs.containsKey(key)) {
                             continue;
                         }
 
@@ -57,12 +56,12 @@ public class CalculateWordvec {
         File savefile = new File("E:/dev_workspace/experiment/nlp/event-guided-mts/corpus/duc2005_docs/duc2005.vec");
 
         try {
-            SerializeUtil.writeObj(wordvecs, savefile);
+            SerializeUtils.writeObj(wordvecs, savefile);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        EhCacheUtil.close();
+        EhcacheUtils.close();
 
     }
 

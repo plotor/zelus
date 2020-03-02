@@ -1,5 +1,12 @@
 package edu.whu.cs.nlp.mts.summary;
 
+import edu.whu.cs.nlp.mts.clustering.ClusterByChineseWhispers;
+import org.apache.log4j.Logger;
+import org.zhenchao.zelus.common.domain.CWRunParam;
+import org.zhenchao.zelus.common.domain.RougeAvg;
+import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.util.C3p0Utils;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,41 +24,34 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
-
-import edu.whu.cs.nlp.mts.base.domain.CWRunParam;
-import edu.whu.cs.nlp.mts.base.domain.RougeAvg;
-import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
-import edu.whu.cs.nlp.mts.base.utils.C3P0Util;
-import edu.whu.cs.nlp.mts.clustering.ClusterByChineseWhispers;
-
 /**
  * 参数优化
- * @author Apache_xiaochao
  *
+ * @author Apache_xiaochao
  */
-public class ParameterOptimization implements GlobalConstant{
+public class ParameterOptimization implements GlobalConstant {
 
     private static Logger log = Logger.getLogger(ParameterOptimization.class);
 
     /**
      * 执行命令过程中的输出处理
+     *
      * @param in
      * @return
      * @throws IOException
      */
-    private static String execStreamProcess(InputStream in) throws IOException{
+    private static String execStreamProcess(InputStream in) throws IOException {
         String output = "";
-        if(in != null){
+        if (in != null) {
             final BufferedReader br = new BufferedReader(new InputStreamReader(in));
             final StringBuilder sb_tmp = new StringBuilder();
             String line = null;
-            while((line = br.readLine()) != null){
+            while ((line = br.readLine()) != null) {
                 sb_tmp.append(line + "\n");
                 //System.out.println(line);
             }
             br.close();
-            if(sb_tmp.length() > 0){
+            if (sb_tmp.length() > 0) {
                 output = sb_tmp.toString();
             }
         }
@@ -59,7 +59,7 @@ public class ParameterOptimization implements GlobalConstant{
     }
 
     public static void main(String[] args) throws IOException, SQLException {
-        if(args.length == 0){
+        if (args.length == 0) {
             System.err.println("请指定配置文件！");
             return;
         }
@@ -92,31 +92,31 @@ public class ParameterOptimization implements GlobalConstant{
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
-            connection = C3P0Util.getConnection("localhost-3306-rouge_eval");
+            connection = C3p0Utils.getConnection("localhost-3306-rouge_eval");
             final String sql = "SELECT weight_kc, weight_mt FROM rouge_avg ORDER BY date DESC LIMIT 1";
             ps = connection.prepareStatement(sql);
             rs = ps.executeQuery();
-            if(rs.next()){
+            if (rs.next()) {
                 keepClassRate = rs.getFloat("weight_kc") + 0.01f;
                 mutationRate = rs.getFloat("weight_mt") + 0.01f;
             }
         } catch (final SQLException e) {
             // TODO Auto-generated catch block
             throw new SQLException("获取最新的权值异常！", e);
-        } finally{
-            if(rs != null){
+        } finally {
+            if (rs != null) {
                 rs.close();
             }
-            if(ps != null){
+            if (ps != null) {
                 ps.close();
             }
-            if(connection != null){
+            if (connection != null) {
                 connection.close();
             }
         }
 
-        while(keepClassRate < 1){
-            while(mutationRate < 1){
+        while (keepClassRate < 1) {
+            while (mutationRate < 1) {
                 log.info("优化参数：kc=" + keepClassRate + "\tmt=" + mutationRate);
                 /*对事件进行聚类，同时按类别抽取时间所在子句*/
                 log.info("正在进行事件聚类和子句抽取...");
@@ -124,24 +124,24 @@ public class ParameterOptimization implements GlobalConstant{
                 final String nodesDir = workDir + "/" + DIR_NODES;
                 //对上面文件夹中的文件进行清理
                 final File fileNodes = new File(nodesDir);
-                if(!fileNodes.exists()){
+                if (!fileNodes.exists()) {
                     log.error(nodesDir + "不存在！");
-                }else{
+                } else {
                     //删除所有聚类算法产生的中间文件
                     final String[] filenames = fileNodes.list(new FilenameFilter() {
 
                         @Override
                         public boolean accept(File dir, String name) {
-                            if(name.contains("renumbered")){
+                            if (name.contains("renumbered")) {
                                 return true;
                             }
                             return false;
                         }
                     });
-                    if(filenames != null && filenames.length > 0){
+                    if (filenames != null && filenames.length > 0) {
                         for (final String filename : filenames) {
                             final File fileRenumbered = new File(nodesDir + "/" + filename);
-                            if(fileRenumbered != null){
+                            if (fileRenumbered != null) {
                                 fileRenumbered.delete();
                             }
                         }
@@ -152,14 +152,14 @@ public class ParameterOptimization implements GlobalConstant{
                 final String edgeDir = workDir + "/" + DIR_EDGES;
                 //对上面的文件夹进行清理
                 final File fileEdgesCW = new File(edgeDir + "/" + DIR_CW_PRETREAT);
-                if(fileEdgesCW.exists()){
+                if (fileEdgesCW.exists()) {
                     fileEdgesCW.delete();
                 }
 
                 //聚类结果存放文件夹
                 final String clustResultDir = workDir + "/" + DIR_EVENTS_CLUST;
                 final File fileClustResult = new File(clustResultDir);
-                if(fileClustResult.exists()){
+                if (fileClustResult.exists()) {
                     fileClustResult.delete();
                 }
                 fileClustResult.mkdirs();
@@ -167,7 +167,7 @@ public class ParameterOptimization implements GlobalConstant{
                 //句子抽取结果存放的文件夹
                 final String sentencesSaveDir = workDir + "/" + DIR_SUB_SENTENCES_EXTRACTED;
                 final File fileSentences = new File(sentencesSaveDir);
-                if(fileSentences.exists()){
+                if (fileSentences.exists()) {
                     fileSentences.delete();
                 }
                 fileSentences.mkdirs();
@@ -175,7 +175,7 @@ public class ParameterOptimization implements GlobalConstant{
                 //句子压缩结果存放的文件夹
                 final String sentencesCompressDir = workDir + "/" + DIR_SENTENCES_COMPRESSION;
                 final File fileSentencesCompress = new File(sentencesCompressDir);
-                if(fileSentencesCompress.exists()){
+                if (fileSentencesCompress.exists()) {
                     fileSentencesCompress.delete();
                 }
                 fileSentencesCompress.mkdirs();
@@ -252,17 +252,17 @@ public class ParameterOptimization implements GlobalConstant{
                     final Process process = Runtime.getRuntime().exec(commond_rouge);
                     final String errMsg = ParameterOptimization.execStreamProcess(process.getErrorStream());
                     final String outMsg = ParameterOptimization.execStreamProcess(process.getInputStream());
-                    if(!"".equals(errMsg)){
+                    if (!"".equals(errMsg)) {
                         log.warn(errMsg);
                     }
-                    if(!"".equals(outMsg)){
+                    if (!"".equals(outMsg)) {
                         log.info(outMsg);
                     }
-                    if(process.waitFor() != 0){
+                    if (process.waitFor() != 0) {
                         log.error("评估命令返回状态不正常！");
                     }
                 } catch (IOException | InterruptedException e) {
-                    log.error("执行rouge出错，当前工作路径：" + System.getProperty("user.dir") , e);
+                    log.error("执行rouge出错，当前工作路径：" + System.getProperty("user.dir"), e);
                     //e.printStackTrace();
                 }
 
@@ -273,11 +273,11 @@ public class ParameterOptimization implements GlobalConstant{
                     br = new BufferedReader(new InputStreamReader(new FileInputStream(rougePath + "/scores.out"), "UTF-8"));
                     final Pattern pattern = Pattern.compile(regex);
                     String line = null;
-                    while((line = br.readLine()) != null){
+                    while ((line = br.readLine()) != null) {
                         line = line.trim();
-                        if(!"".equals(line)){
+                        if (!"".equals(line)) {
                             final Matcher matcher = pattern.matcher(line);
-                            if(matcher.find()){
+                            if (matcher.find()) {
                                 final String rouge = matcher.group(1);
                                 final String average = matcher.group(2);
                                 final String value = matcher.group(3);
@@ -297,8 +297,8 @@ public class ParameterOptimization implements GlobalConstant{
                 } catch (final IOException e) {
                     log.error("解析评估结果文件出错：", e);
                     //e.printStackTrace();
-                } finally{
-                    if(br != null){
+                } finally {
+                    if (br != null) {
                         br.close();
                     }
                 }
@@ -312,16 +312,17 @@ public class ParameterOptimization implements GlobalConstant{
 
     /**
      * 将结果持久化
+     *
      * @param rougeAvg
      * @param weight
      * @throws SQLException
      */
-    private void orm2db(RougeAvg rougeAvg, float weight_kc, float weight_mt, float weight_es) throws SQLException{
+    private void orm2db(RougeAvg rougeAvg, float weight_kc, float weight_mt, float weight_es) throws SQLException {
         Connection connection = null;
-        PreparedStatement ps =null;
-        if(rougeAvg != null){
+        PreparedStatement ps = null;
+        if (rougeAvg != null) {
             try {
-                connection = C3P0Util.getConnection("localhost-3306-rouge_eval");
+                connection = C3p0Utils.getConnection("localhost-3306-rouge_eval");
                 final String sql = "INSERT INTO rouge_avg"
                         + "(rougeType, avgType, `value`, weight_es, date, attribute, weight_kc, weight_mt) "
                         + "VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
@@ -336,11 +337,11 @@ public class ParameterOptimization implements GlobalConstant{
                 ps.setFloat(7, weight_kc);
                 ps.setFloat(8, weight_mt);
                 ps.executeUpdate();
-            } finally{
-                if(ps != null){
+            } finally {
+                if (ps != null) {
                     ps.close();
                 }
-                if(connection != null){
+                if (connection != null) {
                     connection.close();
                 }
             }

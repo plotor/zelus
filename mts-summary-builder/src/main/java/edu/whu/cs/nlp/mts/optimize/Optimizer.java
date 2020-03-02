@@ -1,5 +1,12 @@
 package edu.whu.cs.nlp.mts.optimize;
 
+import edu.whu.cs.nlp.msc.domain.CompressUnit;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
+import org.zhenchao.zelus.common.util.SerializeUtils;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,19 +18,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
-
-import edu.whu.cs.nlp.msc.domain.CompressUnit;
-import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
-
 /**
  * 优化器
  *
  * @author ZhenchaoWang 2015-11-13 20:42:34
- *
  */
 public class Optimizer {
 
@@ -33,7 +31,7 @@ public class Optimizer {
 
     public static void main(String[] args) {
 
-        if(args == null || args.length != 5) {
+        if (args == null || args.length != 5) {
             System.err.println("参数错误！");
             System.out.println("参数说明：压缩结果所在文件夹\t工作目录\t线程数\t最大候选句子数\t最大摘要数");
             return;
@@ -51,19 +49,19 @@ public class Optimizer {
 
         for (File compressFile : compressFiles) {
             try {
-                Map<String, List<CompressUnit>> compressUnits = (Map<String, List<CompressUnit>>) SerializeUtil.readObj(compressFile.getAbsolutePath());
-                if(MapUtils.isEmpty(compressUnits)) {
+                Map<String, List<CompressUnit>> compressUnits = (Map<String, List<CompressUnit>>) SerializeUtils.readObj(compressFile.getAbsolutePath());
+                if (MapUtils.isEmpty(compressUnits)) {
                     continue;
                 }
                 List<List<CompressUnit>> compressUnitsList = new ArrayList<List<CompressUnit>>();
                 for (Entry<String, List<CompressUnit>> entry : compressUnits.entrySet()) {
-                    if(CollectionUtils.isEmpty(entry.getValue())) {
+                    if (CollectionUtils.isEmpty(entry.getValue())) {
                         continue;
                     }
                     compressUnitsList.add(new ArrayList<CompressUnit>(entry.getValue()));
                 }
 
-                if(CollectionUtils.isNotEmpty(compressUnitsList)) {
+                if (CollectionUtils.isNotEmpty(compressUnitsList)) {
                     tasks.add(new EnumerationThread(compressUnitsList, workDir, compressFile.getName(), maxSentenceCount, maxSummaryCount));
                 }
 
@@ -89,11 +87,10 @@ public class Optimizer {
             log.error("", e);
 
         } finally {
-            if(es != null) {
+            if (es != null) {
                 es.shutdown();
             }
         }
-
 
     }
 

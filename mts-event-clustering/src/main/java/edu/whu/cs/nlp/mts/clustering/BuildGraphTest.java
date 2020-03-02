@@ -1,5 +1,16 @@
 package edu.whu.cs.nlp.mts.clustering;
 
+import edu.stanford.nlp.trees.Tree;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.zhenchao.zelus.common.domain.EventWithPhrase;
+import org.zhenchao.zelus.common.domain.Vector;
+import org.zhenchao.zelus.common.domain.Word;
+import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.util.SerializeUtil;
+import org.zhenchao.zelus.common.util.VectorOperator;
+
 import java.io.IOException;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
@@ -11,27 +22,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-
-import edu.stanford.nlp.trees.Tree;
-import edu.whu.cs.nlp.mts.base.domain.EventWithPhrase;
-import edu.whu.cs.nlp.mts.base.domain.Vector;
-import edu.whu.cs.nlp.mts.base.domain.Word;
-import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
-import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
-import edu.whu.cs.nlp.mts.base.utils.VectorOperator;
-
 /**
  * 口哨算法聚类，用于构图测试
  *
  * @author ZhenchaoWang 2015-11-10 14:23:27
- *
  */
 public class BuildGraphTest implements GlobalConstant {
 
-    private final Logger log                   = Logger.getLogger(this.getClass());
+    private final Logger log = Logger.getLogger(this.getClass());
 
     private final VectorOperator vo = new VectorOperator();
 
@@ -83,7 +81,7 @@ public class BuildGraphTest implements GlobalConstant {
             StringBuilder tagged = new StringBuilder();
             StringBuilder weighted = new StringBuilder();
             for (Word word : list) {
-                if("root".equalsIgnoreCase(word.getName())) {
+                if ("root".equalsIgnoreCase(word.getName())) {
                     continue;
                 }
                 /* 计算当前词与当前类别中事件的加权距离
@@ -92,7 +90,7 @@ public class BuildGraphTest implements GlobalConstant {
                  */
                 Vector wordVec = vecDict.get(word.dictKey());
                 double wordWeight = 0.0D;
-                for(int i = 0; i < events.size(); i++) {
+                for (int i = 0; i < events.size(); i++) {
                     Double[] eventVec = eventVecs.get(i);
                     Double eventWeight = eventsWeight.get(i);
                     double distence = VectorOperator.cosineDistence(wordVec.doubleVecs(), eventVec);
@@ -117,8 +115,7 @@ public class BuildGraphTest implements GlobalConstant {
      * 事件到子句的映射
      *
      * @param eventWithPhrase
-     * @param subSentences
-     *            当前事件所在句子的子句集合
+     * @param subSentences 当前事件所在句子的子句集合
      * @return
      */
     private String eventToSubSentence(EventWithPhrase eventWithPhrase, List<String> subSentList) {
@@ -225,24 +222,24 @@ public class BuildGraphTest implements GlobalConstant {
      */
     private List<Word> sentenceObjectified(String strSentence, List<Word> words) {
         List<Word> objSentence = new ArrayList<Word>();
-        if(StringUtils.isBlank(strSentence)) {
+        if (StringUtils.isBlank(strSentence)) {
             return objSentence;
         }
         String[] strs = strSentence.split("\\s+");
         int num = 0;
         for (Word word : words) {
-            if(strs[num].equals(word.getName())) {
+            if (strs[num].equals(word.getName())) {
                 objSentence.add(word);
                 num++;
-                if(num == strs.length) {
+                if (num == strs.length) {
                     break;
                 }
-            } else if(num > 0) {
+            } else if (num > 0) {
                 num = 0;
                 objSentence.clear();
             }
         }
-        if(num != strs.length) {
+        if (num != strs.length) {
             objSentence.clear();
         }
         return objSentence;

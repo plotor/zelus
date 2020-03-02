@@ -1,5 +1,13 @@
 package edu.whu.cs.nlp.msc;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
+import org.apache.log4j.Logger;
+import org.zhenchao.zelus.common.domain.AttributeInClassForSentenceSilimarity;
+import org.zhenchao.zelus.common.domain.SentNumSimiPair;
+import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.util.CommonUtil;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,30 +20,20 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.LineIterator;
-import org.apache.log4j.Logger;
-
-import edu.whu.cs.nlp.mts.base.domain.AttributeInClassForSentenceSilimarity;
-import edu.whu.cs.nlp.mts.base.domain.SentNumSimiPair;
-import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
-import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
-
 /**
  * 对压缩处理后的句子集合按照TF-IDF值来选取
  *
  * @author Apache_xiaochao
- *
  */
 public class KeySentenceSelector2 implements Callable<Boolean>, GlobalConstant {
 
-    private final Logger    log                = Logger.getLogger(this.getClass());
+    private final Logger log = Logger.getLogger(this.getClass());
 
     public final static int MAX_SENTENCE_COUNT = 51;                               // 每个类别的最大句子数
 
-    private final String    compressedFilePath;                                    // 压缩语句文件名
-    private final String    summaryFilePath;                                       // 摘要文件名
-    private final String    question;                                              // 问题
+    private final String compressedFilePath;                                    // 压缩语句文件名
+    private final String summaryFilePath;                                       // 摘要文件名
+    private final String question;                                              // 问题
 
     public KeySentenceSelector2(String compressedFilePath, String summaryFilePath, String question) {
         super();
@@ -107,10 +105,10 @@ public class KeySentenceSelector2 implements Callable<Boolean>, GlobalConstant {
                         for (int i = 0; i < aicfss.getSentences().size(); ++i) {
                             for (final Entry<String, Integer> entry : aicfss.getWords().entrySet()) {
                                 sentenceVector[entry
-                                               .getValue()][i] = (float) ((wordsCountInSentence[entry.getValue()][i]
-                                                       / (float) aicfss.getSentences().get(i).words.size())
-                                                       * Math.log(aicfss.getSentences().size()
-                                                               / (double) sentCount4words.get(entry.getKey())));
+                                        .getValue()][i] = (float) ((wordsCountInSentence[entry.getValue()][i]
+                                        / (float) aicfss.getSentences().get(i).words.size())
+                                        * Math.log(aicfss.getSentences().size()
+                                        / (double) sentCount4words.get(entry.getKey())));
                             }
                         }
 
@@ -232,7 +230,7 @@ public class KeySentenceSelector2 implements Callable<Boolean>, GlobalConstant {
                         sentenceVector[entry.getValue()][i] = (float) ((wordsCountInSentence[entry.getValue()][i]
                                 / (float) aicfss.getSentences().get(i).words.size())
                                 * Math.log(
-                                        aicfss.getSentences().size() / (double) sentCount4words.get(entry.getKey())));
+                                aicfss.getSentences().size() / (double) sentCount4words.get(entry.getKey())));
                     }
                 }
 
@@ -320,7 +318,7 @@ public class KeySentenceSelector2 implements Callable<Boolean>, GlobalConstant {
 
         } finally {
 
-            if(iterator != null) {
+            if (iterator != null) {
                 iterator.close();
             }
 
@@ -332,20 +330,20 @@ public class KeySentenceSelector2 implements Callable<Boolean>, GlobalConstant {
 
         double value = -1;
 
-        if(vec1 == null || vec2 == null) {
+        if (vec1 == null || vec2 == null) {
             return value;
         }
 
         //利用向量余弦值来计算事件之间的相似度
         double scalar = 0;  //两个向量的内积
         double module_1 = 0, module_2 = 0;  //向量vec_1和vec_2的模
-        for(int i = 0; i < vec1.length; ++i){
+        for (int i = 0; i < vec1.length; ++i) {
             scalar += vec1[i] * vec2[i];
             module_1 += vec1[i] * vec1[i];
             module_2 += vec2[i] * vec2[i];
         }
 
-        if(module_1 > 0 && module_2 > 0) {
+        if (module_1 > 0 && module_2 > 0) {
             value = scalar / (Math.sqrt(module_1) * Math.sqrt(module_2)) + 1;
         }
 

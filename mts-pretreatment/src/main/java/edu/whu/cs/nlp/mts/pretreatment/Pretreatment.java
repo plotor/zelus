@@ -26,10 +26,10 @@ import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
-import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
-import edu.whu.cs.nlp.mts.base.loader.FileLoader;
-import edu.whu.cs.nlp.mts.base.loader.ModelLoader;
-import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
+import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.loader.FileLoader;
+import org.zhenchao.zelus.common.loader.ModelLoader;
+import org.zhenchao.zelus.common.util.CommonUtil;
 
 /**
  * 对文件进行预处理

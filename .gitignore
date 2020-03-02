@@ -1,7 +1,66 @@
-/target/
+*.ipr
+*.iws
+*.class
+**/resin-4.0.41
+**/buildlog
+**/release
+/data
+/docs/_book
+**/logs
+
+**/configuration
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+Contact GitHub API Training Shop Blog About
+
+# use glob syntax.
+syntax: glob
+*.ser
+*~
+*.bak
+#*.off
+*.old
+
+# eclipse conf file
+.settings
 .classpath
 .project
-.settings
-logs
+.manager
+.scala_dependencies
+
+# idea
 .idea
-*.iml
+**/*.iml
+.vertx
+
+# building
+**/target
+build
+null
+tmp*
+dist
+test-output
+build.log
+
+# other scm
+.svn
+.CVS
+.hg*
+
+# switch to regexp syntax.
+#  syntax: regexp
+#  ^\.pc/
+
+**/*.releaseBackup
+**/*.versionsBackup
+
+**/dependency-reduced-pom.xml

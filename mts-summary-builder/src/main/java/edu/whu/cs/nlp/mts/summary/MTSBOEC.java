@@ -2,11 +2,6 @@ package edu.whu.cs.nlp.mts.summary;
 
 import edu.whu.cs.nlp.msc.NomParamSentenceReRanker;
 import edu.whu.cs.nlp.msc.SentenceReRanker;
-import edu.whu.cs.nlp.mts.base.domain.Vector;
-import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
-import edu.whu.cs.nlp.mts.base.global.GlobalParam;
-import edu.whu.cs.nlp.mts.base.utils.EhCacheUtil;
-import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
 import edu.whu.cs.nlp.mts.clustering.CalculateSimilarityThread;
 import edu.whu.cs.nlp.mts.clustering.ChineseWhispersCluster;
 import edu.whu.cs.nlp.mts.extraction.graph.EventsExtractBasedOnGraphV2;
@@ -15,9 +10,22 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.log4j.Logger;
+import org.zhenchao.zelus.common.domain.Vector;
+import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.global.GlobalParam;
+import org.zhenchao.zelus.common.util.EhcacheUtils;
+import org.zhenchao.zelus.common.util.SerializeUtils;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -90,7 +98,7 @@ public class MTSBOEC implements GlobalConstant {
 
             List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
 
-            EhCacheUtil ehCacheUtil = new EhCacheUtil(GlobalParam.cacheName, GlobalParam.datasource);
+            EhcacheUtils ehCacheUtil = new EhcacheUtils(GlobalParam.cacheName, GlobalParam.datasource);
 
             for (File dir : textDirFile.listFiles()) {
                 String absoluteDir = dir.getAbsolutePath();
@@ -109,7 +117,7 @@ public class MTSBOEC implements GlobalConstant {
                 log.error("There is an exception when extract events!", e);
                 return;
             } finally {
-                EhCacheUtil.close();
+                EhcacheUtils.close();
                 executorService.shutdown();
             }
 
@@ -221,7 +229,7 @@ public class MTSBOEC implements GlobalConstant {
             Map<String, Vector> wordVecs = new HashMap<String, Vector>();
             for (File wordVecFile : wordVecFiles) {
                 log.info("loading word vec[" + wordVecFile.getAbsolutePath() + "]");
-                Map<String, Vector> wordVecsInTopic = (Map<String, Vector>) SerializeUtil.readObj(wordVecFile.getAbsolutePath());
+                Map<String, Vector> wordVecsInTopic = (Map<String, Vector>) SerializeUtils.readObj(wordVecFile.getAbsolutePath());
                 if (MapUtils.isEmpty(wordVecsInTopic)) {
                     log.error("Can't find any vector in file[" + wordVecFile.getAbsolutePath() + "]");
                     throw new Exception("Can't find any vector in file[" + wordVecFile.getAbsolutePath() + "]");

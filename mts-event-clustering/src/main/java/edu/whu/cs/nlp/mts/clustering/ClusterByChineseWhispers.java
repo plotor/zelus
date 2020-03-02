@@ -1,5 +1,11 @@
 package edu.whu.cs.nlp.mts.clustering;
 
+import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
+import edu.whu.cs.nlp.mts.pretreatment.Pretreatment;
+import org.apache.log4j.Logger;
+import org.zhenchao.zelus.common.domain.CWRunParam;
+import org.zhenchao.zelus.common.global.GlobalConstant;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -14,21 +20,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.apache.log4j.Logger;
-
-import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
-import edu.whu.cs.nlp.mts.base.domain.CWRunParam;
-import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
-import edu.whu.cs.nlp.mts.pretreatment.Pretreatment;
-
 /**
  * 采用口哨算法对事件进行聚类
  *
  * @author Apache_xiaochao
- *
  */
 @Deprecated
-public class ClusterByChineseWhispers implements GlobalConstant{
+public class ClusterByChineseWhispers implements GlobalConstant {
 
     private final Logger log = Logger.getLogger(this.getClass());
 
@@ -45,9 +43,9 @@ public class ClusterByChineseWhispers implements GlobalConstant{
     private final String dictPath;  //WordNet词典路径
 
     public ClusterByChineseWhispers(String nodesDir, String edgeDir,
-            String resultDir, String textDir, String extractedSentencesSaveDir,
-            String moduleFilePath, int threadNum, float edgeSelectedWeight,
-            boolean isPret, boolean isClust, String dictPath) {
+                                    String resultDir, String textDir, String extractedSentencesSaveDir,
+                                    String moduleFilePath, int threadNum, float edgeSelectedWeight,
+                                    boolean isPret, boolean isClust, String dictPath) {
         super();
         this.nodesDir = nodesDir;
         this.edgeDir = edgeDir;
@@ -99,7 +97,7 @@ public class ClusterByChineseWhispers implements GlobalConstant{
     /**
      * 聚类函数
      *
-     * @param cwRunParam  口哨算法运行参数封装对象：
+     * @param cwRunParam 口哨算法运行参数封装对象：
      * 其中edgeWeightThreshold，nodeFileName，edgeFileName，resultFilePath在函数内部自动设置
      * @throws IOException
      * @throws InterruptedException
@@ -113,7 +111,7 @@ public class ClusterByChineseWhispers implements GlobalConstant{
             pretreatment.pretreatment4ChineseWHispers(this.edgeDir);
         }
 
-        if(this.isClust){
+        if (this.isClust) {
             this.log.info("正在对事件进行聚类...");
             final File nodeFile = new File(this.nodesDir);
             final String[] filenames = nodeFile.list(new FilenameFilter() {
@@ -137,7 +135,7 @@ public class ClusterByChineseWhispers implements GlobalConstant{
                 cwRunParam.setEdgeFilePath(edgeFileName);
                 cwRunParam.setResultFilePath(this.resultDir + "/" + filename.replace(".node", ""));
                 final String command = cwRunParam.toString();
-                this.log.info("正在用口哨算法对" + filename.replace(".node", "")	+ "进行聚类...");
+                this.log.info("正在用口哨算法对" + filename.replace(".node", "") + "进行聚类...");
                 final Process process = Runtime.getRuntime().exec(command);
                 process.waitFor();
                 final BufferedReader read = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -176,7 +174,7 @@ public class ClusterByChineseWhispers implements GlobalConstant{
 
         //加载依存分析模型
         final String grammar = "edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz";
-        final String[] options = { "-maxLength", "80", "-retainTmpSubcategories" };
+        final String[] options = {"-maxLength", "80", "-retainTmpSubcategories"};
         final LexicalizedParser lp = LexicalizedParser.loadModel(grammar, options);
         //TreebankLanguagePack tlp = lp.getOp().langpack();
         //GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory();
@@ -189,12 +187,12 @@ public class ClusterByChineseWhispers implements GlobalConstant{
                     this.resultDir, filename_cluster_read, this.extractedSentencesSaveDir, this.textDir, lp, this.dictPath));
         }
 
-        if(tasks.size() > 0){
+        if (tasks.size() > 0) {
             try {
                 //执行任务组，所有任务执行完毕之前，主线程阻塞
                 final List<Future<Boolean>> futures = executorService.invokeAll(tasks);
                 executorService.shutdown();
-                if(futures != null){
+                if (futures != null) {
                     for (final Future<Boolean> future : futures) {
                         future.get();
                     }
@@ -227,7 +225,7 @@ public class ClusterByChineseWhispers implements GlobalConstant{
 
         //加载依存分析模型
         final String grammar = "edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz";
-        final String[] options = { "-maxLength", "80", "-retainTmpSubcategories" };
+        final String[] options = {"-maxLength", "80", "-retainTmpSubcategories"};
         final LexicalizedParser lp = LexicalizedParser.loadModel(grammar, options);
         //TreebankLanguagePack tlp = lp.getOp().langpack();
         //GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory();
@@ -240,12 +238,12 @@ public class ClusterByChineseWhispers implements GlobalConstant{
                     "src/tmp", filename_cluster_read, "src/tmp/extract_sent", "src/tmp/text_dir", lp, "D:/WordNet/2.1/dict"));
         }
 
-        if(tasks.size() > 0){
+        if (tasks.size() > 0) {
             try {
                 //执行任务组，所有任务执行完毕之前，主线程阻塞
                 final List<Future<Boolean>> futures = executorService.invokeAll(tasks);
                 executorService.shutdown();
-                if(futures != null){
+                if (futures != null) {
                     for (final Future<Boolean> future : futures) {
                         future.get();
                     }

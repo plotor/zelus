@@ -1,20 +1,5 @@
 package edu.whu.cs.nlp.mts.extraction.graph;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.regex.Pattern;
-
-import org.apache.log4j.Logger;
-
 import edu.stanford.nlp.ling.CoreAnnotations.LemmaAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
@@ -28,28 +13,41 @@ import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.CoreMap;
-import edu.whu.cs.nlp.mts.base.domain.EventType;
-import edu.whu.cs.nlp.mts.base.domain.EventWithWord;
-import edu.whu.cs.nlp.mts.base.domain.ParseItem;
-import edu.whu.cs.nlp.mts.base.domain.Word;
-import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
-import edu.whu.cs.nlp.mts.base.loader.FileLoader;
-import edu.whu.cs.nlp.mts.base.loader.ModelLoader;
-import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
 import edu.whu.cs.nlp.mts.pretreatment.Pretreatment;
+import org.apache.log4j.Logger;
+import org.zhenchao.zelus.common.domain.EventType;
+import org.zhenchao.zelus.common.domain.EventWithWord;
+import org.zhenchao.zelus.common.domain.ParseItem;
+import org.zhenchao.zelus.common.domain.Word;
+import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.loader.FileLoader;
+import org.zhenchao.zelus.common.loader.ModelLoader;
+import org.zhenchao.zelus.common.util.CommonUtil;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.regex.Pattern;
 
 /**
  * 基于依存关系来构建词图，在词图的基础上用规则进行事件抽取
  *
  * @author Apache_xiaochao
- *
  */
 public class EventsExtractBasedOnGraph implements GlobalConstant, Callable<Boolean> {
 
-    private final Logger          log = Logger.getLogger(this.getClass());
+    private final Logger log = Logger.getLogger(this.getClass());
 
     private final StanfordCoreNLP pipeline;
-    private final String          textDir;                                // 输入文件所在目录
+    private final String textDir;                                // 输入文件所在目录
 
     public EventsExtractBasedOnGraph(String textDir) {
         super();
@@ -94,9 +92,9 @@ public class EventsExtractBasedOnGraph implements GlobalConstant, Callable<Boole
      *
      * @param text
      * @return 结果信息全部存在一个map集合中返回，通过key来获取 key如下： segedText：切分后的句子集合，类型List
-     *         <String> segedTextDetail：切分后的句子详细信息，类型List
-     *         <String> words:所有词的对象信息，按行组织，类型：List<List<Word>>
-     *         parseItems：所有词的依存关系集合，按行组织，类型：List<List<ParseItem>>
+     * <String> segedTextDetail：切分后的句子详细信息，类型List
+     * <String> words:所有词的对象信息，按行组织，类型：List<List<Word>>
+     * parseItems：所有词的依存关系集合，按行组织，类型：List<List<ParseItem>>
      */
     public Map<String, Object> coreNlpOperate(String text) {
         final Map<String, Object> coreNlpResults = new HashMap<String, Object>();
@@ -377,7 +375,7 @@ public class EventsExtractBasedOnGraph implements GlobalConstant, Callable<Boole
      * @return
      */
     public Map<Integer, List<EventWithWord>> extract(List<List<ParseItem>> parsedList, List<List<Word>> words,
-            String filename) {
+                                                     String filename) {
         Map<Integer, List<EventWithWord>> events = null;
         if (parsedList != null && words != null) {
             events = new TreeMap<Integer, List<EventWithWord>>();
@@ -600,7 +598,7 @@ public class EventsExtractBasedOnGraph implements GlobalConstant, Callable<Boole
                     final String eventsInSentence = CommonUtil.list2String(entry.getValue());
                     sb_events.append(entry.getKey() + "\t" + eventsInSentence + LINE_SPLITER);
                     sb_simplify_events
-                    .append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
+                            .append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
                 }
                 FileLoader.write(this.textDir + "/" + DIR_EVENTS + "/" + filename,
                         CommonUtil.cutLastLineSpliter(sb_events.toString()), DEFAULT_CHARSET);

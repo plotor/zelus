@@ -1,5 +1,15 @@
 package edu.whu.cs.nlp.mts.clustering;
 
+import edu.whu.cs.nlp.mts.clustering.cw.CW;
+import edu.whu.cs.nlp.mts.clustering.cw.graph.ArrayBackedGraph;
+import edu.whu.cs.nlp.mts.clustering.cw.graph.Graph;
+import edu.whu.cs.nlp.mts.clustering.domain.SentenceApprox;
+import edu.whu.cs.nlp.mts.clustering.domain.SentenceVector;
+import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
+import org.zhenchao.zelus.common.util.CommonUtil;
+import org.zhenchao.zelus.common.util.SerializeUtil;
+
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -10,26 +20,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
-
-import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
-import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
-import edu.whu.cs.nlp.mts.clustering.cw.CW;
-import edu.whu.cs.nlp.mts.clustering.cw.graph.ArrayBackedGraph;
-import edu.whu.cs.nlp.mts.clustering.cw.graph.Graph;
-import edu.whu.cs.nlp.mts.clustering.domain.SentenceApprox;
-import edu.whu.cs.nlp.mts.clustering.domain.SentenceVector;
-
 /**
  * 口哨算法聚类，对句子进行聚类
  *
  * @author ZhenchaoWang 2015-11-29 19:35:00
- *
  */
 public class ChineseWhispersCluster4Sentence {
 
-    private static Logger log                   = Logger.getLogger(ChineseWhispersCluster4Sentence.class);
+    private static Logger log = Logger.getLogger(ChineseWhispersCluster4Sentence.class);
 
     public static void main(String[] args) {
 
@@ -44,7 +42,7 @@ public class ChineseWhispersCluster4Sentence {
 
             @Override
             public boolean accept(File file, String name) {
-                if(name.endsWith(".obj")) {
+                if (name.endsWith(".obj")) {
                     return true;
                 }
                 return false;
@@ -94,7 +92,7 @@ public class ChineseWhispersCluster4Sentence {
             double avgWeight = totalWeight / sentenceApproxs.size();
             // 添加边
             for (SentenceApprox sentenceApprox : sentenceApproxs) {
-                if(sentenceApprox.getApprox() >= avgWeight * 1.26) {
+                if (sentenceApprox.getApprox() >= avgWeight * 1.26) {
                     graph.addEdgeUndirected(sentenceApprox.getFrom(), sentenceApprox.getTo(), Float.parseFloat(decimalFormat.format(sentenceApprox.getApprox())));
                 }
             }
@@ -109,7 +107,7 @@ public class ChineseWhispersCluster4Sentence {
 
             StringBuilder clustText = new StringBuilder();
             for (Entry<Integer, Set<Integer>> entry : clusterSentences.entrySet()) {
-                if(entry.getValue().size() >= 5){
+                if (entry.getValue().size() >= 5) {
                     clustText.append("classes_" + entry.getKey() + "\n");
                     for (Integer key : entry.getValue()) {
                         String sentence = sentenceVectors.get(key - 1).getSentence();
@@ -129,7 +127,6 @@ public class ChineseWhispersCluster4Sentence {
             }
 
         }
-
 
     }
 

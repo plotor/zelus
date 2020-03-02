@@ -1,5 +1,19 @@
 package edu.whu.cs.nlp.mts.clustering;
 
+import edu.mit.jwi.IDictionary;
+import edu.stanford.nlp.ling.HasWord;
+import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
+import edu.stanford.nlp.process.Tokenizer;
+import edu.stanford.nlp.trees.Tree;
+import edu.stanford.nlp.trees.TreebankLanguagePack;
+import org.apache.log4j.Logger;
+import org.zhenchao.zelus.common.domain.Word;
+import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.loader.FileLoader;
+import org.zhenchao.zelus.common.util.CommonUtil;
+import org.zhenchao.zelus.common.util.Encipher;
+import org.zhenchao.zelus.common.util.WordNetUtil;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -21,28 +35,13 @@ import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
-
-import edu.mit.jwi.IDictionary;
-import edu.stanford.nlp.ling.HasWord;
-import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
-import edu.stanford.nlp.process.Tokenizer;
-import edu.stanford.nlp.trees.Tree;
-import edu.stanford.nlp.trees.TreebankLanguagePack;
-import edu.whu.cs.nlp.mts.base.domain.Word;
-import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
-import edu.whu.cs.nlp.mts.base.loader.FileLoader;
-import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
-import edu.whu.cs.nlp.mts.base.utils.Encipher;
-import edu.whu.cs.nlp.mts.base.utils.WordNetUtil;
-
 /**
  * 句子抽取操作线程
- * @author Apache_xiaochao
  *
+ * @author Apache_xiaochao
  */
 @Deprecated
-public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant{
+public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant {
 
     private final Logger log = Logger.getLogger(this.getClass());
 
@@ -54,8 +53,8 @@ public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant{
     private IDictionary dict;  //wordnet词典对象
 
     public SentenceExtractThread(String resultDir,
-            String filename_cluster_read, String extractedSentencesSaveDir,
-            String textDir, LexicalizedParser lp, String dictPath) {
+                                 String filename_cluster_read, String extractedSentencesSaveDir,
+                                 String textDir, LexicalizedParser lp, String dictPath) {
         super();
         this.clusterResultDir = resultDir;
         this.filename_cluster_read = filename_cluster_read;
@@ -110,14 +109,15 @@ public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant{
 
     /**
      * 返回一个s节点下面的完整子句
+     *
      * @param tree
      * @param sb
      */
-    private void subSentence(Tree tree, StringBuilder sb){
-        if(tree.isLeaf()){
+    private void subSentence(Tree tree, StringBuilder sb) {
+        if (tree.isLeaf()) {
             sb.append(tree.nodeString() + " ");
             return;
-        }else{
+        } else {
             final List<Tree> childTrees = tree.getChildrenAsList();
             for (final Tree child : childTrees) {
                 this.subSentence(child, sb);
@@ -127,15 +127,16 @@ public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant{
 
     /**
      * 获取一句话中的所有子句集合
+     *
      * @param tree
      * @param subSentList
      */
-    private void subSentences(Tree tree, List<String> subSentList){
-        if(tree.label().toString().equals("S") || tree.label().toString().equals("SINV")){
+    private void subSentences(Tree tree, List<String> subSentList) {
+        if (tree.label().toString().equals("S") || tree.label().toString().equals("SINV")) {
             final StringBuilder sb = new StringBuilder();
             this.subSentence(tree, sb);
             final String strTmp = sb.toString().trim();
-            if(!"".equals(strTmp)){
+            if (!"".equals(strTmp)) {
                 //System.out.println("%%\t" + strTmp);
                 subSentList.add(strTmp);
             }
@@ -149,6 +150,7 @@ public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant{
 
     /**
      * 采用句法分析树来得到当前事件对应的子句
+     *
      * @param event
      * @param textsMap
      * @param detailTextsMap
@@ -161,9 +163,9 @@ public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant{
     private List<Word> event2SubSentence(
             String event, Map<String, List<String>> textsMap,
             Map<String, List<List<Word>>> detailTextsMap, String topicName, LexicalizedParser lp)
-                    throws NoSuchAlgorithmException, UnsupportedEncodingException{
+            throws NoSuchAlgorithmException, UnsupportedEncodingException {
         List<Word> subSentence = null;
-        if(event != null){
+        if (event != null) {
             final String regex_filename = "\\[\\$[\\w\\.]*?\\$\\]";
             final Pattern p_filename = Pattern.compile(regex_filename);
             // 获取当前事件所在的文件名
@@ -197,7 +199,7 @@ public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant{
                 final String key = Encipher.MD5(topicName + filename);
                 textList = textsMap.get(key);
                 detailTextList = detailTextsMap.get(key);
-                if(textList == null){
+                if (textList == null) {
                     //加载正文
                     try {
                         textList = CommonUtil.str2List(
@@ -207,7 +209,7 @@ public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant{
                         //e.printStackTrace();
                     }
                 }
-                if(detailTextList == null){
+                if (detailTextList == null) {
                     try {
                         detailTextList =
                                 FileLoader.loadText(this.textDir + "/" + topicName + "/" + DIR_SEGDETAIL_TEXT + "/" + filename, DEFAULT_CHARSET);
@@ -217,8 +219,8 @@ public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant{
                     }
                 }
 
-                if(textList != null && detailTextList != null){
-                    try{
+                if (textList != null && detailTextList != null) {
+                    try {
                         //缓存当前正文类容
                         textsMap.put(key, textList);
                         detailTextsMap.put(key, detailTextList);
@@ -240,21 +242,21 @@ public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant{
                             final String sentStr = subSentList.get(i);
                             int count = 0;
                             final Set<String> wordSet = new HashSet<String>(Arrays.asList(sentStr.split("\\s+")));
-                            if(leftWord != null && wordSet.contains(leftWord.getName())){
+                            if (leftWord != null && wordSet.contains(leftWord.getName())) {
                                 ++count;
                             }
-                            if(middleWord != null && wordSet.contains(middleWord.getName())){
+                            if (middleWord != null && wordSet.contains(middleWord.getName())) {
                                 ++count;
                             }
-                            if(rightWord != null && wordSet.contains(rightWord.getName())){
+                            if (rightWord != null && wordSet.contains(rightWord.getName())) {
                                 ++count;
                             }
-                            if(count >= 2){
+                            if (count >= 2) {
                                 subSentenceStr = sentStr;
                                 break;
                             }
                         }
-                        if(subSentenceStr == null){
+                        if (subSentenceStr == null) {
                             this.log.error("无法映射事件对应的子句:\n左词：" + (leftWord == null ? "" : leftWord.getName()) +
                                     "\n中词：" + (middleWord == null ? "" : middleWord.getName()) +
                                     "\n右词：" + (rightWord == null ? "" : rightWord.getName()) +
@@ -265,29 +267,29 @@ public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant{
                             }
                             this.log.error(CommonUtil.cutLastLineSpliter(tmp.toString()) + "\n" +
                                     event + "\t" + (middleWord.getSentenceNum() - 1) + "\t" + sentence);
-                        }else{
+                        } else {
                             //对当前子句进行对象化
                             subSentence = new ArrayList<Word>();
                             final String[] wordsInSubSent = subSentenceStr.split("\\s+");
                             int num = 0;
-                            for (final Word word: sentenceDetail) {
-                                if(word.getName().equals(wordsInSubSent[num])){
+                            for (final Word word : sentenceDetail) {
+                                if (word.getName().equals(wordsInSubSent[num])) {
                                     subSentence.add((Word) word.clone());
                                     ++num;
-                                    if(subSentence.size() == wordsInSubSent.length){
+                                    if (subSentence.size() == wordsInSubSent.length) {
                                         break;
                                     }
-                                }else{
+                                } else {
                                     //清除
                                     subSentence.clear();
                                     num = 0;
                                 }
                             }
-                            if(subSentence.size() == 0){
+                            if (subSentence.size() == 0) {
                                 this.log.error("句子替换出错：" + subSentenceStr + "(原句)");
                             }
                         }
-                    }catch(final Exception e){
+                    } catch (final Exception e) {
                         this.log.error("句子所在行数越界或MD5算法不支持:" + event, e);
                         //e.printStackTrace();
                     }
@@ -301,9 +303,9 @@ public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant{
     /*
      * 将词集合转化成句子
      */
-    private String words2Sentence(List<Word> subSentence){
+    private String words2Sentence(List<Word> subSentence) {
         String sentence = "";
-        if(subSentence != null && subSentence.size() > 0){
+        if (subSentence != null && subSentence.size() > 0) {
             final StringBuilder sb = new StringBuilder();
             for (final Word word : subSentence) {
                 sb.append(word.getName() + " ");
@@ -340,11 +342,11 @@ public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant{
                     //获取当前事件对应的子句
                     final String topicName = this.filename_cluster_read.replace(".read", "");
                     final List<Word> subSentence = this.event2SubSentence(event, textsMap, detailTextMap, topicName, this.lp);
-                    if(subSentence != null && subSentence.size() > 0){
+                    if (subSentence != null && subSentence.size() > 0) {
                         //记录同义词替换之前的子句
                         final String subSentStrPre = this.words2Sentence(subSentence);
                         //对当前句子进行同义词替换
-                        for(int i = 0; i < subSentence.size(); ++i){
+                        for (int i = 0; i < subSentence.size(); ++i) {
                             final Word word = subSentence.get(i);
                             // FIXME 下面这行注释掉，用于通过maven编译2015-11-11 19:26:01
                             //subSentence.set(i, WordNetUtil.getSynonyms(this.dict, word, selectedSynonymsWords));
@@ -354,7 +356,7 @@ public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant{
                             //计算当前子句的md5值
                             final String sentMd5Val = Encipher.MD5(subSentStrPre);
                             //保证一个类别中同一个子句只出现一次
-                            if(!selectedSentTag.contains(sentMd5Val) && !"".equals(subSentStrAfter)){
+                            if (!selectedSentTag.contains(sentMd5Val) && !"".equals(subSentStrAfter)) {
                                 sentencesInClass.add(subSentStrAfter);
                                 sentencesLemmaInClass.add(subSentStrPre);
                                 selectedSentTag.add(sentMd5Val);
@@ -363,16 +365,16 @@ public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant{
                             this.log.error("找不到对应算法！", e);
                             //e.printStackTrace();
                         }
-                    }else{
+                    } else {
                         //System.out.println("找不到对应子句，事件：" + event);
                         this.log.error("找不到对应子句，事件：" + event);
                     }
                 }
 
                 //当前类别下的句子数量达到一个阈值后才能进入压缩
-                if(sentencesInClass.size() >= MIN_SENTENCE_COUNT_FOR_COMPRESS){
-                    extractedSentenceLemmaGroupByCluster.append("classes_" + num	+ ":" + LINE_SPLITER);
-                    extractedSentenceGroupByCluster.append("classes_" + num	+ ":" + LINE_SPLITER);
+                if (sentencesInClass.size() >= MIN_SENTENCE_COUNT_FOR_COMPRESS) {
+                    extractedSentenceLemmaGroupByCluster.append("classes_" + num + ":" + LINE_SPLITER);
+                    extractedSentenceGroupByCluster.append("classes_" + num + ":" + LINE_SPLITER);
                     taggesSentenceGroupByCluster.append("classes_" + num + ":" + LINE_SPLITER);
                     for (final String sentence : sentencesInClass) {
                         extractedSentenceGroupByCluster.append(sentence + LINE_SPLITER);
@@ -393,7 +395,7 @@ public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant{
                 ++num;
             }
             final String filename = this.filename_cluster_read.replace(".read", ".sentences");
-            if(extractedSentenceLemmaGroupByCluster.length() > 0){
+            if (extractedSentenceLemmaGroupByCluster.length() > 0) {
                 final String eslgbc = CommonUtil.cutLastLineSpliter(extractedSentenceLemmaGroupByCluster.toString());
                 FileLoader.write(this.extractedSentencesSaveDir + "/lemma/" + filename, eslgbc, DEFAULT_CHARSET);
             }

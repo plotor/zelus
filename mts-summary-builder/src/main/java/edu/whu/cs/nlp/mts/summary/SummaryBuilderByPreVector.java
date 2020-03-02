@@ -1,5 +1,21 @@
 package edu.whu.cs.nlp.mts.summary;
 
+import edu.whu.cs.nlp.mts.domain.ClustItem;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.zhenchao.zelus.common.domain.Pair;
+import org.zhenchao.zelus.common.domain.Vector;
+import org.zhenchao.zelus.common.domain.Word;
+import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.nlp.StanfordNLPTools;
+import org.zhenchao.zelus.common.util.SerializeUtils;
+import org.zhenchao.zelus.common.util.VectorOperator;
+import org.zhenchao.zelus.common.util.ZelusUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,51 +33,33 @@ import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.LineIterator;
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-
-import edu.whu.cs.nlp.mts.base.domain.Pair;
-import edu.whu.cs.nlp.mts.base.domain.Vector;
-import edu.whu.cs.nlp.mts.base.domain.Word;
-import edu.whu.cs.nlp.mts.base.global.GlobalConstant;
-import edu.whu.cs.nlp.mts.base.nlp.StanfordNLPTools;
-import edu.whu.cs.nlp.mts.base.utils.CommonUtil;
-import edu.whu.cs.nlp.mts.base.utils.SerializeUtil;
-import edu.whu.cs.nlp.mts.base.utils.VectorOperator;
-import edu.whu.cs.nlp.mts.domain.ClustItem;
-
 /**
  * 基于子模函数生成多文档摘要(利用向量来度量句子之间的相似度)<br>
  * 向量不实时获取，采用预处理
  *
  * @author zhenchao.wang 2016-1-27 20:24:18
- *
  */
 public class SummaryBuilderByPreVector implements Callable<Boolean>, GlobalConstant {
 
-    private static Logger     log              = Logger.getLogger(SummaryBuilderByPreVector.class);
+    private static Logger log = Logger.getLogger(SummaryBuilderByPreVector.class);
 
     /** 工作目录 */
-    private final String      workDir;
+    private final String workDir;
 
     /** 分类目录，用于同时跑多个任务 */
     private final String numDir;
 
     /** 主题文件名 */
-    private final String      filename;
+    private final String filename;
 
     /** 主题名称 */
-    private final String      topicname;
+    private final String topicname;
 
     /** IDF值 */
-    Map<String, Double>       idfValues;
+    Map<String, Double> idfValues;
 
     /** topic query */
-    private final String      question;
+    private final String question;
 
     /** 词向量获取器 */
     /*private final EhCacheUtil ehCacheUtil;*/
@@ -70,13 +68,13 @@ public class SummaryBuilderByPreVector implements Callable<Boolean>, GlobalConst
     private final Map<String, Vector> wordVecs;
 
     /** alpha 参数 */
-    private final float       alpha;
+    private final float alpha;
 
     /** beta 参数 */
-    private final float       beta;
+    private final float beta;
 
     /** 每个主题下面选取的句子的数量 */
-    private Integer           sentCountInClust = 10;
+    private Integer sentCountInClust = 10;
 
     public SummaryBuilderByPreVector(String workDir, String numDir, String filename, int sentCountInClust, Map<String, Double> idfValues, String question, Map<String, Vector> wordVecs, float alpha, float beta) {
         super();
@@ -105,7 +103,7 @@ public class SummaryBuilderByPreVector implements Callable<Boolean>, GlobalConst
         log.info("Loading serilized file[" + clusterWeightFilepath + "]");
         Map<String, Float> clusterWeights = null;
         try {
-            clusterWeights = (Map<String, Float>) SerializeUtil.readObj(clusterWeightFilepath);
+            clusterWeights = (Map<String, Float>) SerializeUtils.readObj(clusterWeightFilepath);
         } catch (IOException e) {
             log.error("Load serilized file[" + clusterWeightFilepath + "] error!", e);
             throw e;
@@ -213,7 +211,7 @@ public class SummaryBuilderByPreVector implements Callable<Boolean>, GlobalConst
                     boolean isSame = false; // 如果候选句子中存在与当前句子在词语构成一模一样的句子则为true
                     for (Double[] psVec : psVectors) {
                         double sps = VectorOperator.cosineDistence(sentVec, psVec);
-                        if(sps > 1.8D) {
+                        if (sps > 1.8D) {
                             isSame = true;
                             break;
                         }
@@ -222,7 +220,7 @@ public class SummaryBuilderByPreVector implements Callable<Boolean>, GlobalConst
                         }
                     }
 
-                    if(isSame) {
+                    if (isSame) {
                         // 说明当前句子与已经选取的句子在词语构成上相同，忽略
                         pairItr.remove();
                         continue;
@@ -291,7 +289,7 @@ public class SummaryBuilderByPreVector implements Callable<Boolean>, GlobalConst
 
             // 1.更新摘要字数
             for (Word word : words) {
-                if (CommonUtil.isPunctuation(word)) {
+                if (ZelusUtils.isPunctuation(word)) {
                     continue;
                 }
                 ++summaryWordCount;
@@ -370,7 +368,7 @@ public class SummaryBuilderByPreVector implements Callable<Boolean>, GlobalConst
         int count = 0;
         for (Word word : words) {
 
-            if (CommonUtil.isPunctuation(word)) {
+            if (ZelusUtils.isPunctuation(word)) {
                 // 跳过标点
                 continue;
             }
@@ -409,8 +407,7 @@ public class SummaryBuilderByPreVector implements Callable<Boolean>, GlobalConst
     /**
      * 加载压缩后的句子，按类别组织
      *
-     * @param count:
-     *            每个类别下选取的句子数量
+     * @param count: 每个类别下选取的句子数量
      * @return
      * @throws IOException
      */
@@ -506,14 +503,14 @@ public class SummaryBuilderByPreVector implements Callable<Boolean>, GlobalConst
         log.info("Loading word vec[" + vecFile.getAbsolutePath() + "]");
         Map<String, Vector> wordVecs = new HashMap<String, Vector>();
         try {
-            wordVecs = (Map<String, Vector>) SerializeUtil.readObj(vecFile.getAbsolutePath());
+            wordVecs = (Map<String, Vector>) SerializeUtils.readObj(vecFile.getAbsolutePath());
         } catch (ClassNotFoundException e) {
             log.error("Load word vec[" + vecFile.getAbsolutePath() + "] error!", e);
             throw e;
         }
         log.info("Load word vec[" + vecFile.getAbsolutePath() + "] success!");
 
-        if(MapUtils.isEmpty(wordVecs)) {
+        if (MapUtils.isEmpty(wordVecs)) {
             log.error("Can't load any word vec[" + vecFile.getAbsolutePath() + "]");
             throw new Exception("Can't load any word vec[" + vecFile.getAbsolutePath() + "]");
         }
