@@ -5,7 +5,7 @@ import opennlp.tools.chunker.ChunkerModel;
 import opennlp.tools.util.Span;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.Constants;
 import org.zhenchao.zelus.common.loader.ModelLoader;
 import org.zhenchao.zelus.common.pojo.ChunkPhrase;
 import org.zhenchao.zelus.common.pojo.Word;

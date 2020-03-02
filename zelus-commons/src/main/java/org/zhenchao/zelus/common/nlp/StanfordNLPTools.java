@@ -18,7 +18,7 @@ import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.CoreMap;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.Constants;
 import org.zhenchao.zelus.common.loader.ModelLoader;
 import org.zhenchao.zelus.common.pojo.ParseItem;
 import org.zhenchao.zelus.common.pojo.Word;

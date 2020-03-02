@@ -3,7 +3,7 @@ package org.zhenchao.zelus.common.util;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.Constants;
 import org.zhenchao.zelus.common.pojo.EventType;
 import org.zhenchao.zelus.common.pojo.EventWithPhrase;
 import org.zhenchao.zelus.common.pojo.Vector;
@@ -469,7 +469,7 @@ public class VectorOperator implements Constants {
     }
 
     /**
-     * 随机生成一个{@value SystemConstant.DIMENSION}维的向量，每一维的值在-1.5~1.5之间
+     * 随机生成一个维度向量，每一维的值在-1.5~1.5之间
      *
      * @return
      */

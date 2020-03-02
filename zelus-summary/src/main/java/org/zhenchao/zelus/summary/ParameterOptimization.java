@@ -2,7 +2,7 @@ package org.zhenchao.zelus.summary;
 
 import org.apache.log4j.Logger;
 import org.zhenchao.zelus.cluster.ClusterByChineseWhispers;
-import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.Constants;
 import org.zhenchao.zelus.common.pojo.CWRunParam;
 import org.zhenchao.zelus.common.pojo.RougeAvg;
 import org.zhenchao.zelus.common.util.C3p0Utils;

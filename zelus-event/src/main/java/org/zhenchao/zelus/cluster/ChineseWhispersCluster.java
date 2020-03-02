@@ -11,8 +11,8 @@ import org.zhenchao.zelus.cluster.cw.CW;
 import org.zhenchao.zelus.cluster.cw.graph.ArrayBackedGraph;
 import org.zhenchao.zelus.cluster.cw.graph.Graph;
 import org.zhenchao.zelus.cluster.domain.CWEdge;
-import org.zhenchao.zelus.common.global.Constants;
-import org.zhenchao.zelus.common.global.GlobalParam;
+import org.zhenchao.zelus.common.Constants;
+import org.zhenchao.zelus.common.GlobalParam;
 import org.zhenchao.zelus.common.pojo.EventWithPhrase;
 import org.zhenchao.zelus.common.pojo.NumedEventWithPhrase;
 import org.zhenchao.zelus.common.pojo.Pair;
@@ -374,7 +374,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
      * 事件到子句的映射
      *
      * @param eventWithPhrase
-     * @param subSentences 当前事件所在句子的子句集合
+     * @param subSentList 当前事件所在句子的子句集合
      * @return
      */
     private String eventToSubSentence(EventWithPhrase eventWithPhrase, List<String> subSentList) {
@@ -507,7 +507,6 @@ public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
     /**
      * 进行同义词替换
      *
-     * @param inSent
      * @return
      */
     private List<Word> synonymReplacement(List<Word> sentence, Set<String> selectedWordsKey) throws Exception {

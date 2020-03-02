@@ -1,7 +1,7 @@
 package org.zhenchao.zelus.common.loader;
 
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.Constants;
 import org.zhenchao.zelus.common.pojo.EventWithWord;
 import org.zhenchao.zelus.common.pojo.Word;
 import org.zhenchao.zelus.common.util.ZelusUtils;

@@ -9,7 +9,7 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.Constants;
 import org.zhenchao.zelus.common.loader.FileLoader;
 import org.zhenchao.zelus.common.loader.ModelLoader;
 import org.zhenchao.zelus.common.util.ZelusUtils;

@@ -3,7 +3,7 @@ package org.zhenchao.zelus.takahe;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.Constants;
 import org.zhenchao.zelus.common.pojo.SentNumSimiPair;
 import org.zhenchao.zelus.common.pojo.SentenceSilimarityAttribute;
 import org.zhenchao.zelus.common.util.ZelusUtils;

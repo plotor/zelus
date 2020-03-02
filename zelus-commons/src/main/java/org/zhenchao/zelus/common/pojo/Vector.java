@@ -1,7 +1,7 @@
 package org.zhenchao.zelus.common.pojo;
 
 import opennlp.tools.util.StringUtil;
-import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.Constants;
 
 import java.io.Serializable;
 

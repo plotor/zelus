@@ -14,7 +14,7 @@ import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.CollapsedCCProcess
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.CoreMap;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.Constants;
 import org.zhenchao.zelus.common.loader.FileLoader;
 import org.zhenchao.zelus.common.loader.ModelLoader;
 import org.zhenchao.zelus.common.pojo.EventType;

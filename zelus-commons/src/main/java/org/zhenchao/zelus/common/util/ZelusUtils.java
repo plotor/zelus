@@ -2,7 +2,7 @@ package org.zhenchao.zelus.common.util;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.Constants;
 import org.zhenchao.zelus.common.pojo.Word;
 
 import java.util.ArrayList;

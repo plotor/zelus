@@ -1,4 +1,4 @@
-package org.zhenchao.zelus.common.global;
+package org.zhenchao.zelus.common;
 
 /**
  * 全局参数

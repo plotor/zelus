@@ -1,6 +1,6 @@
 package org.zhenchao.zelus.common.pojo;
 
-import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.Constants;
 
 /**
  * 事件抽象类

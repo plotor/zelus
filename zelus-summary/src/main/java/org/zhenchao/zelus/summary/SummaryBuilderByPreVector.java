@@ -6,7 +6,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.Constants;
 import org.zhenchao.zelus.common.nlp.StanfordNLPTools;
 import org.zhenchao.zelus.common.pojo.Pair;
 import org.zhenchao.zelus.common.pojo.Vector;
@@ -357,7 +357,7 @@ public class SummaryBuilderByPreVector implements Callable<Boolean>, Constants {
     /**
      * 计算输入句子的向量
      *
-     * @param sentence
+     * @param words
      * @return
      */
     private Double[] sentenceToVector(List<Word> words) {

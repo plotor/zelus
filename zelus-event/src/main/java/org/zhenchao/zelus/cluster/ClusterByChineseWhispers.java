@@ -2,7 +2,7 @@ package org.zhenchao.zelus.cluster;
 
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.Constants;
 import org.zhenchao.zelus.common.pojo.CWRunParam;
 import org.zhenchao.zelus.pretreat.Pretreatment;
 

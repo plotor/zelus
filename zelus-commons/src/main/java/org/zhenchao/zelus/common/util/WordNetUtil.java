@@ -8,7 +8,7 @@ import edu.mit.jwi.item.IWord;
 import edu.mit.jwi.item.IWordID;
 import edu.mit.jwi.item.POS;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.Constants;
 import org.zhenchao.zelus.common.pojo.Word;
 
 import java.io.IOException;
@@ -55,7 +55,6 @@ public class WordNetUtil implements Constants {
      *
      * @param dict
      * @param word
-     * @param selectedSynonymsWords 文章中已经选择的同义词集合
      * @return
      */
     public synchronized static List<Word> getSynonyms(IDictionary dict, Word word) {

@@ -4,7 +4,7 @@ import edu.stanford.nlp.trees.Tree;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.Constants;
 import org.zhenchao.zelus.common.pojo.EventWithPhrase;
 import org.zhenchao.zelus.common.pojo.Vector;
 import org.zhenchao.zelus.common.pojo.Word;
@@ -115,7 +115,7 @@ public class BuildGraphTest implements Constants {
      * 事件到子句的映射
      *
      * @param eventWithPhrase
-     * @param subSentences 当前事件所在句子的子句集合
+     * @param subSentList 当前事件所在句子的子句集合
      * @return
      */
     private String eventToSubSentence(EventWithPhrase eventWithPhrase, List<String> subSentList) {

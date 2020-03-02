@@ -1,4 +1,4 @@
-package org.zhenchao.zelus.common.global;
+package org.zhenchao.zelus.common;
 
 import org.zhenchao.zelus.common.loader.ResourceLoader;
 

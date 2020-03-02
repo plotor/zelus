@@ -7,7 +7,7 @@ import edu.stanford.nlp.process.Tokenizer;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreebankLanguagePack;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.Constants;
 import org.zhenchao.zelus.common.loader.FileLoader;
 import org.zhenchao.zelus.common.pojo.Word;
 import org.zhenchao.zelus.common.util.Encipher;
