@@ -13,7 +13,7 @@
 
     <modules>
         <module>zelus-commons</module>
-        <module>mts-pretreatment</module>
+        <module>zelus-pretreat</module>
         <module>mts-event-extraction</module>
         <module>mts-event-clustering</module>
         <module>mts-msc</module>
@@ -104,7 +104,7 @@
             </dependency>
             <dependency>
                 <groupId>org.zhenchao</groupId>
-                <artifactId>mts-pretreatment</artifactId>
+                <artifactId>zelus-pretreat</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -184,7 +184,7 @@
             <dependency>
                 <groupId>com.mchange</groupId>
                 <artifactId>c3p0</artifactId>
-                <version>0.9.2.1</version>
+                <version>0.9.5.5</version>
             </dependency>
             <dependency>
                 <groupId>commons-dbutils</groupId>

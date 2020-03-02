@@ -9,17 +9,13 @@
         <version>1.0.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <artifactId>mts-event-extraction</artifactId>
-    <name>mts-event-extraction</name>
+    <artifactId>zelus-pretreat</artifactId>
+    <name>zelus-pretreat</name>
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.zhenchao</groupId>
             <artifactId>zelus-commons</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>zelus-pretreat</artifactId>
         </dependency>
 
         <!-- log4j -->
@@ -36,11 +32,6 @@
             <groupId>edu.stanford.nlp</groupId>
             <artifactId>stanford-corenlp</artifactId>
             <classifier>models</classifier>  <!-- coreNlp所需模型文件 -->
-        </dependency>
-        <!-- open nlp -->
-        <dependency>
-            <groupId>org.apache.opennlp</groupId>
-            <artifactId>opennlp-tools</artifactId>
         </dependency>
         <!-- apache commons -->
         <dependency>
@@ -60,7 +51,6 @@
     <build>
         <plugins>
             <plugin>
-                <!-- 编译插件 -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>

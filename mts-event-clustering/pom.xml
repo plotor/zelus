@@ -13,15 +13,13 @@
     <name>mts-event-clustering</name>
 
     <dependencies>
-        <!-- 工程依赖 -->
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>mts-base</artifactId>
+            <artifactId>zelus-commons</artifactId>
         </dependency>
-        <!-- 工程依赖 -->
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>mts-pretreatment</artifactId>
+            <artifactId>zelus-pretreat</artifactId>
         </dependency>
 
         <!-- 口哨算法相关依赖 -->
