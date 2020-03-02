@@ -1,1 +1,1 @@
-# An Event-Guided Method for Abstractive Multi-Document Summarzation
+## An Event-driven Method for Abstractive Multi-Document Summarization
