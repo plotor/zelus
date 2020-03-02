@@ -7,23 +7,23 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.domain.ChunkPhrase;
-import org.zhenchao.zelus.common.domain.CoreferenceElement;
-import org.zhenchao.zelus.common.domain.Event;
-import org.zhenchao.zelus.common.domain.EventType;
-import org.zhenchao.zelus.common.domain.EventWithPhrase;
-import org.zhenchao.zelus.common.domain.EventWithWord;
-import org.zhenchao.zelus.common.domain.ParseItem;
-import org.zhenchao.zelus.common.domain.Vector;
-import org.zhenchao.zelus.common.domain.Word;
-import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.global.Constants;
 import org.zhenchao.zelus.common.global.GlobalParam;
 import org.zhenchao.zelus.common.nlp.OpenNLPTools;
 import org.zhenchao.zelus.common.nlp.StanfordNLPTools;
-import org.zhenchao.zelus.common.util.CommonUtil;
-import org.zhenchao.zelus.common.util.EhCacheUtil;
+import org.zhenchao.zelus.common.pojo.ChunkPhrase;
+import org.zhenchao.zelus.common.pojo.CoreferenceElement;
+import org.zhenchao.zelus.common.pojo.Event;
+import org.zhenchao.zelus.common.pojo.EventType;
+import org.zhenchao.zelus.common.pojo.EventWithPhrase;
+import org.zhenchao.zelus.common.pojo.EventWithWord;
+import org.zhenchao.zelus.common.pojo.ParseItem;
+import org.zhenchao.zelus.common.pojo.Vector;
+import org.zhenchao.zelus.common.pojo.Word;
+import org.zhenchao.zelus.common.util.EhcacheUtils;
 import org.zhenchao.zelus.common.util.Encipher;
-import org.zhenchao.zelus.common.util.SerializeUtil;
+import org.zhenchao.zelus.common.util.SerializeUtils;
+import org.zhenchao.zelus.common.util.ZelusUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,7 +52,7 @@ import java.util.concurrent.Future;
  * @author ZhenchaoWang 2015-10-26 19:38:22
  * @version 2.0
  */
-public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boolean> {
+public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean> {
 
     private final Logger log = Logger.getLogger(this.getClass());
 
@@ -63,7 +63,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
     private final String topicName;
 
     /** 词向量获取器 */
-    private final EhCacheUtil ehCacheUtil;
+    private final EhcacheUtils ehCacheUtil;
 
     /**
      * 构造函数
@@ -71,7 +71,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
      * @param topicName
      * @param ehCacheUtil
      */
-    public EventsExtractBasedOnGraphV2(String topicName, EhCacheUtil ehCacheUtil) {
+    public EventsExtractBasedOnGraphV2(String topicName, EhcacheUtils ehCacheUtil) {
         this.topicName = topicName;
         this.ehCacheUtil = ehCacheUtil;
         this.eventExtractWorkDir = GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT;
@@ -111,7 +111,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                 List<Tree> syntacticTrees = (List<Tree>) coreNlpResults.get(StanfordNLPTools.KEY_SYNTACTICTREES);
                 File treeFile = new File(objBaseDir + "/" + DIR_SYNTACTICTREES_OBJ + "/" + this.topicName, file.getName() + ".obj");
                 try {
-                    SerializeUtil.writeObj(syntacticTrees, treeFile);
+                    SerializeUtils.writeObj(syntacticTrees, treeFile);
                 } catch (IOException e) {
                     this.log.error("Serialize file error:" + treeFile.getAbsolutePath(), e);
                     throw e;
@@ -123,7 +123,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                 // 序列化词集合
                 File wordsFile = FileUtils.getFile(objBaseDir + "/" + DIR_WORDS_OBJ + "/" + this.topicName, file.getName() + ".obj");
                 try {
-                    SerializeUtil.writeObj(words, wordsFile);
+                    SerializeUtils.writeObj(words, wordsFile);
                 } catch (IOException e) {
                     this.log.error("Serialize file error:" + wordsFile.getAbsolutePath(), e);
                     throw e;
@@ -159,7 +159,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                     sb_words_pos.append(sb_pos.toString().trim() + LINE_SPLITER);
                 }
                 /* 中间结果记录：词和词性分开按行存储 */
-                FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_SEGDETAIL_TEXT + "/pos2/" + "/" + this.topicName, file.getName()), CommonUtil.cutLastLineSpliter(sb_words_pos.toString()), DEFAULT_CHARSET);
+                FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_SEGDETAIL_TEXT + "/pos2/" + "/" + this.topicName, file.getName()), ZelusUtils.cutLastLineSpliter(sb_words_pos.toString()), DEFAULT_CHARSET);
 
                 // 获取依存分析结果
                 @SuppressWarnings("unchecked")
@@ -167,13 +167,13 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                 // 序列化依存分析对
                 File parseItemFile = FileUtils.getFile(objBaseDir + "/" + DIR_PARSE_OBJ + "/" + this.topicName, file.getName() + ".obj");
                 try {
-                    SerializeUtil.writeObj(words, parseItemFile);
+                    SerializeUtils.writeObj(words, parseItemFile);
                 } catch (IOException e) {
                     this.log.error("Serialize file error:" + parseItemFile.getAbsolutePath(), e);
                     throw e;
                 }
                 // 以文本形式存储依存分析对
-                FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_PARSE_TEXT + "/" + this.topicName, file.getName()), CommonUtil.lists2String(parseItemList), DEFAULT_CHARSET);
+                FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_PARSE_TEXT + "/" + this.topicName, file.getName()), ZelusUtils.lists2String(parseItemList), DEFAULT_CHARSET);
 
                 /* 中间结果记录：记录依存分析简版结果 */
                 StringBuilder simplifyParsedResult = new StringBuilder();
@@ -182,7 +182,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                         simplifyParsedResult.append(parseItem.toShortString() + "\t");
                     simplifyParsedResult.append(LINE_SPLITER);
                 }
-                FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_PARSESIMPLIFY + "/" + this.topicName, file.getName()), CommonUtil.cutLastLineSpliter(simplifyParsedResult.toString()), DEFAULT_CHARSET);
+                FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_PARSESIMPLIFY + "/" + this.topicName, file.getName()), ZelusUtils.cutLastLineSpliter(simplifyParsedResult.toString()), DEFAULT_CHARSET);
 
                 // 对当前文本进行事件抽取
                 Map<Integer, List<EventWithWord>> events = this.extract(parseItemList, words, file.getName());
@@ -190,12 +190,12 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                 StringBuilder sb_events = new StringBuilder();
                 StringBuilder sb_simplify_events = new StringBuilder();
                 for (Entry<Integer, List<EventWithWord>> entry : events.entrySet()) {
-                    String eventsInSentence = CommonUtil.list2String(entry.getValue());
+                    String eventsInSentence = ZelusUtils.list2String(entry.getValue());
                     sb_events.append(entry.getKey() + "\t" + eventsInSentence + LINE_SPLITER);
                     sb_simplify_events.append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
                 }
-                FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_EVENTS + "/" + this.topicName, file.getName()), CommonUtil.cutLastLineSpliter(sb_events.toString()), DEFAULT_CHARSET);
-                FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_EVENTSSIMPLIFY + "/" + this.topicName, file.getName()), CommonUtil.cutLastLineSpliter(sb_simplify_events.toString()), DEFAULT_CHARSET);
+                FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_EVENTS + "/" + this.topicName, file.getName()), ZelusUtils.cutLastLineSpliter(sb_events.toString()), DEFAULT_CHARSET);
+                FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_EVENTSSIMPLIFY + "/" + this.topicName, file.getName()), ZelusUtils.cutLastLineSpliter(sb_simplify_events.toString()), DEFAULT_CHARSET);
 
                 /**
                  * 指代消解
@@ -235,11 +235,11 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                     StringBuilder sb_events_phrase = new StringBuilder();
                     StringBuilder sb_simplify_events_phrase = new StringBuilder();
                     for (Entry<Integer, List<EventWithPhrase>> entry : eventsAfterCR.entrySet()) {
-                        sb_events_phrase.append(entry.getKey() + "\t" + CommonUtil.list2String(entry.getValue()) + LINE_SPLITER);
+                        sb_events_phrase.append(entry.getKey() + "\t" + ZelusUtils.list2String(entry.getValue()) + LINE_SPLITER);
                         sb_simplify_events_phrase.append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
                     }
-                    FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_CR_EVENTS + "/" + this.topicName, file.getName()), CommonUtil.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
-                    FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_CR_EVENTSSIMPLIFY + "/" + this.topicName, file.getName()), CommonUtil.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_CR_EVENTS + "/" + this.topicName, file.getName()), ZelusUtils.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_CR_EVENTSSIMPLIFY + "/" + this.topicName, file.getName()), ZelusUtils.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
 
                 } catch (Throwable e) {
                     this.log.error("coreference resolution error", e);
@@ -261,11 +261,11 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                     StringBuilder sb_events_phrase = new StringBuilder();
                     StringBuilder sb_simplify_events_phrase = new StringBuilder();
                     for (Entry<Integer, List<EventWithPhrase>> entry : eventsAfterCRAndRP.entrySet()) {
-                        sb_events_phrase.append(entry.getKey() + "\t" + CommonUtil.list2String(entry.getValue()) + LINE_SPLITER);
+                        sb_events_phrase.append(entry.getKey() + "\t" + ZelusUtils.list2String(entry.getValue()) + LINE_SPLITER);
                         sb_simplify_events_phrase.append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
                     }
-                    FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_CR_RP_EVENTS + "/" + this.topicName, file.getName()), CommonUtil.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
-                    FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_CR_RP_EVENTSSIMPLIFY + "/" + this.topicName, file.getName()), CommonUtil.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_CR_RP_EVENTS + "/" + this.topicName, file.getName()), ZelusUtils.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_CR_RP_EVENTSSIMPLIFY + "/" + this.topicName, file.getName()), ZelusUtils.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
 
                 } catch (Throwable e) {
                     this.log.error("repair event error!", e);
@@ -289,11 +289,11 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                     StringBuilder sb_events_phrase = new StringBuilder();
                     StringBuilder sb_simplify_events_phrase = new StringBuilder();
                     for (Entry<Integer, List<EventWithPhrase>> entry : eventsAfterCRAndRPAndPE.entrySet()) {
-                        sb_events_phrase.append(entry.getKey() + "\t" + CommonUtil.list2String(entry.getValue()) + LINE_SPLITER);
+                        sb_events_phrase.append(entry.getKey() + "\t" + ZelusUtils.list2String(entry.getValue()) + LINE_SPLITER);
                         sb_simplify_events_phrase.append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
                     }
-                    FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_CR_RP_PE_EVENTS + "/" + this.topicName, file.getName()), CommonUtil.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
-                    FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_CR_RP_PE_EVENTSSIMPLIFY + "/" + this.topicName, file.getName()), CommonUtil.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_CR_RP_PE_EVENTS + "/" + this.topicName, file.getName()), ZelusUtils.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_CR_RP_PE_EVENTSSIMPLIFY + "/" + this.topicName, file.getName()), ZelusUtils.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
 
                 } catch (Throwable e) {
                     this.log.error("exspand word to phrase error!", e);
@@ -320,11 +320,11 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                     StringBuilder sb_events_phrase = new StringBuilder();
                     StringBuilder sb_simplify_events_phrase = new StringBuilder();
                     for (Entry<Integer, List<EventWithPhrase>> entry : eventsAfterCRAndRPAndPEAndEF.entrySet()) {
-                        sb_events_phrase.append(entry.getKey() + "\t" + CommonUtil.list2String(entry.getValue()) + LINE_SPLITER);
+                        sb_events_phrase.append(entry.getKey() + "\t" + ZelusUtils.list2String(entry.getValue()) + LINE_SPLITER);
                         sb_simplify_events_phrase.append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
                     }
-                    FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_CR_RP_PE_EF_EVENTS + "/" + this.topicName, file.getName()), CommonUtil.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
-                    FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_CR_RP_PE_EF_EVENTSSIMPLIFY + "/" + this.topicName, file.getName()), CommonUtil.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_CR_RP_PE_EF_EVENTS + "/" + this.topicName, file.getName()), ZelusUtils.cutLastLineSpliter(sb_events_phrase.toString()), DEFAULT_CHARSET);
+                    FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_CR_RP_PE_EF_EVENTSSIMPLIFY + "/" + this.topicName, file.getName()), ZelusUtils.cutLastLineSpliter(sb_simplify_events_phrase.toString()), DEFAULT_CHARSET);
 
                     if (MapUtils.isNotEmpty(eventsAfterCRAndRPAndPEAndEF)) {
                         /*
@@ -332,7 +332,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
                          */
                         File eventsObjFile = FileUtils.getFile(objBaseDir + "/" + DIR_SERIALIZE_EVENTS + "/" + this.topicName, file.getName() + SUFFIX_SERIALIZE_FILE);
                         try {
-                            SerializeUtil.writeObj(eventsAfterCRAndRPAndPEAndEF, eventsObjFile.getAbsoluteFile());
+                            SerializeUtils.writeObj(eventsAfterCRAndRPAndPEAndEF, eventsObjFile.getAbsoluteFile());
                         } catch (IOException e) {
                             this.log.error("Seralize error:" + eventsObjFile.getAbsolutePath(), e);
                             throw e;
@@ -357,7 +357,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
              */
             File wordvecFile = FileUtils.getFile(this.eventExtractWorkDir + "/" + OBJ + "/" + DIR_WORDS_VECTOR, this.topicName + ".obj");
             try {
-                SerializeUtil.writeObj(wordvecsInTopic, wordvecFile);
+                SerializeUtils.writeObj(wordvecsInTopic, wordvecFile);
             } catch (IOException e) {
                 this.log.error("Serialize word vector file[" + wordvecFile.getAbsolutePath() + "] error!", e);
                 throw e;
@@ -998,7 +998,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
         });
 
         ExecutorService es = Executors.newSingleThreadExecutor();
-        EhCacheUtil ehCacheUtil = new EhCacheUtil("db_cache_vec", "local");
+        EhcacheUtils ehCacheUtil = new EhcacheUtils("db_cache_vec", "local");
         Future<Boolean> future = es.submit(new EventsExtractBasedOnGraphV2("E:/dev_workspace/tmp/test/duc2007/D0701A", ehCacheUtil));
 
         if (future.get()) {
@@ -1008,7 +1008,7 @@ public class EventsExtractBasedOnGraphV2 implements GlobalConstant, Callable<Boo
         }
 
         es.shutdown();
-        EhCacheUtil.close();
+        EhcacheUtils.close();
     }
 
 }

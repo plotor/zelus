@@ -1,25 +1,23 @@
 package org.zhenchao.zelus.takahe.domain;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.zhenchao.zelus.common.pojo.Word;
+import org.zhenchao.zelus.common.util.ZelusUtils;
+
 import java.io.Serializable;
 import java.util.List;
-
-import org.apache.commons.collections.CollectionUtils;
-
-import org.zhenchao.zelus.common.domain.Word;
-import org.zhenchao.zelus.common.util.CommonUtil;
 
 /**
  * 压缩输出语句单元
  *
  * @author ZhenchaoWang 2015-11-12 16:08:46
- *
  */
 public class CompressUnit implements Comparable<CompressUnit>, Serializable {
 
     private static final long serialVersionUID = 2448812084641441217L;
 
     /** 压缩得分，可能为0 */
-    private float  score;
+    private float score;
     /** 压缩输出句子 */
     /*private String sentence;*/
 
@@ -33,7 +31,7 @@ public class CompressUnit implements Comparable<CompressUnit>, Serializable {
 
     @Override
     public String toString() {
-        return this.score + "#" + CommonUtil.wordsToSentence(this.sentence);
+        return this.score + "#" + ZelusUtils.wordsToSentence(this.sentence);
     }
 
     /**
@@ -45,12 +43,12 @@ public class CompressUnit implements Comparable<CompressUnit>, Serializable {
 
         int count = 0;
 
-        if(CollectionUtils.isEmpty(this.sentence)) {
+        if (CollectionUtils.isEmpty(this.sentence)) {
             return count;
         }
 
         for (Word word : this.sentence) {
-            if(CommonUtil.isPunctuation(word)) {
+            if (ZelusUtils.isPunctuation(word)) {
                 continue;
             }
             count++;

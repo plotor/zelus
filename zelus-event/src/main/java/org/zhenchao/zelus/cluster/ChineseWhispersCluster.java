@@ -5,24 +5,24 @@ import edu.stanford.nlp.trees.Tree;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.zhenchao.zelus.cluster.cw.CW;
 import org.zhenchao.zelus.cluster.cw.graph.ArrayBackedGraph;
 import org.zhenchao.zelus.cluster.cw.graph.Graph;
 import org.zhenchao.zelus.cluster.domain.CWEdge;
-import org.zhenchao.zelus.common.domain.EventWithPhrase;
-import org.zhenchao.zelus.common.domain.NumedEventWithPhrase;
-import org.zhenchao.zelus.common.domain.Pair;
-import org.zhenchao.zelus.common.domain.Vector;
-import org.zhenchao.zelus.common.domain.Word;
-import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.global.Constants;
 import org.zhenchao.zelus.common.global.GlobalParam;
-import org.zhenchao.zelus.common.util.CommonUtil;
+import org.zhenchao.zelus.common.pojo.EventWithPhrase;
+import org.zhenchao.zelus.common.pojo.NumedEventWithPhrase;
+import org.zhenchao.zelus.common.pojo.Pair;
+import org.zhenchao.zelus.common.pojo.Vector;
+import org.zhenchao.zelus.common.pojo.Word;
 import org.zhenchao.zelus.common.util.Encipher;
-import org.zhenchao.zelus.common.util.SerializeUtil;
+import org.zhenchao.zelus.common.util.SerializeUtils;
 import org.zhenchao.zelus.common.util.VectorOperator;
 import org.zhenchao.zelus.common.util.WordNetUtil;
+import org.zhenchao.zelus.common.util.ZelusUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,7 +43,7 @@ import java.util.concurrent.Callable;
  *
  * @author ZhenchaoWang 2015-11-10 14:23:27
  */
-public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant {
+public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
 
     private final Logger log = Logger.getLogger(this.getClass());
 
@@ -82,7 +82,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
          */
         this.log.info("Thread " + Thread.currentThread().getId() + " -> loading serilized file:" + this.nodeFilePath);
         @SuppressWarnings("unchecked")
-        Map<Integer, NumedEventWithPhrase> eventWithNums = (Map<Integer, NumedEventWithPhrase>) SerializeUtil.readObj(this.nodeFilePath);
+        Map<Integer, NumedEventWithPhrase> eventWithNums = (Map<Integer, NumedEventWithPhrase>) SerializeUtils.readObj(this.nodeFilePath);
         if (MapUtils.isEmpty(eventWithNums)) {
             this.log.error("Can't load any node data from [" + this.nodeFilePath + "]");
             throw new IOException("Can't load any node data from [" + this.nodeFilePath + "]");
@@ -93,7 +93,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
          */
         this.log.info("Thread " + Thread.currentThread().getId() + " -> loading serilized file:" + this.edgeFilePath);
         @SuppressWarnings("unchecked")
-        List<CWEdge> cwEdges = (List<CWEdge>) SerializeUtil.readObj(this.edgeFilePath);
+        List<CWEdge> cwEdges = (List<CWEdge>) SerializeUtils.readObj(this.edgeFilePath);
         if (CollectionUtils.isEmpty(cwEdges)) {
             this.log.error("Can't load any edge data from [" + this.edgeFilePath + "]");
             throw new IOException("Can't load any edge data from [" + this.edgeFilePath + "]");
@@ -104,7 +104,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
          */
         this.log.info("Thread " + Thread.currentThread().getId() + " -> loading serilized file:" + this.wordvecDictPath);
         @SuppressWarnings("unchecked")
-        Map<String, Vector> vecDict = (Map<String, Vector>) SerializeUtil.readObj(this.wordvecDictPath);
+        Map<String, Vector> vecDict = (Map<String, Vector>) SerializeUtils.readObj(this.wordvecDictPath);
         if (MapUtils.isEmpty(vecDict)) {
             this.log.error("Can't load any word vector dict data from [" + this.wordvecDictPath + "]");
             throw new IOException("Can't load any word vector dict data from [" + this.wordvecDictPath + "]");
@@ -148,7 +148,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         for (File file : objfiles) {
             try {
                 this.log.info("Thread " + Thread.currentThread().getId() + " -> loading serilized file:" + file.getAbsolutePath());
-                List<List<Word>> words = (List<List<Word>>) SerializeUtil.readObj(file.getAbsolutePath());
+                List<List<Word>> words = (List<List<Word>>) SerializeUtils.readObj(file.getAbsolutePath());
                 texts.put(file.getName().substring(0, file.getName().lastIndexOf(".")), words);
             } catch (Exception e) {
                 this.log.error("Thread " + Thread.currentThread().getId() + " -> load serilized file error [" + this.edgeFilePath + "]", e);
@@ -165,7 +165,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         for (File file : objSyntacticTreefiles) {
             try {
                 this.log.info("Thread " + Thread.currentThread().getId() + " -> loading serilized file:" + file.getAbsolutePath());
-                List<Tree> syntacticTree = (List<Tree>) SerializeUtil.readObj(file.getAbsolutePath());
+                List<Tree> syntacticTree = (List<Tree>) SerializeUtils.readObj(file.getAbsolutePath());
                 syntacticTrees.put(file.getName().substring(0, file.getName().lastIndexOf(".")), syntacticTree);
             } catch (Exception e) {
                 this.log.error("Thread " + Thread.currentThread().getId() + " -> load serilized file error [" + this.edgeFilePath + "]", e);
@@ -263,13 +263,13 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         File clusterWeightsFile = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + '/' + OBJ + "/" + DIR_CLUSTER_WEIGHT, filename.replaceAll("txt", OBJ));
         try {
             this.log.info("Thread " + Thread.currentThread().getId() + " -> serilizing cluster weight to file[" + clusterWeightsFile.getAbsolutePath() + "]");
-            SerializeUtil.writeObj(clusterWeights, clusterWeightsFile);
+            SerializeUtils.writeObj(clusterWeights, clusterWeightsFile);
         } catch (IOException e) {
             this.log.error("Thread " + Thread.currentThread().getId() + " -> serilizing cluster weight to file[" + clusterWeightsFile.getAbsolutePath() + "] error!", e);
             throw e;
         }
 
-        /**
+        /*
          * 持久化聚类的句子集合
          */
         StringBuilder sbClustedSentences = new StringBuilder();
@@ -329,9 +329,9 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         try {
 
             this.log.info("Thread " + Thread.currentThread().getId() + " -> saving clusted sentences to file[" + extractedSentences.getAbsolutePath() + "]");
-            FileUtils.writeStringToFile(extractedSentences, CommonUtil.cutLastLineSpliter(sbClustedSentences.toString()), DEFAULT_CHARSET);
-            FileUtils.writeStringToFile(taggedExtractedSentences, CommonUtil.cutLastLineSpliter(taggedClustedSentences.toString()), DEFAULT_CHARSET);
-            FileUtils.writeStringToFile(weightedExtractedSentences, CommonUtil.cutLastLineSpliter(taggedWeightedClustedSentences.toString()), DEFAULT_CHARSET);
+            FileUtils.writeStringToFile(extractedSentences, ZelusUtils.cutLastLineSpliter(sbClustedSentences.toString()), DEFAULT_CHARSET);
+            FileUtils.writeStringToFile(taggedExtractedSentences, ZelusUtils.cutLastLineSpliter(taggedClustedSentences.toString()), DEFAULT_CHARSET);
+            FileUtils.writeStringToFile(weightedExtractedSentences, ZelusUtils.cutLastLineSpliter(taggedWeightedClustedSentences.toString()), DEFAULT_CHARSET);
             this.log.info("Thread " + Thread.currentThread().getId() + " -> save clusted sentences to file [" + extractedSentences.getAbsolutePath() + "] succeed!");
 
         } catch (IOException e) {
@@ -357,7 +357,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, GlobalConstant
         try{
             this.log.info("Saving clusted sentences to file[" + eventsWeightFile.getAbsolutePath() + "]");
 
-            FileUtils.writeStringToFile(eventsWeightFile, CommonUtil.cutLastLineSpliter(sbEventWeights.toString()), DEFAULT_CHARSET);
+            FileUtils.writeStringToFile(eventsWeightFile, ZelusUtils.cutLastLineSpliter(sbEventWeights.toString()), DEFAULT_CHARSET);
 
             this.log.info("Save clusted sentences to file [" + eventsWeightFile.getAbsolutePath() + "] succeed!");
 

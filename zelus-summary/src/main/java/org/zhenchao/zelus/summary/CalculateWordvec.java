@@ -1,9 +1,9 @@
 package org.zhenchao.zelus.summary;
 
 import org.apache.commons.io.FileUtils;
-import org.zhenchao.zelus.common.domain.Vector;
-import org.zhenchao.zelus.common.domain.Word;
 import org.zhenchao.zelus.common.nlp.StanfordNLPTools;
+import org.zhenchao.zelus.common.pojo.Vector;
+import org.zhenchao.zelus.common.pojo.Word;
 import org.zhenchao.zelus.common.util.EhcacheUtils;
 import org.zhenchao.zelus.common.util.SerializeUtils;
 

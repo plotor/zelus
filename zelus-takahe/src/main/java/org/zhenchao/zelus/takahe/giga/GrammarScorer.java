@@ -1,26 +1,25 @@
 package org.zhenchao.zelus.takahe.giga;
 
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.LineIterator;
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-
 /**
  * 语言模型打分器
  *
  * @author ZhenchaoWang 2015-11-20 14:53:59
- *
  */
 public class GrammarScorer {
 
-    private final Logger                       log = Logger.getLogger(this.getClass());
+    private final Logger log = Logger.getLogger(this.getClass());
 
     private volatile static HashMap<String, NGramScore> models;
 
@@ -110,12 +109,15 @@ public class GrammarScorer {
             w2 = strs[i - 1];
             w3 = strs[i];
 
-            if (!model.containsKey(w1) && !"<s>".equals(w1) && !"</s>".equals(w1))
+            if (!model.containsKey(w1) && !"<s>".equals(w1) && !"</s>".equals(w1)) {
                 w1 = "<unk>";
-            if (!model.containsKey(w2))
+            }
+            if (!model.containsKey(w2)) {
                 w2 = "<unk>";
-            if (!model.containsKey(w3) && !"<s>".equals(w3) && !"</s>".equals(w3))
+            }
+            if (!model.containsKey(w3) && !"<s>".equals(w3) && !"</s>".equals(w3)) {
                 w3 = "<unk>";
+            }
 
             score += (float) Math.pow(10, this.ExtractNGramScore(w1 + " " + w2 + " " + w3, model));
 
@@ -126,7 +128,6 @@ public class GrammarScorer {
     }
 
     /**
-     *
      * @param wordSequence
      * @param model
      * @return
@@ -170,7 +171,7 @@ public class GrammarScorer {
         System.out.println("Please input a setence:(bank string exit)");
         Scanner sc = new Scanner(System.in);
         String sentence = sc.nextLine();
-        while(StringUtils.isNotBlank(sentence)) {
+        while (StringUtils.isNotBlank(sentence)) {
             System.out.println("language score:\t" + gs.calculateFluency(sentence, model));
             System.out.println("Please input a setence:(bank string exit)");
             sentence = sc.nextLine();

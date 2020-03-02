@@ -69,12 +69,9 @@ public class Vectors {
      * create sequence [start : step : end] of double values. TODO: check
      * precision.
      *
-     * @param start
-     *            double value of start, if integer, use "1.0" notation.
-     * @param end
-     *            double value of end, if integer, use "1.0" notation.
-     * @param step
-     *            double value of step size
+     * @param start double value of start, if integer, use "1.0" notation.
+     * @param end double value of end, if integer, use "1.0" notation.
+     * @param step double value of step size
      * @return
      */
     public static double[] range(double start, double end, double step) {
@@ -233,10 +230,8 @@ public class Vectors {
     /**
      * Create new vector of larger size and data of the argument.
      *
-     * @param vector
-     *            source array
-     * @param moreelements
-     *            number of elements to add
+     * @param vector source array
+     * @param moreelements number of elements to add
      * @return larger vector
      */
     public static double[] increaseSize(final double[] vector, int moreelements) {
@@ -249,10 +244,8 @@ public class Vectors {
      * Create new matrix of larger size and data of the argument.
      *
      * @param matrix
-     * @param more
-     *            rows
-     * @param more
-     *            cols
+     * @param more rows
+     * @param more cols
      * @return larger matrix
      */
     public static double[][] increaseSize(final double[][] matrix, int morerows, int morecols) {
@@ -286,10 +279,8 @@ public class Vectors {
      * Create new matrix with data of the argument and removed rows and columns.
      *
      * @param matrix
-     * @param rows
-     *            ordered vector of rows to remove
-     * @param cols
-     *            ordered vector of cols to remove
+     * @param rows ordered vector of rows to remove
+     * @param cols ordered vector of cols to remove
      * @return smaller matrix
      */
     public static double[][] removeElements(final double[][] matrix, int[] rows, int[] cols) {
@@ -300,8 +291,7 @@ public class Vectors {
      * Create new vector with data of the argument and removed elements.
      *
      * @param vector
-     * @param elements
-     *            ordered elements to remove
+     * @param elements ordered elements to remove
      * @return smaller vector
      */
     public static double[] removeElements(final double[] vector, int[] elements) {
@@ -312,10 +302,8 @@ public class Vectors {
      * return the complement of the sorted subset of the set 0:length-1 in
      * Matlab notation
      *
-     * @param set
-     *            sorted set of elements < length
-     * @param length
-     *            of superset of set and its returned complement
+     * @param set sorted set of elements < length
+     * @param length of superset of set and its returned complement
      * @return
      */
     public static int[] rangeComplement(int[] set, int length) {
@@ -373,10 +361,8 @@ public class Vectors {
     /**
      * Create new vector of larger size and data of the argument.
      *
-     * @param vector
-     *            source array
-     * @param moreelements
-     *            number of elements to add
+     * @param vector source array
+     * @param moreelements number of elements to add
      * @return larger vector
      */
     public static int[] increaseSize(final int[] vector, int moreelements) {
@@ -389,10 +375,8 @@ public class Vectors {
      * Create new matrix of larger size and data of the argument.
      *
      * @param matrix
-     * @param more
-     *            rows
-     * @param more
-     *            cols
+     * @param more rows
+     * @param more cols
      * @return larger matrix
      */
     public static int[][] increaseSize(final int[][] matrix, int morerows, int morecols) {
@@ -426,10 +410,8 @@ public class Vectors {
      * Create new matrix with data of the argument and removed rows and columns.
      *
      * @param matrix
-     * @param rows
-     *            ordered vector of rows to remove
-     * @param cols
-     *            ordered vector of cols to remove
+     * @param rows ordered vector of rows to remove
+     * @param cols ordered vector of cols to remove
      * @return smaller matrix
      */
     public static int[][] removeElements(final int[][] matrix, int[] rows, int[] cols) {
@@ -440,8 +422,7 @@ public class Vectors {
      * Create new vector with data of the argument and removed elements.
      *
      * @param vector
-     * @param elements
-     *            ordered elements to remove
+     * @param elements ordered elements to remove
      * @return smaller vector
      */
     public static int[] removeElements(final int[] vector, int[] elements) {
@@ -716,7 +697,7 @@ public class Vectors {
     }
 
     /**
-     * set the elements of vec at indices with the replacement. 
+     * set the elements of vec at indices with the replacement.
      *
      * TODO: implement views as in the colt library
      *

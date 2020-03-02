@@ -1,11 +1,11 @@
 package org.zhenchao.zelus.optimize;
 
-import edu.whu.cs.nlp.msc.domain.CompressUnit;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.zhenchao.zelus.common.util.SerializeUtils;
+import org.zhenchao.zelus.takahe.domain.CompressUnit;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -87,9 +87,7 @@ public class Optimizer {
             log.error("", e);
 
         } finally {
-            if (es != null) {
-                es.shutdown();
-            }
+            es.shutdown();
         }
 
     }

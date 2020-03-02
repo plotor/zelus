@@ -5,10 +5,10 @@ import opennlp.tools.chunker.ChunkerModel;
 import opennlp.tools.util.Span;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zhenchao.zelus.common.domain.ChunkPhrase;
-import org.zhenchao.zelus.common.domain.Word;
-import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.global.Constants;
 import org.zhenchao.zelus.common.loader.ModelLoader;
+import org.zhenchao.zelus.common.pojo.ChunkPhrase;
+import org.zhenchao.zelus.common.pojo.Word;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +17,7 @@ import java.util.List;
  * @author: zhenchao.Wang
  * @date: 2016/5/22 10:44
  */
-public class OpenNLPTools implements GlobalConstant {
+public class OpenNLPTools implements Constants {
 
     private static final Logger log = LoggerFactory.getLogger(OpenNLPTools.class);
 

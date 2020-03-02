@@ -85,7 +85,7 @@ public class ExpDouble {
      *
      * @param digits
      * @return whether magnitude and digits had to be changed by rounding values
-     *         >9.5 to 10
+     * >9.5 to 10
      */
     public boolean round(int ndigits) {
         int diff = digits - ndigits;

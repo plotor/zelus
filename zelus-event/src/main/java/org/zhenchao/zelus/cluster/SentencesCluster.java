@@ -2,11 +2,11 @@ package org.zhenchao.zelus.cluster;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.zhenchao.zelus.cluster.domain.SentenceApprox;
 import org.zhenchao.zelus.cluster.domain.SentenceVector;
-import org.zhenchao.zelus.common.util.SerializeUtil;
+import org.zhenchao.zelus.common.util.SerializeUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -135,7 +135,7 @@ public class SentencesCluster {
             File nodeFile = FileUtils.getFile(baseDir + "/nodes", topicName + ".node.obj");
             try {
                 //FileUtils.writeStringToFile(nodeFile, senetncesInTopic.toString(), "UTF-8");
-                SerializeUtil.writeObj(sentenceVecs, nodeFile);
+                SerializeUtils.writeObj(sentenceVecs, nodeFile);
             } catch (IOException e) {
                 log.error("Save file[" + nodeFile.getAbsolutePath() + "] error!", e);
                 //e.printStackTrace();
@@ -158,7 +158,7 @@ public class SentencesCluster {
             File edgeFile = FileUtils.getFile(baseDir + "/edges", topicName + ".edge.obj");
             try {
                 //FileUtils.writeStringToFile(edgeFile, sentencesApprox.toString(), "UTF-8");
-                SerializeUtil.writeObj(sentenceApproxs, edgeFile);
+                SerializeUtils.writeObj(sentenceApproxs, edgeFile);
             } catch (IOException e) {
                 log.error("Save file[" + edgeFile.getAbsolutePath() + "] error!", e);
                 //e.printStackTrace();

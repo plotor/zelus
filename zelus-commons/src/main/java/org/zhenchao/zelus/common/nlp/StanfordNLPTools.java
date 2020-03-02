@@ -17,11 +17,11 @@ import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.CoreMap;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
-import org.zhenchao.zelus.common.domain.ParseItem;
-import org.zhenchao.zelus.common.domain.Word;
-import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.apache.commons.lang3.StringUtils;
+import org.zhenchao.zelus.common.global.Constants;
 import org.zhenchao.zelus.common.loader.ModelLoader;
+import org.zhenchao.zelus.common.pojo.ParseItem;
+import org.zhenchao.zelus.common.pojo.Word;
 import org.zhenchao.zelus.common.util.ZelusUtils;
 
 import java.io.File;
@@ -36,7 +36,7 @@ import java.util.Map;
  *
  * @author ZhenchaoWang 2015-10-27 16:38:29
  */
-public class StanfordNLPTools implements GlobalConstant {
+public class StanfordNLPTools implements Constants {
 
     /** 获取所有词的对象信息 */
     public static final String KEY_WORDS = "WORDS";
@@ -139,11 +139,11 @@ public class StanfordNLPTools implements GlobalConstant {
         // 缓存处理的结果，用于返回
         /*
          * coreNlpResults.put(KEY_SEGED_TEXT,
-         * CommonUtil.cutLastLineSpliter(textAfterSSeg.toString()));
+         * ZelusUtils.cutLastLineSpliter(textAfterSSeg.toString()));
          * coreNlpResults.put(KEY_SEGED_DETAIL_TEXT,
-         * CommonUtil.cutLastLineSpliter(textAfterSsegDetail.toString()));
+         * ZelusUtils.cutLastLineSpliter(textAfterSsegDetail.toString()));
          * coreNlpResults.put(KEY_SEGED_POS_TEXT,
-         * CommonUtil.cutLastLineSpliter(textWithPOS.toString()));
+         * ZelusUtils.cutLastLineSpliter(textWithPOS.toString()));
          */
         coreNlpResults.put(KEY_WORDS, wordsList);
         coreNlpResults.put(KEY_PARSED_ITEMS, parseItemList);

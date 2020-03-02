@@ -3,11 +3,11 @@ package org.zhenchao.zelus.common.util;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.domain.EventType;
-import org.zhenchao.zelus.common.domain.EventWithPhrase;
-import org.zhenchao.zelus.common.domain.Vector;
-import org.zhenchao.zelus.common.domain.Word;
-import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.pojo.EventType;
+import org.zhenchao.zelus.common.pojo.EventWithPhrase;
+import org.zhenchao.zelus.common.pojo.Vector;
+import org.zhenchao.zelus.common.pojo.Word;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -21,7 +21,7 @@ import java.util.Random;
  *
  * @author Apache_xiaochao
  */
-public class VectorOperator implements GlobalConstant {
+public class VectorOperator implements Constants {
 
     private final Logger log = Logger.getLogger(this.getClass());
 
@@ -238,7 +238,7 @@ public class VectorOperator implements GlobalConstant {
             //主-谓，将宾语的向量全部用1代替
             Float[] leftVec = this.phraseVector(eventWithPhrase.getLeftPhrases(), true);
             Float[] middleVec = this.phraseVector(eventWithPhrase.getMiddlePhrases(), false);
-            Float[] rightVec = new Float[GlobalConstant.DIMENSION];
+            Float[] rightVec = new Float[Constants.DIMENSION];
             Arrays.fill(rightVec, 1.0f);
 
             eventVec = this.wordVecToEventVec(leftVec, middleVec, rightVec);
@@ -246,7 +246,7 @@ public class VectorOperator implements GlobalConstant {
         } else if (EventType.LEFT_MISSING.equals(eventWithPhrase.eventType())) {
 
             //谓-宾，将主语的向量全部用1代替
-            Float[] leftVec = new Float[GlobalConstant.DIMENSION];
+            Float[] leftVec = new Float[Constants.DIMENSION];
             Arrays.fill(leftVec, 1.0f);
             Float[] middleVec = this.phraseVector(eventWithPhrase.getMiddlePhrases(), false);
             Float[] rightVec = this.phraseVector(eventWithPhrase.getRightPhrases(), true);
@@ -678,7 +678,7 @@ public class VectorOperator implements GlobalConstant {
                     Float[] vec = null;
                     for (Vector vector : vecs) {
                         // 以最相近的单词的向量作为当前词的词向量
-                        int dis = CommonUtil.strDistance(word.getName(), vector.getWord());
+                        int dis = ZelusUtils.strDistance(word.getName(), vector.getWord());
                         if(dis < min) {
                             min = dis;
                             vec = vector.floatVecs();

@@ -1,7 +1,7 @@
 package org.zhenchao.zelus.common.nlp;
 
 import org.junit.Test;
-import org.zhenchao.zelus.common.domain.Word;
+import org.zhenchao.zelus.common.pojo.Word;
 
 import java.util.List;
 

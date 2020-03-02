@@ -7,9 +7,9 @@ import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.global.Constants;
 import org.zhenchao.zelus.common.loader.FileLoader;
 import org.zhenchao.zelus.common.loader.ModelLoader;
 import org.zhenchao.zelus.common.util.ZelusUtils;
@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
  *
  * @author Apache_xiaochao
  */
-public class Pretreatment implements GlobalConstant {
+public class Pretreatment implements Constants {
 
     /** 获取句子切分文本的key */
     public static final String KEY_SEG_TEXT = "key_seg_text";

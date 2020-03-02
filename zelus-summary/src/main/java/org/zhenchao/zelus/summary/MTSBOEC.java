@@ -1,20 +1,20 @@
 package org.zhenchao.zelus.summary;
 
-import edu.whu.cs.nlp.msc.NomParamSentenceReRanker;
-import edu.whu.cs.nlp.msc.SentenceReRanker;
-import edu.whu.cs.nlp.mts.clustering.CalculateSimilarityThread;
-import edu.whu.cs.nlp.mts.clustering.ChineseWhispersCluster;
-import edu.whu.cs.nlp.mts.extraction.graph.EventsExtractBasedOnGraphV2;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.domain.Vector;
-import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.cluster.CalculateSimilarityThread;
+import org.zhenchao.zelus.cluster.ChineseWhispersCluster;
+import org.zhenchao.zelus.common.global.Constants;
 import org.zhenchao.zelus.common.global.GlobalParam;
+import org.zhenchao.zelus.common.pojo.Vector;
 import org.zhenchao.zelus.common.util.EhcacheUtils;
 import org.zhenchao.zelus.common.util.SerializeUtils;
+import org.zhenchao.zelus.extract.EventsExtractBasedOnGraphV2;
+import org.zhenchao.zelus.takahe.NomParamSentenceReRanker;
+import org.zhenchao.zelus.takahe.SentenceReRanker;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -36,7 +36,7 @@ import java.util.concurrent.Future;
  *
  * @author ZhenchaoWang 2015-10-20 10:55:06
  */
-public class MTSBOEC implements GlobalConstant {
+public class MTSBOEC implements Constants {
 
     private static final Logger log = Logger.getLogger(MTSBOEC.class);
 

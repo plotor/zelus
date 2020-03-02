@@ -4,14 +4,14 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.zhenchao.zelus.cluster.domain.CWEdge;
-import org.zhenchao.zelus.common.domain.EventWithPhrase;
-import org.zhenchao.zelus.common.domain.NumedEventWithPhrase;
-import org.zhenchao.zelus.common.domain.Vector;
-import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.global.Constants;
 import org.zhenchao.zelus.common.global.GlobalParam;
-import org.zhenchao.zelus.common.util.CommonUtil;
-import org.zhenchao.zelus.common.util.SerializeUtil;
+import org.zhenchao.zelus.common.pojo.EventWithPhrase;
+import org.zhenchao.zelus.common.pojo.NumedEventWithPhrase;
+import org.zhenchao.zelus.common.pojo.Vector;
+import org.zhenchao.zelus.common.util.SerializeUtils;
 import org.zhenchao.zelus.common.util.VectorOperator;
+import org.zhenchao.zelus.common.util.ZelusUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +29,7 @@ import java.util.concurrent.Callable;
  *
  * @author Apache_xiaochao
  */
-public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConstant {
+public class CalculateSimilarityThread implements Callable<Boolean>, Constants {
 
     private static final Logger log = Logger.getLogger(CalculateSimilarityThread.class);
 
@@ -60,7 +60,7 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
         String seralizeFilepath = GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT + "/" + OBJ + "/" + DIR_WORDS_VECTOR + "/" + topicName + ".obj";
         Map<String, Vector> wordvecsInTopic = null;
         try {
-            wordvecsInTopic = (Map<String, Vector>) SerializeUtil.readObj(seralizeFilepath);
+            wordvecsInTopic = (Map<String, Vector>) SerializeUtils.readObj(seralizeFilepath);
         } catch (Exception e) {
             log.error("Load seralize file[" + seralizeFilepath + "] error!", e);
             throw e;
@@ -82,7 +82,7 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
             try {
                 log.info("Loading serialize file: " + eventFile.getAbsolutePath());
                 @SuppressWarnings("unchecked")
-                Map<Integer, List<EventWithPhrase>> eventsInFile = (Map<Integer, List<EventWithPhrase>>) SerializeUtil.readObj(eventFile.getAbsolutePath());
+                Map<Integer, List<EventWithPhrase>> eventsInFile = (Map<Integer, List<EventWithPhrase>>) SerializeUtils.readObj(eventFile.getAbsolutePath());
 
                 //对事件进行编号
                 for (Entry<Integer, List<EventWithPhrase>> event : eventsInFile.entrySet()) {
@@ -117,7 +117,7 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
         if (eventWithNums.size() > 0) {
             File nodeFile = FileUtils.getFile(objBaseDir + "/" + DIR_NODES, topicName + ".node.obj");
             try {
-                SerializeUtil.writeObj(eventWithNums, nodeFile);
+                SerializeUtils.writeObj(eventWithNums, nodeFile);
             } catch (IOException e) {
                 log.error("Serilize file error:" + nodeFile.getAbsolutePath(), e);
                 throw e;
@@ -164,14 +164,14 @@ public class CalculateSimilarityThread implements Callable<Boolean>, GlobalConst
         }
 
         File text_nodeFile = FileUtils.getFile(textBaseDir + "/" + DIR_NODES, topicName + ".node.txt");
-        FileUtils.writeStringToFile(text_nodeFile, CommonUtil.cutLastLineSpliter(sb_nodes.toString()), DEFAULT_ENCODING);
+        FileUtils.writeStringToFile(text_nodeFile, ZelusUtils.cutLastLineSpliter(sb_nodes.toString()), DEFAULT_ENCODING);
 
         File text_edgeFile = FileUtils.getFile(textBaseDir + "/" + DIR_EDGES, topicName + ".edge.txt");
-        FileUtils.writeStringToFile(text_edgeFile, CommonUtil.cutLastLineSpliter(sb_edges.toString()), DEFAULT_ENCODING);
+        FileUtils.writeStringToFile(text_edgeFile, ZelusUtils.cutLastLineSpliter(sb_edges.toString()), DEFAULT_ENCODING);
 
         File edgeFile = FileUtils.getFile(objBaseDir + "/" + DIR_EDGES, topicName + ".edge.obj");
         try {
-            SerializeUtil.writeObj(cwEdges, edgeFile);
+            SerializeUtils.writeObj(cwEdges, edgeFile);
         } catch (IOException e) {
             log.error("Serilize file error:" + edgeFile.getAbsolutePath(), e);
             throw e;

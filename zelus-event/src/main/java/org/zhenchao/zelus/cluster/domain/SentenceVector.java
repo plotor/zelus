@@ -1,6 +1,6 @@
 package org.zhenchao.zelus.cluster.domain;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
 

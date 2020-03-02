@@ -3,10 +3,10 @@ package org.zhenchao.zelus.takahe;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.domain.AttributeInClassForSentenceSilimarity;
-import org.zhenchao.zelus.common.domain.SentNumSimiPair;
-import org.zhenchao.zelus.common.global.GlobalConstant;
-import org.zhenchao.zelus.common.util.CommonUtil;
+import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.pojo.SentNumSimiPair;
+import org.zhenchao.zelus.common.pojo.SentenceSilimarityAttribute;
+import org.zhenchao.zelus.common.util.ZelusUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ import java.util.concurrent.Callable;
  *
  * @author Apache_xiaochao
  */
-public class KeySentenceSelector2 implements Callable<Boolean>, GlobalConstant {
+public class KeySentenceSelector2 implements Callable<Boolean>, Constants {
 
     private final Logger log = Logger.getLogger(this.getClass());
 
@@ -52,8 +52,8 @@ public class KeySentenceSelector2 implements Callable<Boolean>, GlobalConstant {
 
             iterator = FileUtils.lineIterator(FileUtils.getFile(this.compressedFilePath), DEFAULT_CHARSET.toString());
 
-            AttributeInClassForSentenceSilimarity aicfss = null;
-            List<AttributeInClassForSentenceSilimarity> aicfssList = new ArrayList<AttributeInClassForSentenceSilimarity>();
+            SentenceSilimarityAttribute aicfss = null;
+            List<SentenceSilimarityAttribute> aicfssList = new ArrayList<SentenceSilimarityAttribute>();
             int[][] wordsCountInSentence; // 记录每个单词在每个句子中出现的次数，行表示单词，列表示句子
             int wordNum = 0; // 类别中的单词序号
             //StringBuilder sb_summary = new StringBuilder();
@@ -144,7 +144,7 @@ public class KeySentenceSelector2 implements Callable<Boolean>, GlobalConstant {
                         }
                         Collections.sort(sentNumSimiPairs);
                         sentNumSimiPairList.add(sentNumSimiPairs);
-                        // sb_summary.append(CommonUtil.list2String(aicfss.getSentences().get(sentenceNum).words)
+                        // sb_summary.append(ZelusUtils.list2String(aicfss.getSentences().get(sentenceNum).words)
                         // + LINE_SPLITER);
                         // 打印测试
                         /*
@@ -159,13 +159,13 @@ public class KeySentenceSelector2 implements Callable<Boolean>, GlobalConstant {
                     }
 
                     // 清空之前的处理结果
-                    aicfss = new AttributeInClassForSentenceSilimarity(
-                            new ArrayList<AttributeInClassForSentenceSilimarity.Sentence>(),
+                    aicfss = new SentenceSilimarityAttribute(
+                            new ArrayList<SentenceSilimarityAttribute.Sentence>(),
                             new HashMap<String, Integer>());
                     wordNum = 0;
                     // 每个类别的第一句存放问句
                     final List<String> wordsInQuestions = Arrays.asList(this.question.split("\\s+"));
-                    aicfss.getSentences().add(aicfss.new Sentence(-1, wordsInQuestions));
+                    aicfss.getSentences().add(new SentenceSilimarityAttribute.Sentence(-1, wordsInQuestions));
                     for (final String word : wordsInQuestions) {
                         if (!aicfss.getWords().containsKey(word.toLowerCase())) {
                             // 往单词map中添加单词，序号递增
@@ -178,7 +178,7 @@ public class KeySentenceSelector2 implements Callable<Boolean>, GlobalConstant {
                     final float compressedQuality = Float.parseFloat(line.substring(0, firstSpliterIndex));
                     final List<String> wordsInSentence = Arrays
                             .asList(line.substring(firstSpliterIndex + 1).split("\\s+"));
-                    aicfss.getSentences().add(aicfss.new Sentence(compressedQuality, wordsInSentence));
+                    aicfss.getSentences().add(new SentenceSilimarityAttribute.Sentence(compressedQuality, wordsInSentence));
                     for (final String word : wordsInSentence) {
                         if (!aicfss.getWords().containsKey(word.toLowerCase())) {
                             // 往单词map中添加单词，序号递增
@@ -278,7 +278,7 @@ public class KeySentenceSelector2 implements Callable<Boolean>, GlobalConstant {
                 // System.out.println("类别数：" + sentNumSimiPairList.size());
                 for (int i = 0; i < sentNumSimiPairList.size(); ++i) {
                     Set<Integer> sentNumSet = selectedSentNum.get(i);
-                    AttributeInClassForSentenceSilimarity attr = aicfssList.get(i);
+                    SentenceSilimarityAttribute attr = aicfssList.get(i);
                     for (SentNumSimiPair sentNumSimiPair : sentNumSimiPairList.get(i)) {
                         int sentNum = sentNumSimiPair.getSentNum();
                         if (sentNumSet == null) {
@@ -287,7 +287,7 @@ public class KeySentenceSelector2 implements Callable<Boolean>, GlobalConstant {
                             selectedSentNum.put(i, sentNumSet);
                             List<String> words = attr.getSentences().get(sentNum).words;
                             wordsCountInSummary += words.size();
-                            sb_summary.append(CommonUtil.list2String(words) + LINE_SPLITER);
+                            sb_summary.append(ZelusUtils.list2String(words) + LINE_SPLITER);
                             flag = true;
                             break;
                         } else {
@@ -296,7 +296,7 @@ public class KeySentenceSelector2 implements Callable<Boolean>, GlobalConstant {
                                 selectedSentNum.put(i, sentNumSet);
                                 List<String> words = attr.getSentences().get(sentNum).words;
                                 wordsCountInSummary += words.size();
-                                sb_summary.append(CommonUtil.list2String(words) + LINE_SPLITER);
+                                sb_summary.append(ZelusUtils.list2String(words) + LINE_SPLITER);
                                 flag = true;
                                 break;
                             }
@@ -310,7 +310,7 @@ public class KeySentenceSelector2 implements Callable<Boolean>, GlobalConstant {
                 System.out.println("字数：" + wordsCountInSummary);
             }
 
-            FileUtils.writeStringToFile(FileUtils.getFile(this.summaryFilePath), CommonUtil.cutLastLineSpliter(sb_summary.toString()), DEFAULT_CHARSET);
+            FileUtils.writeStringToFile(FileUtils.getFile(this.summaryFilePath), ZelusUtils.cutLastLineSpliter(sb_summary.toString()), DEFAULT_CHARSET);
 
         } catch (IOException e) {
 

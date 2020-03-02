@@ -2,13 +2,13 @@ package org.zhenchao.zelus.cluster;
 
 import edu.stanford.nlp.trees.Tree;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.domain.EventWithPhrase;
-import org.zhenchao.zelus.common.domain.Vector;
-import org.zhenchao.zelus.common.domain.Word;
-import org.zhenchao.zelus.common.global.GlobalConstant;
-import org.zhenchao.zelus.common.util.SerializeUtil;
+import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.pojo.EventWithPhrase;
+import org.zhenchao.zelus.common.pojo.Vector;
+import org.zhenchao.zelus.common.pojo.Word;
+import org.zhenchao.zelus.common.util.SerializeUtils;
 import org.zhenchao.zelus.common.util.VectorOperator;
 
 import java.io.IOException;
@@ -27,7 +27,7 @@ import java.util.Set;
  *
  * @author ZhenchaoWang 2015-11-10 14:23:27
  */
-public class BuildGraphTest implements GlobalConstant {
+public class BuildGraphTest implements Constants {
 
     private final Logger log = Logger.getLogger(this.getClass());
 
@@ -42,17 +42,17 @@ public class BuildGraphTest implements GlobalConstant {
         /**
          * 加载词向量字典文件
          */
-        Map<String, Vector> vecDict = (Map<String, Vector>) SerializeUtil.readObj("E:/workspace/test/example/word-vector-dict/text.obj");
+        Map<String, Vector> vecDict = (Map<String, Vector>) SerializeUtils.readObj("E:/workspace/test/example/word-vector-dict/text.obj");
 
         /**
          * 加载当前主题下所有的文本
          */
-        List<List<Word>> words = (List<List<Word>>) SerializeUtil.readObj("E:/workspace/test/example/text/obj/words/f16su24.obj");
+        List<List<Word>> words = (List<List<Word>>) SerializeUtils.readObj("E:/workspace/test/example/text/obj/words/f16su24.obj");
 
         /**
          * 加载事件集合
          */
-        Map<Integer, List<EventWithPhrase>> eventsMap = (Map<Integer, List<EventWithPhrase>>) SerializeUtil.readObj("E:/workspace/test/example/serializable-events/text/f16su24.obj");
+        Map<Integer, List<EventWithPhrase>> eventsMap = (Map<Integer, List<EventWithPhrase>>) SerializeUtils.readObj("E:/workspace/test/example/serializable-events/text/f16su24.obj");
 
         List<EventWithPhrase> events = new ArrayList<EventWithPhrase>();
 

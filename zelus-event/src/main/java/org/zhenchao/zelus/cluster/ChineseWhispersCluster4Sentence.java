@@ -7,8 +7,8 @@ import org.zhenchao.zelus.cluster.cw.graph.ArrayBackedGraph;
 import org.zhenchao.zelus.cluster.cw.graph.Graph;
 import org.zhenchao.zelus.cluster.domain.SentenceApprox;
 import org.zhenchao.zelus.cluster.domain.SentenceVector;
-import org.zhenchao.zelus.common.util.CommonUtil;
-import org.zhenchao.zelus.common.util.SerializeUtil;
+import org.zhenchao.zelus.common.util.SerializeUtils;
+import org.zhenchao.zelus.common.util.ZelusUtils;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -55,7 +55,7 @@ public class ChineseWhispersCluster4Sentence {
             // 加载当前主题下的句子集合
             List<SentenceVector> sentenceVectors;
             try {
-                sentenceVectors = (List<SentenceVector>) SerializeUtil.readObj(baseDir + "/nodes/" + topicName + ".node.obj");
+                sentenceVectors = (List<SentenceVector>) SerializeUtils.readObj(baseDir + "/nodes/" + topicName + ".node.obj");
             } catch (ClassNotFoundException | IOException e1) {
                 log.error("Load serilized file error!", e1);
                 return;
@@ -66,7 +66,7 @@ public class ChineseWhispersCluster4Sentence {
             // 加载当前主题下的句子相似度
             List<SentenceApprox> sentenceApproxs;
             try {
-                sentenceApproxs = (List<SentenceApprox>) SerializeUtil.readObj(baseDir + "/edges/" + topicName + ".edge.obj");
+                sentenceApproxs = (List<SentenceApprox>) SerializeUtils.readObj(baseDir + "/edges/" + topicName + ".edge.obj");
             } catch (ClassNotFoundException | IOException e1) {
                 log.error("Load serilized file error!", e1);
                 return;
@@ -120,7 +120,7 @@ public class ChineseWhispersCluster4Sentence {
             File saveFile = FileUtils.getFile(baseDir + "/clust-sents", topicName);
             try {
                 log.info("Saving file:" + saveFile.getAbsolutePath());
-                FileUtils.writeStringToFile(saveFile, CommonUtil.cutLastLineSpliter(clustText.toString()), "UTF-8");
+                FileUtils.writeStringToFile(saveFile, ZelusUtils.cutLastLineSpliter(clustText.toString()), "UTF-8");
             } catch (IOException e) {
                 log.error("Save file[" + saveFile.getAbsolutePath() + "] error!", e);
                 //e.printStackTrace();

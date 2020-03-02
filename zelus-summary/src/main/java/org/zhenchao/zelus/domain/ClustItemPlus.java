@@ -1,6 +1,6 @@
 package org.zhenchao.zelus.domain;
 
-import org.zhenchao.zelus.common.domain.Pair;
+import org.zhenchao.zelus.common.pojo.Pair;
 
 import java.io.Serializable;
 import java.util.List;

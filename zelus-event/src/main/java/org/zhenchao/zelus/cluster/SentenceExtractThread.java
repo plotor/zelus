@@ -7,12 +7,12 @@ import edu.stanford.nlp.process.Tokenizer;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreebankLanguagePack;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.domain.Word;
-import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.global.Constants;
 import org.zhenchao.zelus.common.loader.FileLoader;
-import org.zhenchao.zelus.common.util.CommonUtil;
+import org.zhenchao.zelus.common.pojo.Word;
 import org.zhenchao.zelus.common.util.Encipher;
 import org.zhenchao.zelus.common.util.WordNetUtil;
+import org.zhenchao.zelus.common.util.ZelusUtils;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
  * @author Apache_xiaochao
  */
 @Deprecated
-public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant {
+public class SentenceExtractThread implements Callable<Boolean>, Constants {
 
     private final Logger log = Logger.getLogger(this.getClass());
 
@@ -178,16 +178,16 @@ public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant 
                 Word leftWord = null, middleWord = null, rightWord = null;
                 // 分三种情况来对事件进行封装
                 if (words.length == 3 && !event.startsWith(WORD_CONNECTOR_IN_EVENTS)) {
-                    leftWord = CommonUtil.str2Word(words[0]);
-                    middleWord = CommonUtil.str2Word(words[1]);
-                    rightWord = CommonUtil.str2Word(words[2]);
+                    leftWord = ZelusUtils.str2Word(words[0]);
+                    middleWord = ZelusUtils.str2Word(words[1]);
+                    rightWord = ZelusUtils.str2Word(words[2]);
                 } else if (words.length == 2 || event.startsWith(WORD_CONNECTOR_IN_EVENTS)) {
                     if (event.startsWith(WORD_CONNECTOR_IN_EVENTS)) {
-                        middleWord = CommonUtil.str2Word(words[1]);
-                        rightWord = CommonUtil.str2Word(words[2]);
+                        middleWord = ZelusUtils.str2Word(words[1]);
+                        rightWord = ZelusUtils.str2Word(words[2]);
                     } else {
-                        leftWord = CommonUtil.str2Word(words[0]);
-                        middleWord = CommonUtil.str2Word(words[1]);
+                        leftWord = ZelusUtils.str2Word(words[0]);
+                        middleWord = ZelusUtils.str2Word(words[1]);
                     }
                 } else {
                     this.log.error("当前事件类型不支持");
@@ -202,7 +202,7 @@ public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant 
                 if (textList == null) {
                     //加载正文
                     try {
-                        textList = CommonUtil.str2List(
+                        textList = ZelusUtils.str2List(
                                 FileLoader.read(this.textDir + "/" + topicName + "/" + DIR_SEG_TEXT + "/" + filename, DEFAULT_CHARSET));
                     } catch (final IOException e) {
                         this.log.error("加载文件失败：" + this.textDir + "/" + topicName + "/" + DIR_SEG_TEXT + "/" + filename, e);
@@ -265,7 +265,7 @@ public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant 
                             for (final String subSent : subSentList) {
                                 tmp.append(subSent + LINE_SPLITER);
                             }
-                            this.log.error(CommonUtil.cutLastLineSpliter(tmp.toString()) + "\n" +
+                            this.log.error(ZelusUtils.cutLastLineSpliter(tmp.toString()) + "\n" +
                                     event + "\t" + (middleWord.getSentenceNum() - 1) + "\t" + sentence);
                         } else {
                             //对当前子句进行对象化
@@ -396,16 +396,16 @@ public class SentenceExtractThread implements Callable<Boolean>, GlobalConstant 
             }
             final String filename = this.filename_cluster_read.replace(".read", ".sentences");
             if (extractedSentenceLemmaGroupByCluster.length() > 0) {
-                final String eslgbc = CommonUtil.cutLastLineSpliter(extractedSentenceLemmaGroupByCluster.toString());
+                final String eslgbc = ZelusUtils.cutLastLineSpliter(extractedSentenceLemmaGroupByCluster.toString());
                 FileLoader.write(this.extractedSentencesSaveDir + "/lemma/" + filename, eslgbc, DEFAULT_CHARSET);
             }
             if (extractedSentenceGroupByCluster.length() > 0) {
-                final String esgbc = CommonUtil.cutLastLineSpliter(extractedSentenceGroupByCluster.toString());
+                final String esgbc = ZelusUtils.cutLastLineSpliter(extractedSentenceGroupByCluster.toString());
                 FileLoader.write(
                         this.extractedSentencesSaveDir + "/" + filename, esgbc, DEFAULT_CHARSET);
             }
             if (taggesSentenceGroupByCluster.length() > 0) {
-                final String tsgbc = CommonUtil.cutLastLineSpliter(taggesSentenceGroupByCluster.toString());
+                final String tsgbc = ZelusUtils.cutLastLineSpliter(taggesSentenceGroupByCluster.toString());
                 FileLoader.write(this.extractedSentencesSaveDir + "/" + DIR_TAGGED + "/" + filename, tsgbc, DEFAULT_CHARSET);
             }
             success = true;

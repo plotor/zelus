@@ -1,16 +1,15 @@
 package org.zhenchao.zelus.summary;
 
-import edu.whu.cs.nlp.mts.clustering.ClusterByChineseWhispers;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.domain.CWRunParam;
-import org.zhenchao.zelus.common.domain.RougeAvg;
-import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.cluster.ClusterByChineseWhispers;
+import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.pojo.CWRunParam;
+import org.zhenchao.zelus.common.pojo.RougeAvg;
 import org.zhenchao.zelus.common.util.C3p0Utils;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -29,7 +28,7 @@ import java.util.regex.Pattern;
  *
  * @author Apache_xiaochao
  */
-public class ParameterOptimization implements GlobalConstant {
+public class ParameterOptimization implements Constants {
 
     private static Logger log = Logger.getLogger(ParameterOptimization.class);
 
@@ -128,16 +127,7 @@ public class ParameterOptimization implements GlobalConstant {
                     log.error(nodesDir + "不存在！");
                 } else {
                     //删除所有聚类算法产生的中间文件
-                    final String[] filenames = fileNodes.list(new FilenameFilter() {
-
-                        @Override
-                        public boolean accept(File dir, String name) {
-                            if (name.contains("renumbered")) {
-                                return true;
-                            }
-                            return false;
-                        }
-                    });
+                    final String[] filenames = fileNodes.list((dir, name) -> name.contains("renumbered"));
                     if (filenames != null && filenames.length > 0) {
                         for (final String filename : filenames) {
                             final File fileRenumbered = new File(nodesDir + "/" + filename);
@@ -314,7 +304,6 @@ public class ParameterOptimization implements GlobalConstant {
      * 将结果持久化
      *
      * @param rougeAvg
-     * @param weight
      * @throws SQLException
      */
     private void orm2db(RougeAvg rougeAvg, float weight_kc, float weight_mt, float weight_es) throws SQLException {

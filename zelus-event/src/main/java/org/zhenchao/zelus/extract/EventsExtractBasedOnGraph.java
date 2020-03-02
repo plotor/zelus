@@ -13,16 +13,16 @@ import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.CoreMap;
-import edu.whu.cs.nlp.mts.pretreatment.Pretreatment;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.domain.EventType;
-import org.zhenchao.zelus.common.domain.EventWithWord;
-import org.zhenchao.zelus.common.domain.ParseItem;
-import org.zhenchao.zelus.common.domain.Word;
-import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.global.Constants;
 import org.zhenchao.zelus.common.loader.FileLoader;
 import org.zhenchao.zelus.common.loader.ModelLoader;
-import org.zhenchao.zelus.common.util.CommonUtil;
+import org.zhenchao.zelus.common.pojo.EventType;
+import org.zhenchao.zelus.common.pojo.EventWithWord;
+import org.zhenchao.zelus.common.pojo.ParseItem;
+import org.zhenchao.zelus.common.pojo.Word;
+import org.zhenchao.zelus.common.util.ZelusUtils;
+import org.zhenchao.zelus.pretreat.Pretreatment;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
  *
  * @author Apache_xiaochao
  */
-public class EventsExtractBasedOnGraph implements GlobalConstant, Callable<Boolean> {
+public class EventsExtractBasedOnGraph implements Constants, Callable<Boolean> {
 
     private final Logger log = Logger.getLogger(this.getClass());
 
@@ -168,9 +168,9 @@ public class EventsExtractBasedOnGraph implements GlobalConstant, Callable<Boole
         }
 
         // 缓存处理的结果，用于返回
-        coreNlpResults.put("segedText", CommonUtil.cutLastLineSpliter(textAfterSSeg.toString()));
-        coreNlpResults.put("segedTextDetail", CommonUtil.cutLastLineSpliter(textAfterSsegDetail.toString()));
-        coreNlpResults.put("segedTextPOS", CommonUtil.cutLastLineSpliter(textWithPOS.toString()));
+        coreNlpResults.put("segedText", ZelusUtils.cutLastLineSpliter(textAfterSSeg.toString()));
+        coreNlpResults.put("segedTextDetail", ZelusUtils.cutLastLineSpliter(textAfterSsegDetail.toString()));
+        coreNlpResults.put("segedTextPOS", ZelusUtils.cutLastLineSpliter(textWithPOS.toString()));
         coreNlpResults.put("words", wordsList);
         coreNlpResults.put("parseItems", parseItemList);
 
@@ -570,13 +570,13 @@ public class EventsExtractBasedOnGraph implements GlobalConstant, Callable<Boole
                 }
                 // 词和词性分开按行存储
                 FileLoader.write(this.textDir + "/" + DIR_SEGDETAIL_TEXT + "/pos2/" + filename,
-                        CommonUtil.cutLastLineSpliter(sb_words_pos.toString()), DEFAULT_CHARSET);
+                        ZelusUtils.cutLastLineSpliter(sb_words_pos.toString()), DEFAULT_CHARSET);
 
                 // 获取依存分析结果
                 @SuppressWarnings("unchecked")
                 final List<List<ParseItem>> parseItemList = (List<List<ParseItem>>) coreNlpResults.get("parseItems");
                 FileLoader.write(this.textDir + "/" + DIR_PARSE_TEXT + "/" + filename,
-                        CommonUtil.lists2String(parseItemList), DEFAULT_CHARSET);
+                        ZelusUtils.lists2String(parseItemList), DEFAULT_CHARSET);
 
                 // 记录简版的依存分析结果
                 final StringBuilder simplifyParsedResult = new StringBuilder();
@@ -587,7 +587,7 @@ public class EventsExtractBasedOnGraph implements GlobalConstant, Callable<Boole
                     simplifyParsedResult.append(LINE_SPLITER);
                 }
                 FileLoader.write(this.textDir + "/" + DIR_PARSESIMPLIFY + "/" + filename,
-                        CommonUtil.cutLastLineSpliter(simplifyParsedResult.toString()), DEFAULT_CHARSET);
+                        ZelusUtils.cutLastLineSpliter(simplifyParsedResult.toString()), DEFAULT_CHARSET);
 
                 // 对当前文本进行事件抽取
                 final Map<Integer, List<EventWithWord>> events = this.extract(parseItemList, words, filename);
@@ -595,15 +595,15 @@ public class EventsExtractBasedOnGraph implements GlobalConstant, Callable<Boole
                 final StringBuilder sb_events = new StringBuilder();
                 final StringBuilder sb_simplify_events = new StringBuilder();
                 for (final Entry<Integer, List<EventWithWord>> entry : events.entrySet()) {
-                    final String eventsInSentence = CommonUtil.list2String(entry.getValue());
+                    final String eventsInSentence = ZelusUtils.list2String(entry.getValue());
                     sb_events.append(entry.getKey() + "\t" + eventsInSentence + LINE_SPLITER);
                     sb_simplify_events
                             .append(entry.getKey() + "\t" + this.getSimpilyEvents(entry.getValue()) + LINE_SPLITER);
                 }
                 FileLoader.write(this.textDir + "/" + DIR_EVENTS + "/" + filename,
-                        CommonUtil.cutLastLineSpliter(sb_events.toString()), DEFAULT_CHARSET);
+                        ZelusUtils.cutLastLineSpliter(sb_events.toString()), DEFAULT_CHARSET);
                 FileLoader.write(this.textDir + "/" + DIR_EVENTSSIMPLIFY + "/" + filename,
-                        CommonUtil.cutLastLineSpliter(sb_simplify_events.toString()), DEFAULT_CHARSET);
+                        ZelusUtils.cutLastLineSpliter(sb_simplify_events.toString()), DEFAULT_CHARSET);
 
             } catch (final IOException e) {
                 this.log.error("文件读或写失败：" + this.textDir + "/" + filename, e);

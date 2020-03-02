@@ -9,14 +9,13 @@ import java.io.Serializable;
  * Ngram model item
  *
  * @author ZhenchaoWang 2015-11-20 14:52:44
- *
  */
 public class NGramScore implements Serializable {
 
     private static final long serialVersionUID = -2714006471175249369L;
 
-    private float                     prob;
-    private float                     backOffProb;
+    private float prob;
+    private float backOffProb;
 
     public NGramScore(float prob, float backOffProb) {
         this.prob = prob;

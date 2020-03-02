@@ -70,7 +70,7 @@ public class DoubleFormat {
      * @param x the number to be formatted.
      * @param ndigits the maximum number of significant (non-zero) digits
      * @param strlen the exact number of characters in the string returned
-     *        (positive for right-aligned, negative for left-aligned)
+     * (positive for right-aligned, negative for left-aligned)
      * @return the formatted number string or null
      */
     static String format(double x, int ndigits, int strlen) {

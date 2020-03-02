@@ -4,14 +4,14 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.domain.Pair;
-import org.zhenchao.zelus.common.domain.Vector;
-import org.zhenchao.zelus.common.domain.Word;
-import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.global.Constants;
 import org.zhenchao.zelus.common.global.GlobalParam;
 import org.zhenchao.zelus.common.nlp.StanfordNLPTools;
+import org.zhenchao.zelus.common.pojo.Pair;
+import org.zhenchao.zelus.common.pojo.Vector;
+import org.zhenchao.zelus.common.pojo.Word;
 import org.zhenchao.zelus.common.util.SerializeUtils;
 import org.zhenchao.zelus.common.util.VectorOperator;
 import org.zhenchao.zelus.common.util.ZelusUtils;
@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
  *
  * @author zhenchao.wang 2016-1-27 20:24:18
  */
-public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, GlobalConstant {
+public class SummaryBuilderByPreVectorReRanker implements Callable<Boolean>, Constants {
 
     private static final Logger log = Logger.getLogger(SummaryBuilderByPreVectorReRanker.class);
 

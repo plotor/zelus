@@ -1,10 +1,10 @@
 package org.zhenchao.zelus.cluster;
 
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
-import edu.whu.cs.nlp.mts.pretreatment.Pretreatment;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.domain.CWRunParam;
-import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.pojo.CWRunParam;
+import org.zhenchao.zelus.pretreat.Pretreatment;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -26,7 +26,7 @@ import java.util.concurrent.Future;
  * @author Apache_xiaochao
  */
 @Deprecated
-public class ClusterByChineseWhispers implements GlobalConstant {
+public class ClusterByChineseWhispers implements Constants {
 
     private final Logger log = Logger.getLogger(this.getClass());
 

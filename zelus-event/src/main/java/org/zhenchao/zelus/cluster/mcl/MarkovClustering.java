@@ -73,17 +73,12 @@ public class MarkovClustering {
     /**
      * run the MCL process.
      *
-     * @param a
-     *            matrix
-     * @param maxResidual
-     *            maximum difference between row elements and row square sum
-     *            (measure of idempotence)
-     * @param pGamma
-     *            inflation exponent for Gamma operator
-     * @param loopGain
-     *            values for cycles
-     * @param maxZero
-     *            maximum value considered zero for pruning operations
+     * @param a matrix
+     * @param maxResidual maximum difference between row elements and row square sum
+     * (measure of idempotence)
+     * @param pGamma inflation exponent for Gamma operator
+     * @param loopGain values for cycles
+     * @param maxZero maximum value considered zero for pruning operations
      * @return the resulting matrix
      */
     public SparseMatrix run(SparseMatrix a, double maxResidual, double pGamma, double loopGain, double maxZero) {
@@ -114,12 +109,9 @@ public class MarkovClustering {
      * By convention, normalisation is done along rows (SparseMatrix has
      * row-major representation)
      *
-     * @param m
-     *            matrix (mutable)
-     * @param p
-     *            exponent as a double
-     * @param zeromax
-     *            below which elements are pruned from the sparse matrix
+     * @param m matrix (mutable)
+     * @param p exponent as a double
+     * @param zeromax below which elements are pruned from the sparse matrix
      * @return residuum value, m is modified.
      */
     public double inflate(SparseMatrix m, double p, double zeromax) {

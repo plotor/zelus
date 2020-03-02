@@ -3,13 +3,13 @@ package org.zhenchao.zelus.summary;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.domain.Pair;
-import org.zhenchao.zelus.common.domain.Vector;
-import org.zhenchao.zelus.common.domain.Word;
-import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.global.Constants;
 import org.zhenchao.zelus.common.nlp.StanfordNLPTools;
+import org.zhenchao.zelus.common.pojo.Pair;
+import org.zhenchao.zelus.common.pojo.Vector;
+import org.zhenchao.zelus.common.pojo.Word;
 import org.zhenchao.zelus.common.util.EhcacheUtils;
 import org.zhenchao.zelus.common.util.SerializeUtils;
 import org.zhenchao.zelus.common.util.VectorOperator;
@@ -38,7 +38,7 @@ import java.util.regex.Pattern;
  *
  * @author zhenchao.wang 2016-1-27 10:54:02
  */
-public class SummaryBuilderByVector implements Callable<Boolean>, GlobalConstant {
+public class SummaryBuilderByVector implements Callable<Boolean>, Constants {
 
     private static Logger log = Logger.getLogger(SummaryBuilderByVector.class);
 
@@ -89,13 +89,13 @@ public class SummaryBuilderByVector implements Callable<Boolean>, GlobalConstant
     @Override
     public Boolean call() throws Exception {
 
-        log.info("[Thread id:" + Thread.currentThread().getId() + "] is building summary for[" + this.workDir + "/" + GlobalConstant.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "]");
+        log.info("[Thread id:" + Thread.currentThread().getId() + "] is building summary for[" + this.workDir + "/" + Constants.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "]");
 
         // 加载当前主题下面的句子，每个类别控制句子数量
         Map<String, ClustItem> candidateSentences = this.loadSentences(this.sentCountInClust);
 
         // 加载每个clust的权值
-        String clusterWeightFilepath = this.workDir + "/" + GlobalConstant.DIR_CLUSTER_WEIGHT + "/" + this.filename.substring(0, this.filename.length() - 4) + "." + GlobalConstant.OBJ;
+        String clusterWeightFilepath = this.workDir + "/" + Constants.DIR_CLUSTER_WEIGHT + "/" + this.filename.substring(0, this.filename.length() - 4) + "." + Constants.OBJ;
         log.info("Loading serilized file[" + clusterWeightFilepath + "]");
         Map<String, Float> clusterWeights = null;
         try {
@@ -413,8 +413,8 @@ public class SummaryBuilderByVector implements Callable<Boolean>, GlobalConstant
         Pattern pattern = Pattern.compile("(classes_\\d+):");
 
         try {
-            log.info("Loading msc file[" + this.workDir + "/" + GlobalConstant.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "]");
-            LineIterator lineIterator = FileUtils.lineIterator(FileUtils.getFile(this.workDir + '/' + GlobalConstant.DIR_SENTENCES_COMPRESSION, this.filename), GlobalConstant.DEFAULT_CHARSET.toString());
+            log.info("Loading msc file[" + this.workDir + "/" + Constants.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "]");
+            LineIterator lineIterator = FileUtils.lineIterator(FileUtils.getFile(this.workDir + '/' + Constants.DIR_SENTENCES_COMPRESSION, this.filename), Constants.DEFAULT_CHARSET.toString());
 
             String currentKey = "";
             int sentCount = 0; // 存储当前选择的句子数
@@ -451,7 +451,7 @@ public class SummaryBuilderByVector implements Callable<Boolean>, GlobalConstant
             log.info("Load msc file finished[sentence count:" + totalCount + "]");
 
         } catch (IOException e) {
-            log.error("Load msc file[" + this.workDir + "/" + GlobalConstant.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "] error!", e);
+            log.error("Load msc file[" + this.workDir + "/" + Constants.DIR_SENTENCES_COMPRESSION + "/" + this.filename + "] error!", e);
             throw e;
         }
 

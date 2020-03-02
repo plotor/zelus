@@ -8,8 +8,8 @@ import edu.mit.jwi.item.IWord;
 import edu.mit.jwi.item.IWordID;
 import edu.mit.jwi.item.POS;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.domain.Word;
-import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.pojo.Word;
 
 import java.io.IOException;
 import java.net.URL;
@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author Apache_xiaochao
  */
-public class WordNetUtil implements GlobalConstant {
+public class WordNetUtil implements Constants {
 
     private static Logger log = Logger.getLogger(WordNetUtil.class);
 

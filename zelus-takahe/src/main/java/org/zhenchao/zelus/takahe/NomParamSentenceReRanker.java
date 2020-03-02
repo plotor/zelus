@@ -3,15 +3,15 @@ package org.zhenchao.zelus.takahe;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.domain.Pair;
-import org.zhenchao.zelus.common.domain.Vector;
-import org.zhenchao.zelus.common.domain.Word;
-import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.global.Constants;
 import org.zhenchao.zelus.common.nlp.StanfordNLPTools;
-import org.zhenchao.zelus.common.util.CommonUtil;
-import org.zhenchao.zelus.common.util.SerializeUtil;
+import org.zhenchao.zelus.common.pojo.Pair;
+import org.zhenchao.zelus.common.pojo.Vector;
+import org.zhenchao.zelus.common.pojo.Word;
+import org.zhenchao.zelus.common.util.SerializeUtils;
+import org.zhenchao.zelus.common.util.ZelusUtils;
 import org.zhenchao.zelus.takahe.domain.CompressUnit;
 import org.zhenchao.zelus.takahe.giga.GrammarScorer;
 import org.zhenchao.zelus.takahe.giga.NGramScore;
@@ -33,7 +33,7 @@ import java.util.concurrent.Callable;
  *
  * @author ZhenchaoWang 2016-1-29 18:47:56
  */
-public class NomParamSentenceReRanker implements Callable<Boolean>, GlobalConstant {
+public class NomParamSentenceReRanker implements Callable<Boolean>, Constants {
 
     private final Logger log = Logger.getLogger(this.getClass());
 
@@ -140,7 +140,7 @@ public class NomParamSentenceReRanker implements Callable<Boolean>, GlobalConsta
                 double cosVal = cosineDistence(quentionVec, sentvec);
 
                 // 计算当前句子的语言模型得分
-                float fluency = this.grammarScorer.calculateFluency(CommonUtil.wordsToSentence(compressUnit.getSentence()), this.ngramModel);
+                float fluency = this.grammarScorer.calculateFluency(ZelusUtils.wordsToSentence(compressUnit.getSentence()), this.ngramModel);
 
                 // 综合查询覆盖度，语言模型得分，路径得分
 
@@ -169,7 +169,7 @@ public class NomParamSentenceReRanker implements Callable<Boolean>, GlobalConsta
         File objFile = FileUtils.getFile(dir + "/" + DIR_RERANKED_SENTENCES_COMPRESSION + "/obj" + this.numDir, filename);
         try {
 
-            SerializeUtil.writeObj(rerankedClustedCompressUnits, objFile);
+            SerializeUtils.writeObj(rerankedClustedCompressUnits, objFile);
 
         } catch (IOException e) {
 
@@ -229,12 +229,12 @@ public class NomParamSentenceReRanker implements Callable<Boolean>, GlobalConsta
 
                 List<Word> sentence = compressUnit.getSentence();
                 for (Word word : sentence) {
-                    if (CommonUtil.isPunctuation(word)) {
+                    if (ZelusUtils.isPunctuation(word)) {
                         continue;
                     }
                     count++;
                 }
-                String sentenceStr = CommonUtil.wordsToSentence(sentence);
+                String sentenceStr = ZelusUtils.wordsToSentence(sentence);
                 sentenceStr = sentenceStr.replaceAll("\\s+'s", "'s");
                 sentenceStr = sentenceStr.replaceAll("-lrb-[\\s\\S]*?-rrb-\\s+", "");
                 summary.append(sentenceStr + "\n");
@@ -310,7 +310,7 @@ public class NomParamSentenceReRanker implements Callable<Boolean>, GlobalConsta
         Arrays.fill(vector, 0.0D);
         int count = 0;
         for (Word word : sentence) {
-            if (CommonUtil.isPunctuation(word)) {
+            if (ZelusUtils.isPunctuation(word)) {
                 // 跳过标点
                 continue;
             }

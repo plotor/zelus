@@ -1,9 +1,9 @@
 package org.zhenchao.zelus.optimize;
 
-import edu.whu.cs.nlp.msc.domain.CompressUnit;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.takahe.domain.CompressUnit;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +16,7 @@ import java.util.concurrent.Callable;
  *
  * @author ZhenchaoWang 2015-11-13 20:43:50
  */
-public class EnumerationThread implements Callable<Boolean>, GlobalConstant {
+public class EnumerationThread implements Callable<Boolean>, Constants {
 
     private final Logger log = Logger.getLogger(this.getClass());
 
@@ -37,8 +37,8 @@ public class EnumerationThread implements Callable<Boolean>, GlobalConstant {
         this.rerankedClustedCompressUnits = rerankedClustedCompressUnits;
         this.workDir = workDir;
         this.topicName = topicName;
-        this.maxSentenceCount = Integer.valueOf(maxSentenceCount);
-        this.maxSummaries = Integer.valueOf(maxSummaries);
+        this.maxSentenceCount = maxSentenceCount;
+        this.maxSummaries = maxSummaries;
     }
 
     @Override

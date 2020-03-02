@@ -1,9 +1,9 @@
 package org.zhenchao.zelus.common.loader;
 
 import org.apache.log4j.Logger;
-import org.zhenchao.zelus.common.domain.EventWithWord;
-import org.zhenchao.zelus.common.domain.Word;
-import org.zhenchao.zelus.common.global.GlobalConstant;
+import org.zhenchao.zelus.common.global.Constants;
+import org.zhenchao.zelus.common.pojo.EventWithWord;
+import org.zhenchao.zelus.common.pojo.Word;
 import org.zhenchao.zelus.common.util.ZelusUtils;
 
 import java.io.BufferedReader;
@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  *
  * @author Apache_xiaochao
  */
-public class FileLoader implements GlobalConstant {
+public class FileLoader implements Constants {
 
     private static Logger log = Logger.getLogger(FileLoader.class);
 
