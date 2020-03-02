@@ -12,7 +12,7 @@ import org.apache.log4j.Logger;
 import org.zhenchao.zelus.common.global.GlobalConstant;
 import org.zhenchao.zelus.common.loader.FileLoader;
 import org.zhenchao.zelus.common.loader.ModelLoader;
-import org.zhenchao.zelus.common.util.CommonUtil;
+import org.zhenchao.zelus.common.util.ZelusUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -78,7 +78,7 @@ public class Pretreatment implements GlobalConstant {
             }
 
             // 封装句子切分之后的内容
-            result.put(KEY_SEG_TEXT, CommonUtil.cutLastLineSpliter(sb.toString()));
+            result.put(KEY_SEG_TEXT, ZelusUtils.cutLastLineSpliter(sb.toString()));
 
             /*
              * 获取输入文本中的指代链，并执行指代消解
@@ -150,7 +150,7 @@ public class Pretreatment implements GlobalConstant {
                 text.append(sentence + LINE_SPLITER);
             }
             // 封装指代消极的结果内容
-            result.put(KEY_CR_TEXT, CommonUtil.cutLastLineSpliter(text.toString()));
+            result.put(KEY_CR_TEXT, ZelusUtils.cutLastLineSpliter(text.toString()));
         }
         return result;
     }
@@ -191,7 +191,7 @@ public class Pretreatment implements GlobalConstant {
                     }
                 }
                 if (edgeInfos.length() > 0) {
-                    final String edgeInfosStr = CommonUtil.cutLastLineSpliter(edgeInfos.toString());
+                    final String edgeInfosStr = ZelusUtils.cutLastLineSpliter(edgeInfos.toString());
                     FileLoader.write(edgeDir + "/" + DIR_CW_PRETREAT + "/" + filename, edgeInfosStr, DEFAULT_CHARSET);
                 }
             } finally {

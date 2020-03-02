@@ -14,10 +14,9 @@
     <modules>
         <module>zelus-commons</module>
         <module>zelus-pretreat</module>
-        <module>mts-event-extraction</module>
-        <module>mts-event-clustering</module>
-        <module>mts-msc</module>
-        <module>mts-summary-builder</module>
+        <module>zelus-event</module>
+        <module>zelus-takahe</module>
+        <module>zelus-summary</module>
     </modules>
 
     <profiles>
@@ -109,17 +108,12 @@
             </dependency>
             <dependency>
                 <groupId>org.zhenchao</groupId>
-                <artifactId>mts-event-extraction</artifactId>
+                <artifactId>zelus-event</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.zhenchao</groupId>
-                <artifactId>mts-event-clustering</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.zhenchao</groupId>
-                <artifactId>mts-msc</artifactId>
+                <artifactId>zelus-takahe</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
