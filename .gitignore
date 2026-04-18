@@ -41,6 +41,7 @@ syntax: glob
 .idea
 **/*.iml
 .vertx
+.vscode
 
 # building
 **/target

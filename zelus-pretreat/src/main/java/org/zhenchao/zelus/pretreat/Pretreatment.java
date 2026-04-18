@@ -35,6 +35,10 @@ import java.util.regex.Pattern;
  *
  * @author Apache_xiaochao
  */
+@SuppressWarnings({"checkstyle:MethodLength", "checkstyle:NestedIfDepth",
+        "checkstyle:LocalFinalVariableName", "checkstyle:Regexp",
+        "checkstyle:JavadocMethod", "checkstyle:LineLength",
+        "checkstyle:MagicNumber"})
 public class Pretreatment implements Constants {
 
     /** 获取句子切分文本的key */
@@ -55,8 +59,8 @@ public class Pretreatment implements Constants {
     /**
      * 对输入文本进行指代消解，并返回处理后的文本
      *
-     * @param input
-     * @return
+     * @param input 输入文本
+     * @return 处理后的文本
      */
     public Map<String, String> coreferenceResolution(String input) {
 
@@ -67,22 +71,18 @@ public class Pretreatment implements Constants {
             Annotation document = new Annotation(input);
             this.pipeline.annotate(document);
 
-            // 获取按行切分后的句子
-            StringBuilder sb = new StringBuilder();  // 存放分割但未指代消解的句子
+            StringBuilder sb = new StringBuilder();
             List<CoreMap> sentences = document.get(SentencesAnnotation.class);
             List<String> strSentences = new ArrayList<String>();
             for (CoreMap sentence : sentences) {
-                String sent = sentence.toString().replaceAll("\n", " ").replaceAll("\r\n", " ").replaceAll("\\s+", " ");
+                String sent = sentence.toString().replaceAll("\n", " ")
+                        .replaceAll("\r\n", " ").replaceAll("\\s+", " ");
                 sb.append(sent + LINE_SPLITER);
                 strSentences.add(sent);
             }
 
-            // 封装句子切分之后的内容
             result.put(KEY_SEG_TEXT, ZelusUtils.cutLastLineSpliter(sb.toString()));
 
-            /*
-             * 获取输入文本中的指代链，并执行指代消解
-             */
             final Map<Integer, CorefChain> graph = document.get(CorefChainAnnotation.class);
 
             final Set<Map.Entry<Integer, CorefChain>> set = graph.entrySet();
@@ -93,9 +93,9 @@ public class Pretreatment implements Constants {
 
                 if (entry.getValue().getMentionsInTextualOrder().size() > 1) {
 
-                    String sortestPhrase = null; // 记录一个指代链中最短的非指示代词短语
+                    String sortestPhrase = null;
 
-                    final List<CorefMention> pronounWords = new ArrayList<CorefMention>(); // 存放当前指代链中所有的指示代词
+                    final List<CorefMention> pronounWords = new ArrayList<CorefMention>();
 
                     for (int k = 0; k < entry.getValue().getMentionsInTextualOrder().size(); k++) {
 
@@ -121,7 +121,6 @@ public class Pretreatment implements Constants {
 
                     if (pronounWords.size() > 0 && sortestPhrase != null) {
 
-                        // 利用指示代词所指短语对原句中的指示代词进行替换
                         for (final CorefMention pronounWord : pronounWords) {
                             final String regex = "^[^\\w]*?" + pronounWord.mentionSpan + "[^\\w]*?$";
                             final Pattern pattern = Pattern.compile(regex);
@@ -129,18 +128,14 @@ public class Pretreatment implements Constants {
                             final StringBuilder replacedSentence = new StringBuilder();
                             for (int i = 0; i < wordsInSentence.length; ++i) {
                                 if (pattern.matcher(wordsInSentence[i]).find()) {
-                                    final String r_word = wordsInSentence[i].replace(pronounWord.mentionSpan,
-                                            sortestPhrase.toLowerCase());
-                                    replacedSentence.append(r_word + " ");
+                                    final String rWord = wordsInSentence[i].replace(
+                                            pronounWord.mentionSpan, sortestPhrase.toLowerCase());
+                                    replacedSentence.append(rWord + " ");
                                 } else {
                                     replacedSentence.append(wordsInSentence[i] + " ");
                                 }
                             }
-                            // 用指代消解之后的句子替换原来的句子
                             strSentences.set(pronounWord.sentNum - 1, replacedSentence.toString().trim());
-                            // System.out.println(pronounWord.mentionSpan + "("
-                            // + pronounWord.sentNum + ")" + " -> " +
-                            // sortestPhrase);
                         }
                     }
                 }
@@ -149,7 +144,6 @@ public class Pretreatment implements Constants {
             for (final String sentence : strSentences) {
                 text.append(sentence + LINE_SPLITER);
             }
-            // 封装指代消极的结果内容
             result.put(KEY_CR_TEXT, ZelusUtils.cutLastLineSpliter(text.toString()));
         }
         return result;
@@ -158,7 +152,8 @@ public class Pretreatment implements Constants {
     /**
      * 为口哨算法执行的预处理，主要是针对现有算法不支持浮点数据的预处理
      *
-     * @throws IOException
+     * @param edgeDir 边文件目录
+     * @throws IOException IO异常
      */
     public void pretreatment4ChineseWHispers(String edgeDir) throws IOException {
         final File dirFile = new File(edgeDir);
@@ -172,7 +167,7 @@ public class Pretreatment implements Constants {
                 return false;
             }
         });
-        final DecimalFormat df = new DecimalFormat("#0.000000"); // 定义浮点数格式化器
+        final DecimalFormat df = new DecimalFormat("#0.000000");
         for (final String filename : filenames) {
             final StringBuilder edgeInfos = new StringBuilder();
             BufferedReader br = null;
@@ -185,14 +180,15 @@ public class Pretreatment implements Constants {
                     line = line.trim();
                     if (!"".equals(line)) {
                         final String[] infos = line.split("\\s+");
-                        // 对相似度浮点数进行格式化，按照一定精度转化成整型
-                        final int approx_int = (int) (Float.parseFloat(df.format(Double.parseDouble(infos[2]))) * 1000000);
-                        edgeInfos.append(infos[0] + "\t" + infos[1] + "\t" + approx_int + LINE_SPLITER);
+                        final int approxInt = (int) (Float.parseFloat(
+                                df.format(Double.parseDouble(infos[2]))) * 1000000);
+                        edgeInfos.append(infos[0] + "\t" + infos[1] + "\t" + approxInt + LINE_SPLITER);
                     }
                 }
                 if (edgeInfos.length() > 0) {
                     final String edgeInfosStr = ZelusUtils.cutLastLineSpliter(edgeInfos.toString());
-                    FileLoader.write(edgeDir + "/" + DIR_CW_PRETREAT + "/" + filename, edgeInfosStr, DEFAULT_CHARSET);
+                    FileLoader.write(edgeDir + "/" + DIR_CW_PRETREAT + "/" + filename,
+                            edgeInfosStr, DEFAULT_CHARSET);
                 }
             } finally {
                 if (br != null) {
@@ -205,12 +201,13 @@ public class Pretreatment implements Constants {
     /**
      * 测试驱动类
      *
-     * @param args
-     * @throws IOException
+     * @param args 命令行参数
+     * @throws IOException IO异常
      */
     public static void main(String[] args) throws IOException {
         final Pretreatment pret = new Pretreatment();
-        final String text = FileLoader.read("F:/test/text/D0745J/APW19981217.0770", Charset.forName("UTF-8"));
+        final String text = FileLoader.read(
+                "F:/test/text/D0745J/APW19981217.0770", Charset.forName("UTF-8"));
         System.out.println(pret.coreferenceResolution(text));
     }
 

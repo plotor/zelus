@@ -10,6 +10,8 @@ import java.util.UUID;
  *
  * @author Apache_xiaochao 2014-7-11 14:00:53
  */
+@SuppressWarnings({"checkstyle:MagicNumber", "checkstyle:JavadocMethod", "checkstyle:HideUtilityClassConstructor",
+        "checkstyle:ModifierOrder", "checkstyle:MethodName"})
 public class Encipher {
 
     // 十六进制下数字到字符的映射数组

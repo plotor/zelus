@@ -7,24 +7,28 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * 原子事件<br>
+ * 原子事件
  * 2.0版本中将主谓宾由单词扩充成短语
  *
  * @author ZhenchaoWang 2015-10-27 11:27:26
  * @version 2.0
  */
+@SuppressWarnings("checkstyle:ReturnCount")
 public class EventWithPhrase extends Event implements Serializable {
 
     private static final long serialVersionUID = -7370833867494031137L;
 
-    private List<Word> leftPhrases;                             // 主语
-    private List<Word> middlePhrases;                           // 谓语
-    private List<Word> rightPhrases;                            // 宾语
-    private EventType eventType;                               // 事件类型
-    private Integer sentNum;                                 // 事件所在句子行号
-    private String filename;                                // 事件所属的文件名称
+    private List<Word> leftPhrases;
+    private List<Word> middlePhrases;
+    private List<Word> rightPhrases;
+    private EventType eventType;
+    private Integer sentNum;
+    private String filename;
 
-    public EventWithPhrase(List<Word> leftPhrases, List<Word> middlePhrases, List<Word> rightPhrases, Integer sentNum, String filename) {
+    public EventWithPhrase(List<Word> leftPhrases,
+                           List<Word> middlePhrases,
+                           List<Word> rightPhrases,
+                           Integer sentNum, String filename) {
         super();
         this.leftPhrases = leftPhrases;
         this.middlePhrases = middlePhrases;
@@ -37,31 +41,31 @@ public class EventWithPhrase extends Event implements Serializable {
     /**
      * 事件类型：3表示三元组事件，2表示主-谓事件，1表示谓-宾事件，-1表示异常事件
      *
-     * @return
+     * @return 事件类型
      */
     @Override
     public EventType eventType() {
-        if (CollectionUtils.isNotEmpty(this.leftPhrases) && CollectionUtils.isNotEmpty(this.middlePhrases) && CollectionUtils.isNotEmpty(this.rightPhrases)) {
-            // 三元事件
+        if (CollectionUtils.isNotEmpty(this.leftPhrases)
+                && CollectionUtils.isNotEmpty(this.middlePhrases)
+                && CollectionUtils.isNotEmpty(this.rightPhrases)) {
             return EventType.TERNARY;
 
-        } else if (CollectionUtils.isNotEmpty(this.leftPhrases) && CollectionUtils.isNotEmpty(this.middlePhrases)) {
-            // 宾语缺失
+        } else if (CollectionUtils.isNotEmpty(this.leftPhrases)
+                && CollectionUtils.isNotEmpty(this.middlePhrases)) {
             return EventType.RIGHT_MISSING;
 
-        } else if (CollectionUtils.isNotEmpty(this.middlePhrases) && CollectionUtils.isNotEmpty(this.rightPhrases)) {
-            // 主语缺失
+        } else if (CollectionUtils.isNotEmpty(this.middlePhrases)
+                && CollectionUtils.isNotEmpty(this.rightPhrases)) {
             return EventType.LEFT_MISSING;
 
         }
-        // 不是事件
         return EventType.ERROR;
     }
 
     /**
      * 判断当前事件是不是回文事件，即主语和宾语相同
      *
-     * @return
+     * @return 是否为回文事件
      */
     public boolean isPalindromicEvent() {
         boolean isPalindromic = false;
@@ -80,41 +84,47 @@ public class EventWithPhrase extends Event implements Serializable {
     /**
      * 返回事件的简要形式
      *
-     * @return
+     * @return 事件的简要形式
      */
     @Override
     public String toShortString() {
         StringBuilder result = new StringBuilder();
-        final String SPLITER = "_";
-        StringBuilder sb_left = new StringBuilder();
+        final String spliter = "_";
+        StringBuilder sbLeft = new StringBuilder();
         if (CollectionUtils.isNotEmpty(this.leftPhrases)) {
             for (Word word : this.leftPhrases) {
-                sb_left.append(word.getName() + SPLITER);
+                sbLeft.append(word.getName() + spliter);
             }
-            result.append(sb_left.substring(0, sb_left.lastIndexOf(SPLITER)));
+            result.append(sbLeft.substring(0, sbLeft.lastIndexOf(spliter)));
         }
         result.append(Constants.WORD_CONNECTOR_IN_EVENTS);
-        StringBuilder sb_middle = new StringBuilder();
+        StringBuilder sbMiddle = new StringBuilder();
         if (CollectionUtils.isNotEmpty(this.middlePhrases)) {
             for (Word word : this.middlePhrases) {
-                sb_middle.append(word.getName() + SPLITER);
+                sbMiddle.append(word.getName() + spliter);
             }
-            result.append(sb_middle.substring(0, sb_middle.lastIndexOf(SPLITER)));
+            result.append(sbMiddle.substring(0, sbMiddle.lastIndexOf(spliter)));
         }
         result.append(Constants.WORD_CONNECTOR_IN_EVENTS);
-        StringBuilder sb_right = new StringBuilder();
+        StringBuilder sbRight = new StringBuilder();
         if (CollectionUtils.isNotEmpty(this.rightPhrases)) {
             for (Word word : this.rightPhrases) {
-                sb_right.append(word.getName() + SPLITER);
+                sbRight.append(word.getName() + spliter);
             }
-            result.append(sb_right.substring(0, sb_right.lastIndexOf(SPLITER)));
+            result.append(sbRight.substring(0, sbRight.lastIndexOf(spliter)));
         }
         return result.toString();
     }
 
     @Override
     public String toString() {
-        return (CollectionUtils.isEmpty(this.leftPhrases) ? "" : this.leftPhrases.toString()) + Constants.WORD_CONNECTOR_IN_EVENTS + (CollectionUtils.isEmpty(this.middlePhrases) ? "" : this.middlePhrases.toString()) + Constants.WORD_CONNECTOR_IN_EVENTS + (CollectionUtils.isEmpty(this.rightPhrases) ? "" : this.rightPhrases.toString()) + Constants.FILENAME_REST_LEFT + this.filename + Constants.FILENAME_REST_RIGHT;
+        return (CollectionUtils.isEmpty(this.leftPhrases) ? "" : this.leftPhrases.toString())
+                + Constants.WORD_CONNECTOR_IN_EVENTS
+                + (CollectionUtils.isEmpty(this.middlePhrases) ? "" : this.middlePhrases.toString())
+                + Constants.WORD_CONNECTOR_IN_EVENTS
+                + (CollectionUtils.isEmpty(this.rightPhrases) ? "" : this.rightPhrases.toString())
+                + Constants.FILENAME_REST_LEFT + this.filename
+                + Constants.FILENAME_REST_RIGHT;
     }
 
     public List<Word> getLeftPhrases() {

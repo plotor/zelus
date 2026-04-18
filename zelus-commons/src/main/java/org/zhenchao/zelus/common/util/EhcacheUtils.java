@@ -20,6 +20,10 @@ import java.util.List;
  *
  * @author Apache_xiaochao
  */
+@SuppressWarnings({"checkstyle:MagicNumber", "checkstyle:MethodLength", "checkstyle:JavadocMethod",
+        "checkstyle:HideUtilityClassConstructor", "checkstyle:LineLength",
+        "checkstyle:ModifierOrder", "checkstyle:UncommentedMain", "checkstyle:NestedIfDepth",
+        "checkstyle:Regexp"})
 public class EhcacheUtils {
 
     private static Logger log = Logger.getLogger(EhcacheUtils.class);

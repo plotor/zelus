@@ -119,7 +119,7 @@ public class GrammarScorer {
                 w3 = "<unk>";
             }
 
-            score += (float) Math.pow(10, this.ExtractNGramScore(w1 + " " + w2 + " " + w3, model));
+            score += (float) Math.pow(10, this.extractNGramScore(w1 + " " + w2 + " " + w3, model));
 
         }
 
@@ -132,7 +132,7 @@ public class GrammarScorer {
      * @param model
      * @return
      */
-    private float ExtractNGramScore(String wordSequence, Map<String, NGramScore> model) {
+    private float extractNGramScore(String wordSequence, Map<String, NGramScore> model) {
 
         String[] words = wordSequence.split("\\s+");
 
@@ -141,9 +141,9 @@ public class GrammarScorer {
             if (model.containsKey(wordSequence)) {
                 return model.get(wordSequence).getProb();
             } else if (model.containsKey(words[0] + " " + words[1])) {
-                return model.get(words[0] + " " + words[1]).getBackOffProb() + this.ExtractNGramScore(words[1] + " " + words[2], model);
+                return model.get(words[0] + " " + words[1]).getBackOffProb() + this.extractNGramScore(words[1] + " " + words[2], model);
             } else {
-                return this.ExtractNGramScore(words[1] + " " + words[2], model);
+                return this.extractNGramScore(words[1] + " " + words[2], model);
             }
 
         } else if (words.length == 2) {
@@ -151,7 +151,7 @@ public class GrammarScorer {
             if (model.containsKey(words[0] + " " + words[1])) {
                 return model.get(words[0] + " " + words[1]).getProb();
             } else {
-                return model.get(words[0]).getBackOffProb() + this.ExtractNGramScore(words[1], model);
+                return model.get(words[0]).getBackOffProb() + this.extractNGramScore(words[1], model);
             }
 
         } else {

@@ -25,30 +25,35 @@ import java.util.regex.Pattern;
  *
  * @author Apache_xiaochao
  */
-public class FileLoader implements Constants {
+@SuppressWarnings("checkstyle:HideUtilityClassConstructor")
+public final class FileLoader implements Constants {
+
+    private static final int EVENT_PARTS_THREE = 3;
+    private static final int EVENT_PARTS_TWO = 2;
+    private static final int LINE_ATTRS_PARTS = 2;
 
     private static Logger log = Logger.getLogger(FileLoader.class);
 
+    private FileLoader() {
+    }
+
     /**
-     * 写文件函数，自动创建写路径<br>
+     * 写文件函数，自动创建写路径
      * 不推荐使用，建议使用apache commons工具包
      *
-     * @param filepath
-     * @param content
-     * @param charset
-     * @return
-     * @throws IOException
+     * @param filepath 文件路径
+     * @param content  内容
+     * @param charset  字符编码
+     * @throws IOException IO异常
      */
     @Deprecated
     public static void write(String filepath, String content, Charset charset) throws IOException {
         if (filepath != null && content != null) {
-            //判断写路径是否存在，不存在则创建
             final File file = new File(filepath);
             if (!file.getParentFile().exists()) {
                 file.getParentFile().mkdirs();
             }
 
-            //将内容写入文件
             BufferedWriter bw = null;
             try {
                 bw = new BufferedWriter(new OutputStreamWriter(
@@ -63,13 +68,13 @@ public class FileLoader implements Constants {
     }
 
     /**
-     * 加载指定文件中的内容，并返回一个完整的字符串<br>
+     * 加载指定文件中的内容，并返回一个完整的字符串
      * 不推荐使用，建议使用apache commons工具包
      *
-     * @param filepath
-     * @param charset
-     * @return
-     * @throws IOException
+     * @param filepath 文件路径
+     * @param charset  字符编码
+     * @return 文件内容
+     * @throws IOException IO异常
      */
     @Deprecated
     public static String read(String filepath, Charset charset) throws IOException {
@@ -83,7 +88,7 @@ public class FileLoader implements Constants {
             final StringBuilder textTmp = new StringBuilder();
             while (((lineStr = br.readLine()) != null)) {
                 lineStr = lineStr.trim();
-                if (!"".equals(lineStr)) {  //只要有内容的行
+                if (!"".equals(lineStr)) {
                     textTmp.append(lineStr.trim() + LINE_SPLITER);
                 }
             }
@@ -102,50 +107,53 @@ public class FileLoader implements Constants {
     /**
      * 加载文本文件
      *
-     * @param filepath
-     * @return
-     * @throws IOException
+     * @param filepath 文件路径
+     * @return 事件列表
+     * @throws IOException IO异常
      */
     @Deprecated
+    @SuppressWarnings("checkstyle:MethodLength")
     public static List<EventWithWord> loadEvents(String filepath) throws IOException {
         List<EventWithWord> events = null;
         BufferedReader br = null;
         try {
-            br = new BufferedReader(new InputStreamReader(new FileInputStream(filepath), DEFAULT_CHARSET));
+            br = new BufferedReader(new InputStreamReader(
+                    new FileInputStream(filepath), DEFAULT_CHARSET));
             String lineStr = null;
             events = new ArrayList<EventWithWord>();
-            final String regex_filename = "\\[\\$[\\w\\.]*?\\$\\]";
-            final Pattern p_filename = Pattern.compile(regex_filename);
+            final String regexFilename = "\\[\\$[\\w\\.]*?\\$\\]";
+            final Pattern pFilename = Pattern.compile(regexFilename);
             while (((lineStr = br.readLine()) != null)) {
-                final String[] lineAttrs = lineStr.split("\t");  //去除首尾空格，并将连续的多个空格替换成一个空格
-                if (lineAttrs.length == 2 && !"".equals(lineAttrs[1].trim())) {  //只要有内容的行
-                    final String[] events_str = lineAttrs[1].trim().split("\\s+");
-                    for (String event_str : events_str) {
+                final String[] lineAttrs = lineStr.split("\t");
+                if (lineAttrs.length == LINE_ATTRS_PARTS
+                        && !"".equals(lineAttrs[1].trim())) {
+                    final String[] eventsStr = lineAttrs[1].trim().split("\\s+");
+                    for (String eventStr : eventsStr) {
                         Word leftWord = null, middleWord = null, rightWord = null;
-                        //提取事件所在文件名
                         String filename = null;
-                        final Matcher matcher = p_filename.matcher(event_str);
+                        final Matcher matcher = pFilename.matcher(eventStr);
                         if (matcher.find()) {
                             final String str = matcher.group();
-                            filename = str.substring(2, str.length() - 2);
-                            event_str = event_str.replaceAll(regex_filename, "");  //删除当前事件中的所属文件名信息
+                            filename = str.substring(EVENT_PARTS_TWO, str.length() - EVENT_PARTS_TWO);
+                            eventStr = eventStr.replaceAll(regexFilename, "");
                         }
                         if (filename == null) {
-                            log.error("提取事件所属文件名失败：" + event_str);
+                            log.error("提取事件所属文件名失败：" + eventStr);
                         } else {
-                            final String[] word_str = event_str.split(WORD_CONNECTOR_IN_EVENTS);
-                            //分三种情况来对事件进行封装
-                            if (word_str.length == 3 && !event_str.startsWith(WORD_CONNECTOR_IN_EVENTS)) {
-                                leftWord = ZelusUtils.str2Word(word_str[0]);
-                                middleWord = ZelusUtils.str2Word(word_str[1]);
-                                rightWord = ZelusUtils.str2Word(word_str[2]);
-                            } else if (word_str.length == 2 || event_str.startsWith(WORD_CONNECTOR_IN_EVENTS)) {
-                                if (event_str.startsWith(WORD_CONNECTOR_IN_EVENTS)) {
-                                    middleWord = ZelusUtils.str2Word(word_str[1]);
-                                    rightWord = ZelusUtils.str2Word(word_str[2]);
+                            final String[] wordStr = eventStr.split(WORD_CONNECTOR_IN_EVENTS);
+                            if (wordStr.length == EVENT_PARTS_THREE
+                                    && !eventStr.startsWith(WORD_CONNECTOR_IN_EVENTS)) {
+                                leftWord = ZelusUtils.str2Word(wordStr[0]);
+                                middleWord = ZelusUtils.str2Word(wordStr[1]);
+                                rightWord = ZelusUtils.str2Word(wordStr[EVENT_PARTS_TWO]);
+                            } else if (wordStr.length == EVENT_PARTS_TWO
+                                    || eventStr.startsWith(WORD_CONNECTOR_IN_EVENTS)) {
+                                if (eventStr.startsWith(WORD_CONNECTOR_IN_EVENTS)) {
+                                    middleWord = ZelusUtils.str2Word(wordStr[1]);
+                                    rightWord = ZelusUtils.str2Word(wordStr[EVENT_PARTS_TWO]);
                                 } else {
-                                    leftWord = ZelusUtils.str2Word(word_str[0]);
-                                    middleWord = ZelusUtils.str2Word(word_str[1]);
+                                    leftWord = ZelusUtils.str2Word(wordStr[0]);
+                                    middleWord = ZelusUtils.str2Word(wordStr[1]);
                                 }
                             } else {
                                 log.error("当前事件类型不支持");
@@ -166,10 +174,10 @@ public class FileLoader implements Constants {
     /**
      * 加载当前指定文本，并将其转化成词对象
      *
-     * @param filepath
-     * @param charset
-     * @return
-     * @throws IOException
+     * @param filepath 文件路径
+     * @param charset  字符编码
+     * @return 词对象列表
+     * @throws IOException IO异常
      */
     public static List<List<Word>> loadText(String filepath, Charset charset) throws IOException {
         List<List<Word>> text = null;
@@ -182,7 +190,7 @@ public class FileLoader implements Constants {
             String lineStr = null;
             while (((lineStr = br.readLine()) != null)) {
                 lineStr = lineStr.trim();
-                if (!"".equals(lineStr)) {  //只要有内容的行
+                if (!"".equals(lineStr)) {
                     final List<Word> words = new ArrayList<Word>();
                     final String[] wordsStr = lineStr.split("\\s+");
                     for (final String wordStr : wordsStr) {

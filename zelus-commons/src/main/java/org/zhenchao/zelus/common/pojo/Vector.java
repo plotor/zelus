@@ -16,12 +16,12 @@ public class Vector implements Serializable {
 
     private Long id;
     private String word;
-    private String vec; // 向量字符串
+    private String vec;
 
     /**
-     * 将字符串表示的向量转换成对应的Double类型数组
+     * 将字符串表示的向量转换成对应的Float类型数组
      *
-     * @return
+     * @return Float类型向量数组
      */
     public Float[] floatVecs() {
 
@@ -42,7 +42,7 @@ public class Vector implements Serializable {
     /**
      * 将字符串表示的向量转换成对应的Double类型数组
      *
-     * @return
+     * @return Double类型向量数组
      */
     public Double[] doubleVecs() {
 

@@ -9,16 +9,16 @@ import java.io.Serializable;
  *
  * @author Apache_xiaochao
  */
-public class Word implements Serializable, Constants, Cloneable {
+public class Word implements Serializable, Cloneable {
 
     private static final long serialVersionUID = -4747705721887890597L;
 
-    private String name;                                    // 单词
-    private String pos;                                     // 词性
-    private String lemma;                                   // 原型
-    private String ner;                                     // 命名实体
-    private int sentenceNum;                             // 所在句子编号
-    private int numInLine;                               // 行内编号
+    private String name;
+    private String pos;
+    private String lemma;
+    private String ner;
+    private int sentenceNum;
+    private int numInLine;
 
     public Word() {
         super();
@@ -36,14 +36,13 @@ public class Word implements Serializable, Constants, Cloneable {
 
     @Override
     public Object clone() throws CloneNotSupportedException {
-        // Word word = (Word) super.clone();
         return super.clone();
     }
 
     /**
      * 词向量字典的key
      *
-     * @return
+     * @return 字典key
      */
     public String dictKey() {
 
@@ -161,20 +160,29 @@ public class Word implements Serializable, Constants, Cloneable {
         this.sentenceNum = sentenceNum;
     }
 
+    /**
+     * 返回简短字符串表示
+     *
+     * @return 简短字符串
+     */
     public String toShortString() {
-        return this.name + WORD_ATTRBUTE_CONNECTOR + this.numInLine;
+        return this.name + Constants.WORD_ATTRBUTE_CONNECTOR + this.numInLine;
     }
 
     @Override
     public String toString() {
-        return this.name + WORD_ATTRBUTE_CONNECTOR + this.lemma + WORD_ATTRBUTE_CONNECTOR + this.pos + WORD_ATTRBUTE_CONNECTOR + this.ner
-                + WORD_ATTRBUTE_CONNECTOR + this.sentenceNum + WORD_ATTRBUTE_CONNECTOR + this.numInLine;
+        return this.name + Constants.WORD_ATTRBUTE_CONNECTOR
+                + this.lemma + Constants.WORD_ATTRBUTE_CONNECTOR
+                + this.pos + Constants.WORD_ATTRBUTE_CONNECTOR
+                + this.ner + Constants.WORD_ATTRBUTE_CONNECTOR
+                + this.sentenceNum + Constants.WORD_ATTRBUTE_CONNECTOR
+                + this.numInLine;
     }
 
     /**
      * 仅打印词性
      *
-     * @return
+     * @return 词/词性
      */
     public String wordWithPOS() {
         return this.name + "/" + this.pos;

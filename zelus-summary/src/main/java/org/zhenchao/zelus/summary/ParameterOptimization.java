@@ -183,7 +183,7 @@ public class ParameterOptimization implements Constants {
                     final CWRunParam cwRunParam = new CWRunParam();
                     cwRunParam.setJarPath(properties.getProperty("cwjarPath"));
                     cwRunParam.setKeepClassRate(keepClassRate);
-                    cwRunParam.setMutation_rate(mutationRate);
+                    cwRunParam.setMutationRate(mutationRate);
                     cwRunParam.setIterationCount(100);
                     cluster.doCluster(cwRunParam);
                     //获取事件对应的句子，所有子句抽取结束之前，主线程阻塞

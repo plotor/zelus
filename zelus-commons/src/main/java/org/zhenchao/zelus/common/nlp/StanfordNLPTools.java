@@ -36,7 +36,11 @@ import java.util.Map;
  *
  * @author ZhenchaoWang 2015-10-27 16:38:29
  */
-public class StanfordNLPTools implements Constants {
+@SuppressWarnings({"checkstyle:HideUtilityClassConstructor", "checkstyle:MethodLength",
+        "checkstyle:JavadocMethod", "checkstyle:ModifierOrder", "checkstyle:Regexp",
+        "checkstyle:LineLength", "checkstyle:NestedForDepth", "checkstyle:LocalVariableName",
+        "checkstyle:UncommentedMain"})
+public final class StanfordNLPTools implements Constants {
 
     /** 获取所有词的对象信息 */
     public static final String KEY_WORDS = "WORDS";
