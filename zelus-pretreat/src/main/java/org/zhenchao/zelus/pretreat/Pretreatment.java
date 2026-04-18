@@ -31,9 +31,9 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * 对文件进行预处理
+ * Pairs文件进行Preprocessing
  *
- * @author Apache_xiaochao
+ * @author zhenchao
  */
 @SuppressWarnings({"checkstyle:MethodLength", "checkstyle:NestedIfDepth",
         "checkstyle:LocalFinalVariableName", "checkstyle:Regexp",
@@ -41,9 +41,9 @@ import java.util.regex.Pattern;
         "checkstyle:MagicNumber"})
 public class Pretreatment implements Constants {
 
-    /** 获取句子切分文本的key */
+    /** 获取Sentence segmentation文本的key */
     public static final String KEY_SEG_TEXT = "key_seg_text";
-    /** 获取指代消解文本的key */
+    /** 获取Coreference resolution文本的key */
     public static final String KEY_CR_TEXT = "key_cr_text";
 
     private final Logger log = Logger.getLogger(this.getClass());
@@ -57,10 +57,10 @@ public class Pretreatment implements Constants {
     }
 
     /**
-     * 对输入文本进行指代消解，并返回处理后的文本
+     * PairsInput文本进行Coreference resolution，并返回Process后的文本
      *
-     * @param input 输入文本
-     * @return 处理后的文本
+     * @param input Input文本
+     * @return Process后的文本
      */
     public Map<String, String> coreferenceResolution(String input) {
 
@@ -150,7 +150,7 @@ public class Pretreatment implements Constants {
     }
 
     /**
-     * 为口哨算法执行的预处理，主要是针对现有算法不支持浮点数据的预处理
+     * 为Chinese Whispers algorithmExecute的Preprocessing，主要是针Pairs现有算法不支持浮点Data的Preprocessing
      *
      * @param edgeDir 边文件目录
      * @throws IOException IO异常
@@ -199,9 +199,9 @@ public class Pretreatment implements Constants {
     }
 
     /**
-     * 测试驱动类
+     * 测试Driver class
      *
-     * @param args 命令行参数
+     * @param args 命令行Parameter
      * @throws IOException IO异常
      */
     public static void main(String[] args) throws IOException {

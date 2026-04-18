@@ -12,24 +12,24 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 /**
- * 穷举选择句子构建摘要
+ * 穷举Select sentencesBuild摘要
  *
- * @author ZhenchaoWang 2015-11-13 20:43:50
+ * @author zhenchao 2015-11-13 20:43:50
  */
 public class EnumerationThread implements Callable<Boolean>, Constants {
 
     private final Logger log = Logger.getLogger(this.getClass());
 
-    /** 按照类别组织的句子 */
+    /** 按照Class别组织的句子 */
     private final List<List<CompressUnit>> rerankedClustedCompressUnits;
-    /** 工作目录 */
+    /** Working directory */
     private final String workDir;
-    /** 当前主题名 */
+    /** Current topic名 */
     private final String topicName;
-    /** 每个类别下面的最大句子数 */
+    /** 每个Class别下面的最大句子数 */
     private Integer maxSentenceCount = 5;
 
-    /** 最大摘要数 */
+    /** Maximum summary count */
     private Integer maxSummaries = 50000;
 
     public EnumerationThread(List<List<CompressUnit>> rerankedClustedCompressUnits, String workDir, String topicName, int maxSentenceCount, int maxSummaries) {
@@ -46,11 +46,11 @@ public class EnumerationThread implements Callable<Boolean>, Constants {
 
         this.log.info(Thread.currentThread().getName() + " is iterate building summary for topic: " + this.topicName);
 
-        // 初始化指示器
+        // Initialize指示器
         int[] counter = new int[this.rerankedClustedCompressUnits.size()];
         Arrays.fill(counter, 0);
 
-        // 初始化上限指示器
+        // Initialize上限指示器
         int[] clusterSizes = new int[this.rerankedClustedCompressUnits.size()];
         for (int i = 0; i < this.rerankedClustedCompressUnits.size(); i++) {
             clusterSizes[i] = Math.min(this.rerankedClustedCompressUnits.get(i).size(), this.maxSentenceCount);
@@ -63,7 +63,7 @@ public class EnumerationThread implements Callable<Boolean>, Constants {
 
             this.log.info("[" + flag + "] summaru is building...");
 
-            // 迭代构建摘要
+            // 迭代Build摘要
             int wordsCount = 0;
             StringBuilder summary = new StringBuilder();
             int classCount = 0;

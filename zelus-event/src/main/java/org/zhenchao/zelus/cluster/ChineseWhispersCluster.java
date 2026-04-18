@@ -39,9 +39,9 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 /**
- * 口哨算法聚类
+ * Chinese Whispers algorithmClustering
  *
- * @author ZhenchaoWang 2015-11-10 14:23:27
+ * @author zhenchao 2015-11-10 14:23:27
  */
 public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
 
@@ -49,13 +49,13 @@ public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
 
     private static final String CLASS_PREFIX = "classes_";
 
-    /** 当前主题路径 */
+    /** Current topic路径 */
     private final String topicDir;
     /** node文件所在路径 */
     private final String nodeFilePath;
     /** edge文件所在路径 */
     private final String edgeFilePath;
-    /** 词向量字典文件所在路径 */
+    /** Word vector dictionary文件所在路径 */
     private final String wordvecDictPath;
 
     public ChineseWhispersCluster(String topicDir, String nodeFilePath, String edgeFilePath, String wordvecDictPath) {
@@ -100,7 +100,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
         }
 
         /**
-         * 加载词向量字典文件
+         * Load word vectors字典文件
          */
         this.log.info("Thread " + Thread.currentThread().getId() + " -> loading serilized file:" + this.wordvecDictPath);
         @SuppressWarnings("unchecked")
@@ -111,14 +111,14 @@ public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
         }
 
         /**
-         * 构建事件图
+         * BuildEvent图
          */
         Graph<Integer, Float> graph = new ArrayBackedGraph<Float>(eventWithNums.size(), eventWithNums.size());
         // 添加结点
         for (Entry<Integer, NumedEventWithPhrase> entry : eventWithNums.entrySet()) {
             graph.addNode(entry.getValue().getNum());
         }
-        // 计算所有边权值的均值
+        // Calculate所有边权值的均值
         float totalWeight = 0.0f;
         for (CWEdge cwEdge : cwEdges) {
             totalWeight += cwEdge.getWeight();
@@ -132,7 +132,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
         }
 
         /**
-         * 采用口哨算法进行聚类
+         * 采用Chinese Whispers algorithm进行Clustering
          */
         this.log.info("Thread " + Thread.currentThread().getId() + " -> Chinese Whispers clusting[" + this.topicDir + "]");
         CW<Integer> cw = new CW<Integer>();
@@ -140,7 +140,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
         this.log.info("Thread " + Thread.currentThread().getId() + " -> Chinese Whispers clust finished[" + this.topicDir + "]");
 
         /**
-         * 加载当前主题下所有的文本
+         * 加载Current topic下所有的文本
          */
         File objWordsDir = new File(GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT + "/" + OBJ + "/" + DIR_WORDS_OBJ + "/" + topicName);
         File[] objfiles = objWordsDir.listFiles();
@@ -157,7 +157,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
         }
 
         /**
-         * 加载当前主题下所有文本中句子的句法分析树
+         * 加载Current topic下所有文本中句子的句法分析树
          */
         File objSyntacticTreesDir = new File(GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT + "/" + OBJ + "/" + DIR_SYNTACTICTREES_OBJ + "/" + topicName);
         File[] objSyntacticTreefiles = objSyntacticTreesDir.listFiles();
@@ -174,21 +174,21 @@ public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
         }
 
         /**
-         * 子句映射，同义词替换
+         * 子句Map，同义Word替换
          */
-        // 同义词替换，存放当前已经选择的词的指纹信息
+        // 同义Word替换，存放当前已经选择的Word的指纹Information
         Set<String> selectedWordsKey = new HashSet<String>();
         Map<Integer, List<List<Word>>> clusterSubSentence = new HashMap<Integer, List<List<Word>>>();
         Map<Integer, List<List<Word>>> clusterSubSentenceAfterSynonymReplacement = new HashMap<Integer, List<List<Word>>>();
         Map<Integer, List<Pair<NumedEventWithPhrase, Double>>> clusterEventWeihts = new HashMap<Integer, List<Pair<NumedEventWithPhrase, Double>>>();
 
         /*
-         * 存放每个类的权值
-         * 计算方法：一个cluster中包含的文档的数量之和（每个文档计数为1）
+         * 存放每个Class的权值
+         * CalculateMethod：一个cluster中包含的文档的数量之和（每个文档计数为1）
          */
         Map<String, Float> clusterWeights = new HashMap<String, Float>();
 
-        //获取当前句子所有的子句集合
+        //获取Current sentence子所有的子句Collection
         for (Entry<Integer, Set<Integer>> entry : clusterEvents.entrySet()) {
 
             if (CollectionUtils.isEmpty(entry.getValue())) {
@@ -201,14 +201,14 @@ public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
             for (Integer eventNum : entry.getValue()) {
                 NumedEventWithPhrase numedEventWithPhrase = eventWithNums.get(eventNum);
                 vectorsInCluster.add(numedEventWithPhrase.getVec());
-                // 以文件名来计算一个cluster的包含的来源文件的数目，以此度量一个cluster的主题贡献
+                // 以文件名来Calculate一个cluster的包含的来源文件的数目，以此度量一个cluster的主题贡献
                 filenames4ClusterWeight.add(numedEventWithPhrase.getEvent().getFilename());
             }
 
-            // 以一个类包含的总的文件数量来度量该类的权重
+            // 以一个Class包含的总的文件数量来度量该Class的权重
             clusterWeights.put(CLASS_PREFIX + entry.getKey(), (float) filenames4ClusterWeight.size());
 
-            // 计算向量中心
+            // CalculateVector中心
             Double[] centralVec = VectorOperator.centralVector(vectorsInCluster);
             if (centralVec == null) {
                 this.log.error("[" + entry.getKey() + "]Calculate central vector error!");
@@ -225,25 +225,25 @@ public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
 
                 EventWithPhrase eventWithPhrase = numedEventWithPhrase.getEvent();
 
-                // 计算当前事件到向量中心的距离
+                // Calculate当前Event到Vector中心的距离
                 double eventWeight = VectorOperator.cosineDistence(centralVec, numedEventWithPhrase.getVec());
                 eventWeights.add(new Pair<NumedEventWithPhrase, Double>(numedEventWithPhrase, eventWeight));
 
-                // 获取当前事件所属句子的句法树
+                // 获取当前Event所属句子的Syntactic tree
                 Tree tree = syntacticTrees.get(eventWithPhrase.getFilename()).get(eventWithPhrase.getSentNum() - 1);
-                // 利用句法树来获得子句集合
+                // 利用Syntactic tree来获得子句Collection
                 List<String> subSentList = new ArrayList<String>();
                 this.subSentences(tree, subSentList);
                 String subSentence = this.eventToSubSentence(eventWithPhrase, subSentList);
 
-                // 获取当前事件所属句子的词集合
+                // 获取当前Event所属句子的WordCollection
                 List<Word> words = texts.get(eventWithPhrase.getFilename()).get(eventWithPhrase.getSentNum() - 1);
                 List<Word> subObjSentence = this.sentenceObjectified(subSentence, words);
                 if (CollectionUtils.isNotEmpty(subObjSentence)) {
                     subSentences.add(subObjSentence);
                 }
 
-                // 对句子进行同义词替换
+                // Pairs句子进行同义Word替换
                 List<Word> subSynObjSentence = this.synonymReplacement(subObjSentence, selectedWordsKey);
                 if (CollectionUtils.isNotEmpty(subSynObjSentence)) {
                     subSynSentences.add(subSynObjSentence);
@@ -259,7 +259,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
 
         String filename = this.nodeFilePath.substring(Math.max(this.nodeFilePath.lastIndexOf("/"), this.nodeFilePath.lastIndexOf("\\"))).replace("node.obj", "txt");
 
-        // 序列化cluster权重
+        // Serializingcluster权重
         File clusterWeightsFile = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + '/' + OBJ + "/" + DIR_CLUSTER_WEIGHT, filename.replaceAll("txt", OBJ));
         try {
             this.log.info("Thread " + Thread.currentThread().getId() + " -> serilizing cluster weight to file[" + clusterWeightsFile.getAbsolutePath() + "]");
@@ -270,7 +270,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
         }
 
         /*
-         * 持久化聚类的句子集合
+         * 持久化Clustering的句子Collection
          */
         StringBuilder sbClustedSentences = new StringBuilder();
         StringBuilder taggedClustedSentences = new StringBuilder();
@@ -278,7 +278,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
         for (Entry<Integer, List<List<Word>>> entry : clusterSubSentence.entrySet()) {
 
             if (CollectionUtils.isEmpty(entry.getValue()) || entry.getValue().size() < 5) {
-                // 跳过小于5个句子的类
+                // 跳过小于5个句子的Class
                 continue;
             }
 
@@ -291,9 +291,9 @@ public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
                 StringBuilder tagged = new StringBuilder();
                 StringBuilder weighted = new StringBuilder();
                 for (Word word : words) {
-                    /* 计算当前词与当前类别中事件的加权距离
-                     * 计算方式：
-                     *     当前词与每个事件的距离*事件的权值，然后取平均
+                    /* Calculate当前Word与当前Class别中Event的加权距离
+                     * Calculate方式：
+                     *     当前Word与每个Event的距离*Event的权值，然后取平均
                      */
                     Vector wordVec = vecDict.get(word.dictKey());
                     double wordWeight = 0.0D;
@@ -339,12 +339,12 @@ public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
         }
 
         /**
-         * 持久化事件的权值
+         * 持久化Event的权值
          */
         /*StringBuilder sbEventWeights = new StringBuilder();
         for (Entry<Integer, List<Pair<NumedEventWithPhrase, Double>>> entry : clusterEventWeihts.entrySet()) {
             if(CollectionUtils.isEmpty(entry.getValue()) || entry.getValue().size() < 5) {
-                // 跳过小于5个句子的类
+                // 跳过小于5个句子的Class
                 continue;
             }
             sbEventWeights.append("classes_" + entry.getKey() + ":" + LINE_SPLITER);
@@ -371,10 +371,10 @@ public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
     }
 
     /**
-     * 事件到子句的映射
+     * Event到子句的Map
      *
      * @param eventWithPhrase
-     * @param subSentList 当前事件所在句子的子句集合
+     * @param subSentList 当前Event所在句子的子句Collection
      * @return
      */
     private String eventToSubSentence(EventWithPhrase eventWithPhrase, List<String> subSentList) {
@@ -430,7 +430,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
     }
 
     /**
-     * 获取一句话中的所有子句集合
+     * 获取一句话中的所有子句Collection
      *
      * @param tree
      * @param subSentList
@@ -473,7 +473,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
     }
 
     /**
-     * 将字符串组织的句子替换成{@link Word}组织的句子
+     * 将String组织的句子替换成{@link Word}组织的句子
      *
      * @param strSentence
      * @param words
@@ -505,7 +505,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
     }
 
     /**
-     * 进行同义词替换
+     * 进行同义Word替换
      *
      * @return
      */
@@ -517,11 +517,11 @@ public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
                 try {
                     List<Word> synonymsWords = WordNetUtil.getSynonyms(dict, word);
                     if (CollectionUtils.isEmpty(synonymsWords)) {
-                        // 不存在同义词
+                        // does not exist同义Word
                         outSent.add((Word) word.clone());
                         selectedWordsKey.add(Encipher.MD5(word.getLemma() + word.getPos()));
                     } else {
-                        // 存在同义词
+                        // 存在同义Word
                         boolean flag = false;
                         for (Word synonymsWord : synonymsWords) {
                             String fingerprint = Encipher.MD5(synonymsWord.getLemma() + synonymsWord.getPos());
@@ -533,7 +533,7 @@ public class ChineseWhispersCluster implements Callable<Boolean>, Constants {
                         }
 
                         if (!flag) {
-                            // 将自己作为同义词
+                            // Treat self as synonymous word
                             outSent.add((Word) word.clone());
                             selectedWordsKey.add(Encipher.MD5(word.getLemma() + word.getPos()));
                         }

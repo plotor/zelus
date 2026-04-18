@@ -32,31 +32,35 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
- * 驱动类
+ * Driver class
  *
- * @author ZhenchaoWang 2015-10-20 10:55:06
+ * @author zhenchao 2015-10-20 10:55:06
  */
-public class MTSBOEC implements Constants {
+public final class MTSBOEC implements Constants {
 
     private static final Logger log = Logger.getLogger(MTSBOEC.class);
 
+    private MTSBOEC() {
+    }
+
+    /* Application driver entry point */
     public static void main(String[] args) throws Exception {
 
         if (args.length == 0) {
-            log.error("请指定配置文件！");
+            log.error("Please specify a configuration file！");
             return;
         }
 
-        String propFilePath = args[0]; // 配置文件所在路径
+        String propFilePath = args[0]; // Configuration file path
 
-        // 以文件名最后数字作为文件名，用于同时跑多个任务
+        // Use the last number of the filename for running multiple tasks simultaneously
         String numDir = propFilePath.substring(propFilePath.lastIndexOf(".") + 1, propFilePath.length());
         if (!numDir.matches("\\d+")) {
             numDir = "";
         }
 
         /*
-         * 加载配置文件
+         * Load configuration file
          */
         Properties properties = new Properties();
         try {
@@ -66,10 +70,10 @@ public class MTSBOEC implements Constants {
             return;
         }
 
-        // 获取线程数
+        // Get thread count
         int threadNum = Integer.parseInt(properties.getProperty("thread_num", "2").trim());
 
-        // 设置参数到全局
+        // Set parameters globally
         GlobalParam.setWorkDir(properties.getProperty("work_dir"));
         GlobalParam.setCacheName(properties.getProperty("cachename"));
         GlobalParam.setDatasource(properties.getProperty("datasource"));
@@ -86,7 +90,7 @@ public class MTSBOEC implements Constants {
         GlobalParam.setBeta4summary(Float.parseFloat(properties.getProperty("beta_summary").trim()));
 
         /**
-         * 1.执行事件抽取操作
+         * 1.Execute event extraction
          */
         if ("y".equalsIgnoreCase(properties.getProperty("is_extract_event"))) {
 
@@ -106,7 +110,7 @@ public class MTSBOEC implements Constants {
                 tasks.add(new EventsExtractBasedOnGraphV2(topicName, ehCacheUtil));
             }
 
-            /* 执行完成之前，主线程阻塞 */
+            /* Main thread blocks until completion */
             ExecutorService executorService = Executors.newFixedThreadPool(threadNum);
             try {
                 List<Future<Boolean>> futures = executorService.invokeAll(tasks);
@@ -128,7 +132,7 @@ public class MTSBOEC implements Constants {
         }
 
         /**
-         * 2.计算事件之间的相似度
+         * 2.Calculate similarity between events
          */
         if ("y".equalsIgnoreCase(properties.getProperty("is_calculate_similarity"))) {
 
@@ -158,7 +162,7 @@ public class MTSBOEC implements Constants {
         }
 
         /**
-         * 3.对事件进行聚类，同时按类别抽取事件所在子句
+         * 3.Cluster events and extract sub-sentences by category
          */
         if ("y".equalsIgnoreCase(properties.getProperty("is_event_cluster"))) {
 
@@ -207,11 +211,11 @@ public class MTSBOEC implements Constants {
         }
 
         /**
-         * 4.摘要生成
+         * 4.Summary generation
          */
         if ("y".equalsIgnoreCase(properties.getProperty("is_build_summary"))) {
 
-            // 加载question文件
+            // Load question file
             Properties prop = new Properties();
             try {
                 String questionFilename = GlobalParam.questionFilename;
@@ -223,7 +227,7 @@ public class MTSBOEC implements Constants {
                 throw e;
             }
 
-            // 加载词向量
+            // Load word vectors
             File wordVecDir = new File(GlobalParam.workDir + "/" + DIR_EVENTS_EXTRACT + "/" + OBJ + "/" + DIR_WORDS_VECTOR);
             File[] wordVecFiles = wordVecDir.listFiles();
             Map<String, Vector> wordVecs = new HashMap<String, Vector>();
@@ -250,7 +254,7 @@ public class MTSBOEC implements Constants {
             String runMode = GlobalParam.runMode;
 
             if ("old-np".equalsIgnoreCase(runMode)) {
-                // 采用老的reranker策略构建摘要
+                // Build summary using old reranker strategy
                 log.info("Summary build mode: old-np");
                 for (File file : compressFiles.listFiles()) {
                     String topicName = file.getName().substring(0, file.getName().lastIndexOf("."));
@@ -258,7 +262,7 @@ public class MTSBOEC implements Constants {
                 }
 
             } else if ("old".equalsIgnoreCase(runMode)) {
-                // 采用老的reranker策略构建摘要
+                // Build summary using old reranker strategy
                 for (File file : compressFiles.listFiles()) {
                     String topicName = file.getName().substring(0, file.getName().lastIndexOf("."));
                     tasks.add(new SentenceReRanker(prop.getProperty(topicName), file.getAbsolutePath(), numDir, wordVecs, GlobalParam.ngramModelPath, alpha, beta));
@@ -266,11 +270,11 @@ public class MTSBOEC implements Constants {
 
             } else if ("new".equalsIgnoreCase(runMode)) {
 
-                // 采用子模函数构建摘要
+                // Build summary using submodular function
                 log.info("Summary build mode: new");
 
-                // 加载每个词的IDF值
-                /** Google 总页面数估值 */
+                // 加载每个Word的IDF values
+                /** Estimated total Google page count */
                 final double TOTAL_PAGE_COUNT = 30000000000.0D;
                 Map<String, Double> idfValues = new HashMap<String, Double>();
                 File idfFIle = FileUtils.getFile(GlobalParam.workDir + "/" + DIR_IDF_FILE, GlobalParam.idfFilename);

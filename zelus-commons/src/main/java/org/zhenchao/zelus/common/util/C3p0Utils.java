@@ -8,9 +8,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * C3P0工具类
+ * C3P0工具Class
  *
- * @author ZhenchaoWang 2015-11-4 11:11:52
+ * @author zhenchao 2015-11-4 11:11:52
  */
 @SuppressWarnings("checkstyle:HideUtilityClassConstructor")
 public final class C3p0Utils {
@@ -21,10 +21,10 @@ public final class C3p0Utils {
     }
 
     /**
-     * 获取数据库连接
+     * 获取Data库连接
      *
-     * @param cfgName 配置名称
-     * @return 数据库连接
+     * @param cfgName Configuration名称
+     * @return Data库连接
      * @throws SQLException SQL异常
      */
     public static synchronized Connection getConnection(String cfgName) throws SQLException {

@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * 句子之间的相似度
  *
- * @author ZhenchaoWang 2015-11-29 19:45:19
+ * @author zhenchao 2015-11-29 19:45:19
  */
 public class SentenceApprox implements Serializable {
 

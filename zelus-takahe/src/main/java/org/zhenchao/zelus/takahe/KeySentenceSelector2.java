@@ -21,15 +21,15 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 /**
- * 对压缩处理后的句子集合按照TF-IDF值来选取
+ * Pairs压缩Process后的句子Collection按照TF-IDF values来选取
  *
- * @author Apache_xiaochao
+ * @author zhenchao
  */
 public class KeySentenceSelector2 implements Callable<Boolean>, Constants {
 
     private final Logger log = Logger.getLogger(this.getClass());
 
-    public final static int MAX_SENTENCE_COUNT = 51;                               // 每个类别的最大句子数
+    public static final int MAX_SENTENCE_COUNT = 51;                               // 每个Class别的最大句子数
 
     private final String compressedFilePath;                                    // 压缩语句文件名
     private final String summaryFilePath;                                       // 摘要文件名
@@ -54,8 +54,8 @@ public class KeySentenceSelector2 implements Callable<Boolean>, Constants {
 
             SentenceSilimarityAttribute aicfss = null;
             List<SentenceSilimarityAttribute> aicfssList = new ArrayList<SentenceSilimarityAttribute>();
-            int[][] wordsCountInSentence; // 记录每个单词在每个句子中出现的次数，行表示单词，列表示句子
-            int wordNum = 0; // 类别中的单词序号
+            int[][] wordsCountInSentence; // 记录每个Word在每个句子中出现的次数，行表示Word，List示句子
+            int wordNum = 0; // Class别中的Word序号
             //StringBuilder sb_summary = new StringBuilder();
             List<List<SentNumSimiPair>> sentNumSimiPairList = new ArrayList<List<SentNumSimiPair>>();
 
@@ -69,8 +69,8 @@ public class KeySentenceSelector2 implements Callable<Boolean>, Constants {
 
                         aicfssList.add(aicfss);
 
-                        // 表示有数据未处理，进行处理
-                        // 统计每个单词在每个句子中的数量，多语句压缩默认最多输出50句，再加上一个问句
+                        // 表示有Data未Process，进行Process
+                        // 统计每个Word在每个句子中的数量，Multi-sentence compression默认最多Output50句，再加上一个问句
                         wordsCountInSentence = new int[aicfss.getWords().size()][MAX_SENTENCE_COUNT];
                         for (int i = 0; i < MAX_SENTENCE_COUNT; ++i) {
                             if (i == aicfss.getSentences().size()) {
@@ -78,20 +78,20 @@ public class KeySentenceSelector2 implements Callable<Boolean>, Constants {
                             }
                             List<String> wordsInSentence = aicfss.getSentences().get(i).words;
 
-                            // 创建当前句子对应的单词set集合，提高运行速度
+                            // Create word set collection for current sentence to improve speed
                             Set<String> tmpWordSet = new HashSet<String>();
                             for (String word : wordsInSentence) {
                                 tmpWordSet.add(word.toLowerCase());
                             }
                             for (Entry<String, Integer> entry : aicfss.getWords().entrySet()) {
                                 if (tmpWordSet.contains(entry.getKey().toLowerCase())) {
-                                    // 当前句子中包含该单词，对应单词数+1
+                                    // Current sentence contains this word, increment corresponding word count
                                     wordsCountInSentence[entry.getValue()][i] += 1;
                                 }
                             }
                         }
-                        // 计算各语句的向量，利用TF-IDF
-                        Map<String, Integer> sentCount4words = new HashMap<String, Integer>(); // 用来记录包含指定单词的句子数
+                        // Calculate各语句的Vector，利用TF-IDF
+                        Map<String, Integer> sentCount4words = new HashMap<String, Integer>(); // 用来记录包含指定Word的句子数
                         for (final Entry<String, Integer> entry : aicfss.getWords().entrySet()) {
                             int count = 0;
                             for (int j = 0; j < aicfss.getSentences().size(); ++j) {
@@ -112,7 +112,7 @@ public class KeySentenceSelector2 implements Callable<Boolean>, Constants {
                             }
                         }
 
-                        // 计算压缩得到的句子与问句之间的相似度，余弦定理
+                        // Calculate压缩得到的句子与问句之间的相似度，余弦定理
                         float[] questionVec = new float[aicfss.getWords().size()];
                         for (int j = 0; j < aicfss.getWords().size(); ++j) {
                             questionVec[j] = sentenceVector[j][0];
@@ -127,7 +127,7 @@ public class KeySentenceSelector2 implements Callable<Boolean>, Constants {
                             for (int j = 0; j < aicfss.getWords().size(); ++j) {
                                 sentenceVec[j] = sentenceVector[j][i];
                             }
-                            // 计算两个向量的余弦值
+                            // Calculate cosine similarity between two vectors
                             double approx = this.cosineDistence(questionVec, sentenceVec);
                             sentNumSimiPairs.add(new SentNumSimiPair(i, approx));
                             /*
@@ -148,32 +148,32 @@ public class KeySentenceSelector2 implements Callable<Boolean>, Constants {
                         // + LINE_SPLITER);
                         // 打印测试
                         /*
-                         * System.out.println(line + ",单词数：" +
+                         * log.info(line + ",Word count：" +
                          * aicfss.getWords().size()); for (Entry<String,
                          * Integer> entry : aicfss.getWords().entrySet()) {
-                         * System.out.println(entry.getKey() + "\t" +
+                         * log.info(entry.getKey() + "\t" +
                          * Arrays.toString(wordsCountInSentence[entry.getValue()
                          * ])); }
                          */
                         // return;
                     }
 
-                    // 清空之前的处理结果
+                    // 清空之前的ProcessResult
                     aicfss = new SentenceSilimarityAttribute(
                             new ArrayList<SentenceSilimarityAttribute.Sentence>(),
                             new HashMap<String, Integer>());
                     wordNum = 0;
-                    // 每个类别的第一句存放问句
+                    // 每个Class别的第一句存放问句
                     final List<String> wordsInQuestions = Arrays.asList(this.question.split("\\s+"));
                     aicfss.getSentences().add(new SentenceSilimarityAttribute.Sentence(-1, wordsInQuestions));
                     for (final String word : wordsInQuestions) {
                         if (!aicfss.getWords().containsKey(word.toLowerCase())) {
-                            // 往单词map中添加单词，序号递增
+                            // Add word to word map with incrementing index
                             aicfss.getWords().put(word.toLowerCase(), wordNum++);
                         }
                     }
                 } else {
-                    // 将文件中的句子表示成内存中的数据结构
+                    // 将文件中的句子表示成内存中的Data结构
                     final int firstSpliterIndex = line.indexOf("#");
                     final float compressedQuality = Float.parseFloat(line.substring(0, firstSpliterIndex));
                     final List<String> wordsInSentence = Arrays
@@ -181,40 +181,40 @@ public class KeySentenceSelector2 implements Callable<Boolean>, Constants {
                     aicfss.getSentences().add(new SentenceSilimarityAttribute.Sentence(compressedQuality, wordsInSentence));
                     for (final String word : wordsInSentence) {
                         if (!aicfss.getWords().containsKey(word.toLowerCase())) {
-                            // 往单词map中添加单词，序号递增
+                            // Add word to word map with incrementing index
                             aicfss.getWords().put(word.toLowerCase(), wordNum++);
                         }
                     }
                 }
             }
-            // 处理最后一个类别的数据
+            // Process最后一个Class别的Data
             if (aicfss != null) {
                 aicfssList.add(aicfss);
-                // 表示有数据未处理，进行处理
-                // 统计每个单词在每个句子中的数量，多语句压缩默认最多输出50句，再加上一个问句
+                // 表示有Data未Process，进行Process
+                // 统计每个Word在每个句子中的数量，Multi-sentence compression默认最多Output50句，再加上一个问句
                 wordsCountInSentence = new int[aicfss.getWords().size()][MAX_SENTENCE_COUNT];
                 for (int i = 0; i < MAX_SENTENCE_COUNT; ++i) {
                     if (i == aicfss.getSentences().size()) {
                         break;
                     }
                     final List<String> wordsInSentence = aicfss.getSentences().get(i).words;
-                    // System.out.println(">>" + i + "\t" +
+                    // log.info(">>" + i + "\t" +
                     // wordsInSentence.toString());
-                    // 创建当前句子对应的单词set集合，提高运行速度
+                    // Create word set collection for current sentence to improve speed
                     final Set<String> tmpWordSet = new HashSet<String>();
                     for (final String word : wordsInSentence) {
                         tmpWordSet.add(word.toLowerCase());
                     }
                     for (final Entry<String, Integer> entry : aicfss.getWords().entrySet()) {
                         if (tmpWordSet.contains(entry.getKey().toLowerCase())) {
-                            // 当前句子中包含该单词，对应单词数+1
+                            // Current sentence contains this word, increment corresponding word count
                             wordsCountInSentence[entry.getValue()][i] += 1;
                         }
                     }
                 }
 
-                // 计算各语句的向量，利用TF-IDF
-                final Map<String, Integer> sentCount4words = new HashMap<String, Integer>(); // 用来记录包含指定单词的句子数
+                // Calculate各语句的Vector，利用TF-IDF
+                final Map<String, Integer> sentCount4words = new HashMap<String, Integer>(); // 用来记录包含指定Word的句子数
                 for (final Entry<String, Integer> entry : aicfss.getWords().entrySet()) {
                     int count = 0;
                     for (int j = 0; j < aicfss.getSentences().size(); ++j) {
@@ -234,7 +234,7 @@ public class KeySentenceSelector2 implements Callable<Boolean>, Constants {
                     }
                 }
 
-                // 计算压缩得到的句子与问句之间的相似度，余弦定理
+                // Calculate压缩得到的句子与问句之间的相似度，余弦定理
                 final float[] questionVec = new float[aicfss.getWords().size()];
                 for (int j = 0; j < aicfss.getWords().size(); ++j) {
                     questionVec[j] = sentenceVector[j][0];
@@ -249,7 +249,7 @@ public class KeySentenceSelector2 implements Callable<Boolean>, Constants {
                     for (int j = 0; j < aicfss.getWords().size(); ++j) {
                         sentenceVec[j] = sentenceVector[j][i];
                     }
-                    // 计算两个向量的余弦值
+                    // Calculate cosine similarity between two vectors
                     final double approx = this.cosineDistence(questionVec, sentenceVec);
                     sentNumSimiPairs.add(new SentNumSimiPair(i, approx));
                     /*
@@ -275,7 +275,7 @@ public class KeySentenceSelector2 implements Callable<Boolean>, Constants {
             while (wordsCountInSummary <= MAX_SUMMARY_WORDS_COUNT) {
                 // int k = 0;
                 boolean flag = false;
-                // System.out.println("类别数：" + sentNumSimiPairList.size());
+                // log.info("Class别数：" + sentNumSimiPairList.size());
                 for (int i = 0; i < sentNumSimiPairList.size(); ++i) {
                     Set<Integer> sentNumSet = selectedSentNum.get(i);
                     SentenceSilimarityAttribute attr = aicfssList.get(i);
@@ -307,7 +307,7 @@ public class KeySentenceSelector2 implements Callable<Boolean>, Constants {
                 if (!flag) {
                     break;
                 }
-                System.out.println("字数：" + wordsCountInSummary);
+                log.info("字数：" + wordsCountInSummary);
             }
 
             FileUtils.writeStringToFile(FileUtils.getFile(this.summaryFilePath), ZelusUtils.cutLastLineSpliter(sb_summary.toString()), DEFAULT_CHARSET);
@@ -319,7 +319,11 @@ public class KeySentenceSelector2 implements Callable<Boolean>, Constants {
         } finally {
 
             if (iterator != null) {
-                iterator.close();
+                try {
+                    iterator.close();
+                } catch (IOException e) {
+                    log.error("Close iterator error!", e);
+                }
             }
 
         }
@@ -334,9 +338,9 @@ public class KeySentenceSelector2 implements Callable<Boolean>, Constants {
             return value;
         }
 
-        //利用向量余弦值来计算事件之间的相似度
-        double scalar = 0;  //两个向量的内积
-        double module_1 = 0, module_2 = 0;  //向量vec_1和vec_2的模
+        //Calculate event similarity using vector cosine
+        double scalar = 0;  //Inner product of two vectors
+        double module_1 = 0, module_2 = 0;  //Magnitudes of vec1 and vec2
         for (int i = 0; i < vec1.length; ++i) {
             scalar += vec1[i] * vec2[i];
             module_1 += vec1[i] * vec1[i];

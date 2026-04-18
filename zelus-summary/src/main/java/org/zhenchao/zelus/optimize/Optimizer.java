@@ -19,21 +19,24 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
- * 优化器
+ * Optimizer
  *
- * @author ZhenchaoWang 2015-11-13 20:42:34
+ * @author zhenchao 2015-11-13 20:42:34
  */
-public class Optimizer {
+public final class Optimizer {
 
     private static Logger log = Logger.getLogger(Optimizer.class);
+
+    private Optimizer() {
+    }
 
     //String[] topics = {"D0743", "D0734", "D0726", "D0737", "D0736", "D0709", "D0701", "D0739", "D0718", "D0706", "D0723", "D0708", "D0733", "D0728", "D0744", "D0719", "D0724", "D0741", "D0702", "D0720", "D0715", "D0714"};
 
     public static void main(String[] args) {
 
         if (args == null || args.length != 5) {
-            System.err.println("参数错误！");
-            System.out.println("参数说明：压缩结果所在文件夹\t工作目录\t线程数\t最大候选句子数\t最大摘要数");
+            log.error("Invalid parameters！");
+            log.info("Parameter description：Compressed results directory\tWorking directory\tThread count\tMaximum candidate sentence count\tMaximum summary count");
             return;
         }
 

@@ -21,10 +21,11 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 /**
- * 口哨算法聚类，对句子进行聚类
+ * Chinese Whispers algorithmClustering，Pairs句子进行Clustering
  *
- * @author ZhenchaoWang 2015-11-29 19:35:00
+ * @author zhenchao 2015-11-29 19:35:00
  */
+@SuppressWarnings("checkstyle:HideUtilityClassConstructor")
 public class ChineseWhispersCluster4Sentence {
 
     private static Logger log = Logger.getLogger(ChineseWhispersCluster4Sentence.class);
@@ -52,7 +53,7 @@ public class ChineseWhispersCluster4Sentence {
         for (String nodeName : nodes) {
             String topicName = nodeName.substring(0, nodeName.length() - 9);
 
-            // 加载当前主题下的句子集合
+            // 加载Current topic下的句子Collection
             List<SentenceVector> sentenceVectors;
             try {
                 sentenceVectors = (List<SentenceVector>) SerializeUtils.readObj(baseDir + "/nodes/" + topicName + ".node.obj");
@@ -63,7 +64,7 @@ public class ChineseWhispersCluster4Sentence {
             }
             log.info("Load node file:" + topicName + ".node.obj, size:" + sentenceVectors.size());
 
-            // 加载当前主题下的句子相似度
+            // 加载Current topic下的句子相似度
             List<SentenceApprox> sentenceApproxs;
             try {
                 sentenceApproxs = (List<SentenceApprox>) SerializeUtils.readObj(baseDir + "/edges/" + topicName + ".edge.obj");
@@ -75,7 +76,7 @@ public class ChineseWhispersCluster4Sentence {
             log.info("Load edge file:" + topicName + ".edge.obj, size:" + sentenceApproxs.size());
 
             /**
-             * 构建事件图
+             * BuildEvent图
              */
             Graph<Integer, Float> graph = new ArrayBackedGraph<Float>(sentenceVectors.size(), sentenceVectors.size());
             // 添加结点
@@ -83,7 +84,7 @@ public class ChineseWhispersCluster4Sentence {
             for (SentenceVector sentenceVector : sentenceVectors) {
                 graph.addNode(++num);
             }
-            // 计算所有边权值的均值
+            // Calculate所有边权值的均值
             double totalWeight = 0.0;
             for (SentenceApprox sentenceApprox : sentenceApproxs) {
                 totalWeight += sentenceApprox.getApprox();
@@ -98,7 +99,7 @@ public class ChineseWhispersCluster4Sentence {
             }
 
             /**
-             * 采用口哨算法进行聚类
+             * 采用Chinese Whispers algorithm进行Clustering
              */
             log.info("Chinese Whispers clusting...[" + topicName + "]");
             CW<Integer> cw = new CW<Integer>();

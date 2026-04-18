@@ -21,9 +21,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 文件操作相关类
+ * 文件操作相关Class
  *
- * @author Apache_xiaochao
+ * @author zhenchao
  */
 @SuppressWarnings("checkstyle:HideUtilityClassConstructor")
 public final class FileLoader implements Constants {
@@ -38,7 +38,7 @@ public final class FileLoader implements Constants {
     }
 
     /**
-     * 写文件函数，自动创建写路径
+     * 写文件Function，自动Create写路径
      * 不推荐使用，建议使用apache commons工具包
      *
      * @param filepath 文件路径
@@ -68,7 +68,7 @@ public final class FileLoader implements Constants {
     }
 
     /**
-     * 加载指定文件中的内容，并返回一个完整的字符串
+     * 加载指定文件中的内容，并返回一个完整的String
      * 不推荐使用，建议使用apache commons工具包
      *
      * @param filepath 文件路径
@@ -108,7 +108,7 @@ public final class FileLoader implements Constants {
      * 加载文本文件
      *
      * @param filepath 文件路径
-     * @return 事件列表
+     * @return EventList
      * @throws IOException IO异常
      */
     @Deprecated
@@ -138,7 +138,7 @@ public final class FileLoader implements Constants {
                             eventStr = eventStr.replaceAll(regexFilename, "");
                         }
                         if (filename == null) {
-                            log.error("提取事件所属文件名失败：" + eventStr);
+                            log.error("提取Event所属文件名Failure：" + eventStr);
                         } else {
                             final String[] wordStr = eventStr.split(WORD_CONNECTOR_IN_EVENTS);
                             if (wordStr.length == EVENT_PARTS_THREE
@@ -156,7 +156,7 @@ public final class FileLoader implements Constants {
                                     middleWord = ZelusUtils.str2Word(wordStr[1]);
                                 }
                             } else {
-                                log.error("当前事件类型不支持");
+                                log.error("当前EventClass型不支持");
                             }
                             events.add(new EventWithWord(leftWord, null, middleWord, rightWord, filename));
                         }
@@ -172,11 +172,11 @@ public final class FileLoader implements Constants {
     }
 
     /**
-     * 加载当前指定文本，并将其转化成词对象
+     * 加载当前指定文本，并将其转化成WordPairs象
      *
      * @param filepath 文件路径
      * @param charset  字符编码
-     * @return 词对象列表
+     * @return WordPairs象List
      * @throws IOException IO异常
      */
     public static List<List<Word>> loadText(String filepath, Charset charset) throws IOException {

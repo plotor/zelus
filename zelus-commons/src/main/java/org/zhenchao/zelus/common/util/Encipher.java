@@ -6,22 +6,22 @@ import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 
 /**
- * 加密工具类
+ * Encryption utility class
  *
- * @author Apache_xiaochao 2014-7-11 14:00:53
+ * @author zhenchao 2014-7-11 14:00:53
  */
 @SuppressWarnings({"checkstyle:MagicNumber", "checkstyle:JavadocMethod", "checkstyle:HideUtilityClassConstructor",
         "checkstyle:ModifierOrder", "checkstyle:MethodName"})
 public class Encipher {
 
-    // 十六进制下数字到字符的映射数组
+    // 十六进制下数字到字符的MapArray
     private final static String[] HEX_DIGITS =
             {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"};
 
     /**
-     * 转换字节数组为十六进制字符串
+     * Convert字节Array为十六进制String
      *
-     * @return 十六进制字符串
+     * @return 十六进制String
      */
     private static String byteArrayToHexString(byte[] b) {
         final StringBuffer resultSb = new StringBuffer();
@@ -32,7 +32,7 @@ public class Encipher {
     }
 
     /**
-     * 将一个字节转化成十六进制形式的字符串
+     * 将一个字节转化成十六进制形式的String
      */
     private static String byteToHexString(byte b) {
         int n = b;
@@ -45,9 +45,9 @@ public class Encipher {
     }
 
     /**
-     * MD5加密器
+     * MD5Encrypt器
      *
-     * @param input 待加密字符串
+     * @param input 待EncryptString
      * @return
      * @throws NoSuchAlgorithmException
      * @throws UnsupportedEncodingException
@@ -56,9 +56,9 @@ public class Encipher {
         String result = null;
         if (input != null) {
             final MessageDigest md = MessageDigest.getInstance("MD5");
-            // 使用指定的字节数组对摘要进行最后更新，然后完成摘要计算
+            // 使用指定的字节ArrayPairs摘要进行最后Update，然后finished摘要Calculate
             final byte[] results = md.digest(input.getBytes("UTF-8"));
-            // 将得到的字节数组变成字符串返回
+            // 将得到的字节Array变成String返回
             result = byteArrayToHexString(results);
         }
         return result;

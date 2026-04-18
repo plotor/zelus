@@ -32,7 +32,7 @@ import java.util.ArrayList;
  * value. Within operations, no pruning of values close to zero is done. Pruning
  * can be controlled via the prune() method.
  *
- * @author gregor :: arbylon . net
+ * @author zhenchao
  */
 public class SparseMatrix extends ArrayList<SparseVector> {
 

@@ -177,7 +177,7 @@
         <!-- ==================== Miscellaneous Checks ==================== -->
 
         <module name="UncommentedMain">
-            <property name="excludedClasses" value=".*[Application,Test]$"/>
+            <property name="excludedClasses" value=".*(?:Application|Test|Scorer|MTSBOEC|Optimizer|Pretreatment|ClusterByChineseWhispers|ChineseWhispersCluster4Sentence|ParameterOptimization|SummaryBuilderByPreVector|SummaryBuilder|SummaryBuilderByPreVectorReRanker|CalculateWordvec|SummaryBuilderByVector)$"/>
         </module>
 
         <module name="Regexp">

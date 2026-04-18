@@ -1,15 +1,15 @@
 package org.zhenchao.zelus.common.pojo;
 
 /**
- * 指代链元素
+ * Coreference chain element
  *
- * @author ZhenchaoWang 2015-10-27 18:04:03
+ * @author zhenchao 2015-10-27 18:04:03
  */
 public class CoreferenceElement {
 
-    /** 当前词或短语 */
+    /** Current word or phrase */
     private String element;
-    /** 所属类别ID */
+    /** Category ID */
     private Integer clusterId;
 
     private Integer startIndex;
@@ -17,7 +17,7 @@ public class CoreferenceElement {
     private Integer endIndex;
 
     private Integer sentNum;
-    /** 指代的词 */
+    /** Coreference word */
     private CoreferenceElement ref;
 
     public CoreferenceElement(String element, Integer clusterId, Integer startIndex, Integer endIndex, Integer sentNum,

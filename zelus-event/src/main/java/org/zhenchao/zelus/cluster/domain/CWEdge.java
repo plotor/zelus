@@ -3,9 +3,9 @@ package org.zhenchao.zelus.cluster.domain;
 import java.io.Serializable;
 
 /**
- * 口哨算法边实体
+ * Chinese Whispers algorithm边实体
  *
- * @author ZhenchaoWang 2015-11-10 14:40:59
+ * @author zhenchao 2015-11-10 14:40:59
  */
 public class CWEdge implements Serializable {
 

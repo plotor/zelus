@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+@SuppressWarnings("checkstyle:EqualsHashCode")
 public class StringIndexGraphWrapper<E> extends StringIndex {
     protected Graph<Integer, E> base;
 

@@ -1,23 +1,23 @@
 package org.zhenchao.zelus.common.pojo;
 
 /**
- * 事件抽象类
+ * Abstract event class
  *
- * @author ZhenchaoWang 2015-10-28 10:49:56
+ * @author zhenchao 2015-10-28 10:49:56
  */
 public abstract class Event {
 
     /**
-     * 事件类型判定
+     * Determine event type
      *
-     * @return 事件类型
+     * @return event type
      */
     public abstract EventType eventType();
 
     /**
-     * 返回事件的精简形式
+     * Return the compact form of the event
      *
-     * @return 事件的精简形式
+     * @return compact form of the event
      */
     public abstract String toShortString();
 

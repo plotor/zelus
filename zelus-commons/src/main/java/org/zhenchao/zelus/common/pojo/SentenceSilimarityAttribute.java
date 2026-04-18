@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 记录压缩输出的句子集合的一些统计属性
+ * 记录压缩Output的句子Collection的一些统计Property
  *
- * @author Apache_xiaochao
+ * @author zhenchao
  */
 @SuppressWarnings("checkstyle:VisibilityModifier")
 public class SentenceSilimarityAttribute {
@@ -14,7 +14,7 @@ public class SentenceSilimarityAttribute {
     /**
      * 句子实体
      *
-     * @author Apache_xiaochao
+     * @author zhenchao
      */
     public static class Sentence {
         public float compressedQuality;

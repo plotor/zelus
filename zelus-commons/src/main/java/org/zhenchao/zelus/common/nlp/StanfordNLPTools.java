@@ -32,9 +32,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 斯坦福NLP工具类
+ * 斯坦福NLP工具Class
  *
- * @author ZhenchaoWang 2015-10-27 16:38:29
+ * @author zhenchao 2015-10-27 16:38:29
  */
 @SuppressWarnings({"checkstyle:HideUtilityClassConstructor", "checkstyle:MethodLength",
         "checkstyle:JavadocMethod", "checkstyle:ModifierOrder", "checkstyle:Regexp",
@@ -42,27 +42,27 @@ import java.util.Map;
         "checkstyle:UncommentedMain"})
 public final class StanfordNLPTools implements Constants {
 
-    /** 获取所有词的对象信息 */
+    /** 获取所有Word的Pairs象Information */
     public static final String KEY_WORDS = "WORDS";
 
-    /** 获取所有词的依存关系集合 */
+    /** 获取所有Word的依存关系Collection */
     public static final String KEY_PARSED_ITEMS = "PARSED_ITEMS";
 
     /** 获取句法分析树 */
     public static final String KEY_SYNTACTICTREES = "SYNTACTICTREES";
 
-    /** 获取依存分析图 */
+    /** 获取Dependency parsing图 */
     public static final String KEY_SEMANTICGRAPHS = "SEMANTICGRAPHS";
 
     /** 获取指代链图 */
     public static final String KEY_COREFCHAIN_GRAPH = "COREFCHAIN_GRAPH";
 
     /**
-     * 利用stanford的nlp处理工具coreNlp对传入的正文进行处理，主要包括：<br>
-     * 句子切分；词性标注，命名实体识别，依存分析等
+     * 利用stanford的nlpProcess工具coreNlpPairs传入的正文进行Process，主要包括：<br>
+     * Sentence segmentation；POS tagging，命名实体识别，Dependency parsing等
      *
-     * @param text 输入文本
-     * @return 结果信息全部存在一个map集合中返回，通过key来获取
+     * @param text Input文本
+     * @return ResultInformation全部存在一个mapCollection中返回，通过key来获取
      */
     public synchronized static Map<String, Object> coreOperate(final String text) {
 
@@ -73,7 +73,7 @@ public final class StanfordNLPTools implements Constants {
         Annotation document = new Annotation(text);
         pipeline.annotate(document);
 
-        /** 存放文章所有的词，按句子组织 */
+        /** 存放文章所有的Word，按句子组织 */
         List<List<Word>> wordsList = new ArrayList<List<Word>>();
         /** 存放句子的句法分析树 */
         List<Tree> syntacticTrees = new ArrayList<Tree>();
@@ -84,12 +84,12 @@ public final class StanfordNLPTools implements Constants {
 
         List<CoreMap> sentences = document.get(SentencesAnnotation.class);
 
-        // 获取句子中词的详细信息，并封装成对象
+        // 获取句子中Word的详细Information，并封装成Pairs象
         for (int i = 0; i < sentences.size(); ++i) {
 
-            List<Word> words = new ArrayList<Word>(); // 存放一行中所有词的对象信息
+            List<Word> words = new ArrayList<Word>(); // 存放一行中所有Word的Pairs象Information
 
-            // 构建一个Root词对象，保证与依存分析中的词顺序统一
+            // Build一个RootWordPairs象，保证与Dependency parsing中的Word顺序统一
             Word root = new Word();
             root.setName("Root");
             root.setLemma("root");
@@ -102,7 +102,7 @@ public final class StanfordNLPTools implements Constants {
             CoreMap sentence = sentences.get(i);
             for (CoreLabel token : sentence.get(TokensAnnotation.class)) {
 
-                // 构建词对象
+                // BuildWordPairs象
                 Word word = new Word();
                 word.setName(token.get(TextAnnotation.class));
                 word.setLemma(token.get(LemmaAnnotation.class));
@@ -114,23 +114,23 @@ public final class StanfordNLPTools implements Constants {
 
             }
 
-            // 缓存每个句子的处理结果
+            // 缓存每个句子的ProcessResult
             wordsList.add(words);
 
-            // 获取当前句子的句法分析树
+            // 获取Current sentence子的句法分析树
             syntacticTrees.add(sentence.get(TreeAnnotation.class));
 
-            // 获取依存依存分析结果，构建依存对象对儿
+            // 获取依存Dependency parsingResult，Build依存Pairs象Pairs儿
             SemanticGraph dependencies = sentence.get(CollapsedCCProcessedDependenciesAnnotation.class);
             semanticGraphs.add(dependencies);
 
             List<TypedDependency> typedDependencies = (List<TypedDependency>) dependencies.typedDependencies();
-            List<ParseItem> parseItems = new ArrayList<ParseItem>(); // 存放一行中的依存信息
+            List<ParseItem> parseItems = new ArrayList<ParseItem>(); // 存放一行中的依存Information
             for (TypedDependency typedDependency : typedDependencies) {
                 // 依存关系单元
                 Word leftWord = words.get(typedDependency.gov().index());
                 Word rightWord = words.get(typedDependency.dep().index());
-                // 构建依存关系单元
+                // Build依存关系单元
                 ParseItem parseItem = new ParseItem();
                 parseItem.setDependencyType(typedDependency.reln().getShortName());
                 parseItem.setLeftWord(leftWord);
@@ -140,7 +140,7 @@ public final class StanfordNLPTools implements Constants {
             parseItemList.add(parseItems);
         }
 
-        // 缓存处理的结果，用于返回
+        // 缓存Process的Result，用于返回
         /*
          * coreNlpResults.put(KEY_SEGED_TEXT,
          * ZelusUtils.cutLastLineSpliter(textAfterSSeg.toString()));
@@ -153,7 +153,7 @@ public final class StanfordNLPTools implements Constants {
         coreNlpResults.put(KEY_PARSED_ITEMS, parseItemList);
         coreNlpResults.put(KEY_SEMANTICGRAPHS, semanticGraphs);
         coreNlpResults.put(KEY_SYNTACTICTREES, syntacticTrees);
-        // 获取输入文本中的指代链，并执行指代消解
+        // 获取Input文本中的指代链，并ExecuteCoreference resolution
         coreNlpResults.put(KEY_COREFCHAIN_GRAPH, document.get(CorefChainAnnotation.class));
 
         return coreNlpResults;
@@ -161,7 +161,7 @@ public final class StanfordNLPTools implements Constants {
     }
 
     /**
-     * 对输入文本进行分句、分词处理
+     * PairsInput文本进行分句、分WordProcess
      *
      * @param sentence
      * @return
@@ -177,13 +177,13 @@ public final class StanfordNLPTools implements Constants {
 
         List<CoreMap> sentences = document.get(SentencesAnnotation.class);
 
-        // 获取句子中词的详细信息，并封装成对象
+        // 获取句子中Word的详细Information，并封装成Pairs象
         for (int i = 0; i < sentences.size(); ++i) {
 
             CoreMap sent = sentences.get(i);
             for (CoreLabel token : sent.get(TokensAnnotation.class)) {
 
-                // 构建词对象
+                // BuildWordPairs象
                 Word word = new Word();
                 word.setName(token.get(TextAnnotation.class));
                 word.setLemma(token.get(LemmaAnnotation.class));

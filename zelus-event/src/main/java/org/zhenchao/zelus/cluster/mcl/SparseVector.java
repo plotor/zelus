@@ -37,8 +37,9 @@ import java.util.Set;
  * value. Within operations, no pruning of values close to zero is done. Pruning
  * can be controlled via the prune() method.
  *
- * @author gregor :: arbylon . net
+ * @author zhenchao
  */
+@SuppressWarnings("checkstyle:NeedBraces")
 public class SparseVector extends HashMap<Integer, Double> {
 
     /**

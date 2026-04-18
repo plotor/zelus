@@ -18,9 +18,9 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * WordNet相关工具类
+ * WordNet相关工具Class
  *
- * @author Apache_xiaochao
+ * @author zhenchao
  */
 @SuppressWarnings({"checkstyle:JavadocMethod", "checkstyle:HideUtilityClassConstructor",
         "checkstyle:LineLength", "checkstyle:LocalVariableName", "checkstyle:WhitespaceAfter",
@@ -32,7 +32,7 @@ public class WordNetUtil implements Constants {
     private static ConcurrentHashMap<String, IDictionary> dicts = new ConcurrentHashMap<String, IDictionary>();
 
     /**
-     * 打开词典
+     * 打开Word典
      *
      * @param dictPath
      * @return
@@ -44,7 +44,7 @@ public class WordNetUtil implements Constants {
                 if (dicts.get(dictPath) == null) {
                     URL url = new URL("file", null, dictPath);
                     IDictionary dict = new Dictionary(url);
-                    dict.open();//打开词典
+                    dict.open();//打开Word典
                     dicts.put(dictPath, dict);
                 }
             }
@@ -53,7 +53,7 @@ public class WordNetUtil implements Constants {
     }
 
     /**
-     * 根据一定规则来获取当前词的最佳同义词
+     * 根据一定规则来获取当前Word的最佳同义Word
      * 2015-6-9 19:47:30 添加synchronized关键字，jwi不是线程安全的
      *
      * @param dict
@@ -81,7 +81,7 @@ public class WordNetUtil implements Constants {
 
         IWordID wordID = idxWord.getWordIDs().get(0); // 1st meaning
         IWord iword = dict.getWord(wordID);
-        ISynset synset = iword.getSynset(); //ISynset是一个词的同义词集的接口
+        ISynset synset = iword.getSynset(); //ISynset是一个Word的同义Word集的Interface
 
         for (IWord w : synset.getWords()) {
 

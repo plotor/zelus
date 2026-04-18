@@ -1,53 +1,53 @@
 package org.zhenchao.zelus.common;
 
 /**
- * 全局参数
+ * Global parameters
  *
- * @author zhenchao.Wang 2016-1-29 20:22:22
+ * @author zhenchao 2016-1-29 20:22:22
  */
 @SuppressWarnings("checkstyle:VisibilityModifier")
 public abstract class GlobalParam {
 
-    /** 线程数 */
+    /** Thread count */
     public static String workDir;
 
-    /** 缓存名称 */
+    /** Cache name */
     public static String cacheName = "db_cache_vec";
 
-    /** 数据源名称 */
+    /** Data源名称 */
     public static String datasource;
 
-    /** wordnet词向量所在路径 */
+    /** wordnetWordVector所在路径 */
     public static String wordnetDictPath;
 
-    /** 口哨算法聚类选边阈值 */
+    /** Chinese Whispers algorithmClustering选边阈值 */
     public static float edgeWeightThresh;
 
     /** n-gram模型所在路径 */
     public static String ngramModelPath;
 
-    /** 问题文件名 */
+    /** Question filename */
     public static String questionFilename;
 
     /** idf值文件名 */
     public static String idfFilename;
 
-    /** 词向量文件名 */
+    /** Word vector filename */
     public static String vecFilename;
 
-    /** 运行模式 */
+    /** Run mode */
     public static String runMode;
 
-    /** 每个类别中选取的句子的上限数 */
+    /** 每个Class别中选取的句子的上限数 */
     public static int sentenceCountThresh;
 
     /** 相似度上限 */
     public static float similarityThresh;
 
-    /** 摘要参数 */
+    /** 摘要Parameter */
     public static float alpha4summary = 1.0f;
 
-    /** 摘要参数 */
+    /** 摘要Parameter */
     public static float beta4summary = 1.0f;
 
     public static void setWorkDir(String workDir) {

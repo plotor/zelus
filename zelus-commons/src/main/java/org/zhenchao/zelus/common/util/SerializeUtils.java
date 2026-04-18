@@ -8,9 +8,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 /**
- * 序列化工具类
+ * Serializing工具Class
  *
- * @author ZhenchaoWang 2015-11-3 16:12:11
+ * @author zhenchao 2015-11-3 16:12:11
  */
 @SuppressWarnings("checkstyle:HideUtilityClassConstructor")
 public final class SerializeUtils {
@@ -19,12 +19,12 @@ public final class SerializeUtils {
     }
 
     /**
-     * 反序列化对象
+     * 反SerializingPairs象
      *
      * @param filename 文件名
-     * @return 反序列化后的对象
+     * @return 反Serializing后的Pairs象
      * @throws IOException            IO异常
-     * @throws ClassNotFoundException 类未找到异常
+     * @throws ClassNotFoundException Class未找到异常
      */
     public static Object readObj(String filename) throws IOException, ClassNotFoundException {
 
@@ -45,9 +45,9 @@ public final class SerializeUtils {
     }
 
     /**
-     * 序列化对象
+     * SerializingPairs象
      *
-     * @param obj  待序列化对象
+     * @param obj  待SerializingPairs象
      * @param file 目标文件
      * @throws IOException IO异常
      */

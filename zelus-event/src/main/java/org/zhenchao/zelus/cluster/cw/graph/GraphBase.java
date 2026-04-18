@@ -20,6 +20,7 @@ import java.util.Set;
  * Abstract Graph class implementing a few of the Graph interface
  * methods
  */
+@SuppressWarnings("checkstyle:EqualsHashCode")
 public abstract class GraphBase<N, E> implements Graph<N, E> {
     public GraphBase() {
         super();

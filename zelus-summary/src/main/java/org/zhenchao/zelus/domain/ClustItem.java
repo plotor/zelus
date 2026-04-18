@@ -6,9 +6,9 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * 类别实体
+ * Class别实体
  *
- * @author zhenchao.Wang 2016-1-25 13:18:59
+ * @author zhenchao 2016-1-25 13:18:59
  */
 public class ClustItem implements Serializable {
 
@@ -17,10 +17,10 @@ public class ClustItem implements Serializable {
     /** clust名称 */
     private String name;
 
-    /** clust下面的句子集合 */
+    /** clust下面的句子Collection */
     private List<Pair<Float, String>> sentences;
 
-    /** 当前类别大小 */
+    /** 当前Class别大小 */
     private int size;
 
     public ClustItem() {

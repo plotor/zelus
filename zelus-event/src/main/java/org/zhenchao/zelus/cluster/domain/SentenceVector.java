@@ -5,10 +5,11 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.Serializable;
 
 /**
- * 句子与其对应的向量
+ * 句子与其Pairs应的Vector
  *
- * @author ZhenchaoWang 2015-11-29 18:38:29
+ * @author zhenchao 2015-11-29 18:38:29
  */
+@SuppressWarnings("checkstyle:HiddenField")
 public class SentenceVector implements Serializable {
 
     private static final long serialVersionUID = -2943493490559564584L;
@@ -30,7 +31,7 @@ public class SentenceVector implements Serializable {
     }
 
     /**
-     * 将字符串表示的向量，转换成浮点数组表示
+     * 将String表示的Vector，Convert成浮点Array表示
      *
      * @param vec
      * @return

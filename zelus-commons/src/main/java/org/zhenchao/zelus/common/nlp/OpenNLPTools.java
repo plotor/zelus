@@ -14,9 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * OpenNLP工具类
+ * OpenNLP utility class
  *
- * @author zhenchao.Wang
+ * @author zhenchao
  */
 @SuppressWarnings("checkstyle:HideUtilityClassConstructor")
 public final class OpenNLPTools implements Constants {
@@ -29,8 +29,8 @@ public final class OpenNLPTools implements Constants {
     /**
      * 利用open nlp进行chunk，并添加一些修正规则
      *
-     * @param words 词列表
-     * @return chunk短语列表
+     * @param words WordList
+     * @return chunk短语List
      * @throws Exception 异常
      */
     @SuppressWarnings("checkstyle:LineLength")

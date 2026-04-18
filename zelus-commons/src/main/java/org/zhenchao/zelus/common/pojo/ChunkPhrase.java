@@ -3,15 +3,15 @@ package org.zhenchao.zelus.common.pojo;
 import java.util.List;
 
 /**
- * chunk处理的短语单元
+ * chunkProcess的短语单元
  *
- * @author ZhenchaoWang 2015-11-1 16:01:38
+ * @author zhenchao 2015-11-1 16:01:38
  */
 public class ChunkPhrase {
 
-    private Integer leftIndex;  // 短语第一个单词的index
-    private Integer rightIndex; // 短语最后一个单词的index
-    private List<Word> words;      // 短语中的所有单词
+    private Integer leftIndex;  // 短语第一个Word的index
+    private Integer rightIndex; // 短语最后一个Word的index
+    private List<Word> words;      // 短语中的所有Word
 
     public ChunkPhrase(Integer leftIndex, Integer rightIndex, List<Word> words) {
         super();

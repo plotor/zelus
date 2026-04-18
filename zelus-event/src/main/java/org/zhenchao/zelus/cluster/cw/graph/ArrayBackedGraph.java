@@ -18,6 +18,7 @@ import java.util.Iterator;
  * array-based (subgraph allocates same amount of memory as graph itself),
  * allowing constant-time lookups where possible.
  */
+@SuppressWarnings("checkstyle:RedundantModifier")
 public class ArrayBackedGraph<E> extends GraphBase<Integer, E> {
 
     protected int size;
@@ -227,16 +228,16 @@ public class ArrayBackedGraph<E> extends GraphBase<Integer, E> {
                 E weight = edgeWeights[node].get(i);
                 if (_sgNodes.get(source) && !sourceSet.contains(source)) {
                     _sg.addNode(source);
-//					if (sources.size() < maxEdgesPerNode) {
+//                    if (sources.size() < maxEdgesPerNode) {
                     sourceSet.add(source);
                     sources.add(source);
                     weights.add(weight);
-//					}
-//					if (_sg.edgeSources[source].size() < maxEdgesPerNode) {
+//                    }
+//                    if (_sg.edgeSources[source].size() < maxEdgesPerNode) {
                     _sg.edgeSourceSet[source].add(node);
                     _sg.edgeSources[source].add(node);
                     _sg.edgeWeights[source].add(weight);
-//					}
+//                    }
                 }
             }
         }

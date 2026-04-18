@@ -3,7 +3,8 @@ package org.zhenchao.zelus.cluster;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zhenchao.zelus.cluster.domain.SentenceApprox;
 import org.zhenchao.zelus.cluster.domain.SentenceVector;
 import org.zhenchao.zelus.common.util.SerializeUtils;
@@ -14,13 +15,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 句子聚类，用于对比试验
+ * Sentence clustering for comparative experiments
  *
- * @author ZhenchaoWang 2015-11-29 18:30:10
+ * @author zhenchao 2015-11-29 18:30:10
  */
+@SuppressWarnings({"checkstyle:HideUtilityClassConstructor", "checkstyle:UncommentedMain"})
 public class SentencesCluster {
 
-    private static Logger log = Logger.getLogger(SentencesCluster.class);
+    private static Logger log = LoggerFactory.getLogger(SentencesCluster.class);
 
     public static double cosineDistence(float[] vec1, float[] vec2) {
 
@@ -30,9 +32,9 @@ public class SentencesCluster {
             return value;
         }
 
-        //利用向量余弦值来计算事件之间的相似度
-        double scalar = 0;  //两个向量的内积
-        double module_1 = 0, module_2 = 0;  //向量vec_1和vec_2的模
+        //Calculate event similarity using vector cosine
+        double scalar = 0;  //Inner product of two vectors
+        double module_1 = 0, module_2 = 0;  //Magnitudes of vec1 and vec2
         for (int i = 0; i < 300; i++) {
             scalar += vec1[i] * vec2[i];
             module_1 += vec1[i] * vec1[i];
@@ -59,7 +61,7 @@ public class SentencesCluster {
 
             log.info("processing topic:" + topicName);
 
-            // 加载当前主题下的句子和对应句子向量
+            // 加载Current topic下的句子和Pairs应Sentence vector
             File texts = new File(baseDir + "/seg-pos/" + topicName);
             String[] filenames = texts.list();
             List<SentenceVector> sentenceVecs = new ArrayList<SentenceVector>();
@@ -80,11 +82,15 @@ public class SentencesCluster {
                     //e.printStackTrace();
                 } finally {
                     if (lineIterator != null) {
-                        lineIterator.close();
+                        try {
+                            lineIterator.close();
+                        } catch (IOException e) {
+                            log.error("Close lineIterator error!", e);
+                        }
                     }
                 }
 
-                // 加载向量
+                // 加载Vector
                 List<String> vectors = new ArrayList<String>();
                 File vectorFile = FileUtils.getFile(baseDir + "/sent-vec/" + topicName, filename + ".vec");
                 try {
@@ -106,7 +112,11 @@ public class SentencesCluster {
                     //e.printStackTrace();
                 } finally {
                     if (lineIterator != null) {
-                        lineIterator.close();
+                        try {
+                            lineIterator.close();
+                        } catch (IOException e) {
+                            log.error("Close lineIterator error!", e);
+                        }
                     }
                 }
 
@@ -125,7 +135,7 @@ public class SentencesCluster {
 
             }
 
-            // 对当前事件按照编号保存
+            // Pairs当前Event按照编号保存
             log.info("saving node:" + topicName);
             StringBuilder senetncesInTopic = new StringBuilder();
             for (int i = 0; i < sentenceVecs.size(); i++) {
@@ -141,7 +151,7 @@ public class SentencesCluster {
                 //e.printStackTrace();
             }
 
-            // 计算当前主题下句子之间的相似度
+            // CalculateCurrent topic下句子之间的相似度
             log.info("calculating approx:" + topicName);
             StringBuilder sentencesApprox = new StringBuilder();
             List<SentenceApprox> sentenceApproxs = new ArrayList<SentenceApprox>();

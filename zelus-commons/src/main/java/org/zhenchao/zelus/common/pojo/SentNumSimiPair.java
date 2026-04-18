@@ -1,10 +1,10 @@
 package org.zhenchao.zelus.common.pojo;
 
 /**
- * 记录当前句子的编号，以及与问句的相似度
- * 实现了Comparable接口，按照相似度由小到大进行排序
+ * Record sentence number and similarity to the query
+ * Implements Comparable, sorted by similarity in ascending order
  *
- * @author Apache_xiaochao
+ * @author zhenchao
  */
 public class SentNumSimiPair implements Comparable<SentNumSimiPair> {
 

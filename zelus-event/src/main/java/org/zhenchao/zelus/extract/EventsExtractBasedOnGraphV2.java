@@ -45,28 +45,29 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
- * 基于依存关系来构建词图，在词图的基础上基于规则进行事件抽取<br>
+ * 基于依存关系来BuildWord图，在Word图的基础上基于规则进行Event extraction<br>
  * 规则如下：<br>
- * 1.先进行事件抽取，再进行指代消解
+ * 1.先进行Event extraction，再进行Coreference resolution
  *
- * @author ZhenchaoWang 2015-10-26 19:38:22
+ * @author zhenchao 2015-10-26 19:38:22
  * @version 2.0
  */
+@SuppressWarnings({"checkstyle:LeftCurly", "checkstyle:NeedBraces", "checkstyle:Regexp", "checkstyle:UncommentedMain"})
 public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean> {
 
     private final Logger log = Logger.getLogger(this.getClass());
 
-    /** 输入文件所在目录 */
+    /** Input文件所在目录 */
     private final String eventExtractWorkDir;
 
     /** 专题名 */
     private final String topicName;
 
-    /** 词向量获取器 */
+    /** Word vector retriever */
     private final EhcacheUtils ehCacheUtil;
 
     /**
-     * 构造函数
+     * 构造Function
      *
      * @param topicName
      * @param ehCacheUtil
@@ -88,15 +89,15 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
         //主题text基础文件夹
         String textBaseDir = this.eventExtractWorkDir + "/" + TEXT;
 
-        /* 一个topic下所有词的向量字典 */
+        /* 一个topic下所有Word的Vector字典 */
         Map<String, Vector> wordvecsInTopic = new HashMap<String, Vector>();
 
         // 获取指定文件夹下的所有文件
         Collection<File> files = FileUtils.listFiles(FileUtils.getFile(GlobalParam.workDir + "/" + DIR_CORPUS + "/" + this.topicName), null, false);
         for (File file : files) {
 
-            // 加载文件
-            String absolutePath = file.getAbsolutePath(); // 当前处理的文件的绝对路径
+            // Load file
+            String absolutePath = file.getAbsolutePath(); // 当前Process的文件的绝Pairs路径
             /*String parentPath = file.getParentFile().getAbsolutePath(); // 文件所属文件夹的路径
              */
             this.log.info("Thread " + Thread.currentThread().getId() + " -> event extracting for[" + absolutePath + "]");
@@ -105,7 +106,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                 // 加载正文
                 String text = FileUtils.readFileToString(file, DEFAULT_CHARSET);
 
-                // 利用stanford的nlp核心工具进行处理
+                // 利用stanford的nlp核心工具进行Process
                 Map<String, Object> coreNlpResults = StanfordNLPTools.coreOperate(text);
 
                 List<Tree> syntacticTrees = (List<Tree>) coreNlpResults.get(StanfordNLPTools.KEY_SYNTACTICTREES);
@@ -117,10 +118,10 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                     throw e;
                 }
 
-                // 获取对句子中单词进行对象化后的文本
+                // 获取Pairs句子中Word进行Pairs象化后的文本
                 List<List<Word>> words = (List<List<Word>>) coreNlpResults.get(StanfordNLPTools.KEY_WORDS);
 
-                // 序列化词集合
+                // SerializingWordCollection
                 File wordsFile = FileUtils.getFile(objBaseDir + "/" + DIR_WORDS_OBJ + "/" + this.topicName, file.getName() + ".obj");
                 try {
                     SerializeUtils.writeObj(words, wordsFile);
@@ -130,7 +131,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                 }
 
                 /*
-                 * 构建当前主题下每个词的词向量字典
+                 * BuildCurrent topic下每个Word的Word vector dictionary
                  */
                 for (List<Word> wordsInSent : words) {
                     for (Word word : wordsInSent) {
@@ -138,7 +139,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                         if (wordvecsInTopic.containsKey(key)) {
                             continue;
                         }
-                        // 获取当前词的词向量
+                        // 获取当前Word的WordVector
                         Vector vector = this.ehCacheUtil.getMostSimilarVec(word);
                         if (null != vector) {
                             wordvecsInTopic.put(key, vector);
@@ -146,7 +147,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                     }
                 }
 
-                // 以文本形式存储词集合
+                // 以文本形式存储WordCollection
                 StringBuilder sb_words_pos = new StringBuilder();
                 for (List<Word> list : words) {
                     StringBuilder sb_words = new StringBuilder();
@@ -158,13 +159,13 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                     sb_words_pos.append(sb_words.toString().trim() + LINE_SPLITER);
                     sb_words_pos.append(sb_pos.toString().trim() + LINE_SPLITER);
                 }
-                /* 中间结果记录：词和词性分开按行存储 */
+                /* 中间Result记录：Word和Word性分开按行存储 */
                 FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_SEGDETAIL_TEXT + "/pos2/" + "/" + this.topicName, file.getName()), ZelusUtils.cutLastLineSpliter(sb_words_pos.toString()), DEFAULT_CHARSET);
 
-                // 获取依存分析结果
+                // 获取Dependency parsingResult
                 @SuppressWarnings("unchecked")
                 List<List<ParseItem>> parseItemList = (List<List<ParseItem>>) coreNlpResults.get(StanfordNLPTools.KEY_PARSED_ITEMS);
-                // 序列化依存分析对
+                // SerializingDependency parsingPairs
                 File parseItemFile = FileUtils.getFile(objBaseDir + "/" + DIR_PARSE_OBJ + "/" + this.topicName, file.getName() + ".obj");
                 try {
                     SerializeUtils.writeObj(words, parseItemFile);
@@ -172,10 +173,10 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                     this.log.error("Serialize file error:" + parseItemFile.getAbsolutePath(), e);
                     throw e;
                 }
-                // 以文本形式存储依存分析对
+                // 以文本形式存储Dependency parsingPairs
                 FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_PARSE_TEXT + "/" + this.topicName, file.getName()), ZelusUtils.lists2String(parseItemList), DEFAULT_CHARSET);
 
-                /* 中间结果记录：记录依存分析简版结果 */
+                /* 中间Result记录：记录Dependency parsing简版Result */
                 StringBuilder simplifyParsedResult = new StringBuilder();
                 for (List<ParseItem> parseItems : parseItemList) {
                     for (ParseItem parseItem : parseItems)
@@ -184,9 +185,9 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                 }
                 FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_PARSESIMPLIFY + "/" + this.topicName, file.getName()), ZelusUtils.cutLastLineSpliter(simplifyParsedResult.toString()), DEFAULT_CHARSET);
 
-                // 对当前文本进行事件抽取
+                // Pairs当前文本进行Event extraction
                 Map<Integer, List<EventWithWord>> events = this.extract(parseItemList, words, file.getName());
-                /* 中间结果记录：保存事件抽取结果 */
+                /* 中间Result记录：保存Event extractionResult */
                 StringBuilder sb_events = new StringBuilder();
                 StringBuilder sb_simplify_events = new StringBuilder();
                 for (Entry<Integer, List<EventWithWord>> entry : events.entrySet()) {
@@ -198,10 +199,10 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                 FileUtils.writeStringToFile(FileUtils.getFile(textBaseDir + "/" + DIR_EVENTSSIMPLIFY + "/" + this.topicName, file.getName()), ZelusUtils.cutLastLineSpliter(sb_simplify_events.toString()), DEFAULT_CHARSET);
 
                 /**
-                 * 指代消解
+                 * Coreference resolution
                  */
                 Map<String, CoreferenceElement> crChains = this.cr((Map<Integer, CorefChain>) coreNlpResults.get(StanfordNLPTools.KEY_COREFCHAIN_GRAPH));
-                /* 存放指代消解之后的事件，按行组织 */
+                /* 存放Coreference resolution之后的Event，按行组织 */
                 Map<Integer, List<EventWithPhrase>> eventsAfterCR = new TreeMap<Integer, List<EventWithPhrase>>();
                 try {
                     for (Entry<Integer, List<EventWithWord>> entry : events.entrySet()) {
@@ -231,7 +232,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                         eventsAfterCR.put(sentNum, eventWithPhraseInSentence);
                     }
 
-                    /* 中间结果记录：保存指代消解之后的事件 */
+                    /* 中间Result记录：保存Coreference resolution之后的Event */
                     StringBuilder sb_events_phrase = new StringBuilder();
                     StringBuilder sb_simplify_events_phrase = new StringBuilder();
                     for (Entry<Integer, List<EventWithPhrase>> entry : eventsAfterCR.entrySet()) {
@@ -247,9 +248,9 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                 }
 
                 /**
-                 * 事件修复
+                 * Event repair
                  */
-                /* 经过指代消解和事件修复之后的事件 */
+                /* 经过Coreference resolution和Event repair之后的Event */
                 Map<Integer, List<EventWithPhrase>> eventsAfterCRAndRP = new TreeMap<Integer, List<EventWithPhrase>>();
                 try {
 
@@ -257,7 +258,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                         eventsAfterCRAndRP.put(entry.getKey(), this.eventRepair(entry.getValue(), words.get(entry.getKey() - 1), entry.getKey()));
                     }
 
-                    /* 中间结果记录：保存经过短语扩充之后的事件 */
+                    /* 中间Result记录：保存经过Phrase expansion之后的Event */
                     StringBuilder sb_events_phrase = new StringBuilder();
                     StringBuilder sb_simplify_events_phrase = new StringBuilder();
                     for (Entry<Integer, List<EventWithPhrase>> entry : eventsAfterCRAndRP.entrySet()) {
@@ -273,9 +274,9 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                 }
 
                 /**
-                 * 短语扩充
+                 * Phrase expansion
                  */
-                /* 经过指代消解、事件修复、短语扩充之后的事件 */
+                /* 经过Coreference resolution、Event repair、Phrase expansion之后的Event */
                 Map<Integer, List<EventWithPhrase>> eventsAfterCRAndRPAndPE = new TreeMap<Integer, List<EventWithPhrase>>();
                 try {
 
@@ -285,7 +286,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                         eventsAfterCRAndRPAndPE.put(sentNum, eventWithPhrases);
                     }
 
-                    /* 中间结果记录：保存经过短语扩充之后的事件 */
+                    /* 中间Result记录：保存经过Phrase expansion之后的Event */
                     StringBuilder sb_events_phrase = new StringBuilder();
                     StringBuilder sb_simplify_events_phrase = new StringBuilder();
                     for (Entry<Integer, List<EventWithPhrase>> entry : eventsAfterCRAndRPAndPE.entrySet()) {
@@ -301,7 +302,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                 }
 
                 /**
-                 * 对事件进行过滤
+                 * Perform event 过滤
                  */
                 Map<Integer, List<EventWithPhrase>> eventsAfterCRAndRPAndPEAndEF = new TreeMap<Integer, List<EventWithPhrase>>();
                 try {
@@ -316,7 +317,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                         eventsAfterCRAndRPAndPEAndEF.put(entry.getKey(), eventsInSentence);
                     }
 
-                    /* 中间结果记录：保存经过事件过滤之后的事件 */
+                    /* 中间Result记录：保存经过Event filtering之后的Event */
                     StringBuilder sb_events_phrase = new StringBuilder();
                     StringBuilder sb_simplify_events_phrase = new StringBuilder();
                     for (Entry<Integer, List<EventWithPhrase>> entry : eventsAfterCRAndRPAndPEAndEF.entrySet()) {
@@ -328,7 +329,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
 
                     if (MapUtils.isNotEmpty(eventsAfterCRAndRPAndPEAndEF)) {
                         /*
-                         * 序列化事件抽取结果
+                         * Serialize event extraction result
                          */
                         File eventsObjFile = FileUtils.getFile(objBaseDir + "/" + DIR_SERIALIZE_EVENTS + "/" + this.topicName, file.getName() + SUFFIX_SERIALIZE_FILE);
                         try {
@@ -353,7 +354,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
 
         if (MapUtils.isNotEmpty(wordvecsInTopic)) {
             /*
-             * 序列化词向量字典
+             * SerializingWord vector dictionary
              */
             File wordvecFile = FileUtils.getFile(this.eventExtractWorkDir + "/" + OBJ + "/" + DIR_WORDS_VECTOR, this.topicName + ".obj");
             try {
@@ -369,7 +370,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
     }
 
     /**
-     * 将输入单词转换成相应的指代的词
+     * 将InputWordConvert成相应的Coreference word
      *
      * @param inWord
      * @param crChains
@@ -408,7 +409,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
     }
 
     /**
-     * 构建依存关系词图，以依存关系作为边
+     * Build依存关系Word图，以依存关系作为边
      *
      * @param parseItems
      * @param wordsCount
@@ -416,7 +417,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
      */
     public String[][] buildWordGraph(List<ParseItem> parseItems, int wordsCount) {
 
-        String[][] edges = new String[wordsCount][wordsCount]; // 存放图的边信息
+        String[][] edges = new String[wordsCount][wordsCount]; // 存放图的边Information
         for (ParseItem parseItem : parseItems)
             edges[parseItem.getLeftWord().getNumInLine()][parseItem.getRightWord().getNumInLine()] = parseItem.getDependencyType();
 
@@ -425,8 +426,8 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
     }
 
     /**
-     * 对输入文本进行指代消解<br>
-     * 以指代链中最先出现的指代作为被指代的词（短语)<br>
+     * PairsInput文本进行Coreference resolution<br>
+     * 以指代链中最先出现的指代作为被Coreference word（短语)<br>
      * key:MD5(element + sentNum + startIndex + endIndex)
      *
      * @param graph 指代链
@@ -447,7 +448,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
             if (entry.getValue().getMentionsInTextualOrder().size() > 1) {
 
                 CorefMention firstElement = entry.getValue().getMentionsInTextualOrder().get(0);
-                /* 以第一个词（短语）作为被指代的词（短语） */
+                /* 以第一个Word（短语）作为被Coreference word（短语） */
                 CoreferenceElement ref = new CoreferenceElement(firstElement.mentionSpan, firstElement.corefClusterID, firstElement.startIndex, firstElement.endIndex, firstElement.sentNum, null);
                 for (int k = 1; k < entry.getValue().getMentionsInTextualOrder().size(); k++) {
 
@@ -471,8 +472,8 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
     }
 
     /**
-     * 事件抽取函数<br>
-     * 先构建词图，然后基于词图来进行事件抽取
+     * Event extractionFunction<br>
+     * 先BuildWord图，然后基于Word图来进行Event extraction
      *
      * @param parsedList
      * @param words
@@ -485,24 +486,24 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
 
         if (CollectionUtils.isNotEmpty(parsedList) && CollectionUtils.isNotEmpty(words)) {
             for (int k = 0; k < parsedList.size(); ++k) {
-                /* 当前处理单位：句子 */
+                /* 当前Process单位：句子 */
 
                 List<ParseItem> parseItems = new ArrayList<ParseItem>(parsedList.get(k));
                 List<Word> wordsInSentence = new ArrayList<Word>(words.get(k));
                 int wordsCount = wordsInSentence.size();
-                // 以依存关系为边构建当前句子的依存关系词图
+                // 以依存关系为边BuildCurrent sentence子的依存关系Word图
                 String[][] edges = this.buildWordGraph(parseItems, wordsCount);
-                List<EventWithWord> eventsInSentence = new ArrayList<EventWithWord>(); // 用于存储从当前句子中抽取到的事件
-                // 构建事件
+                List<EventWithWord> eventsInSentence = new ArrayList<EventWithWord>(); // 用于存储从Current sentence子中抽取到的Event
+                // BuildEvent
                 for (int i = 0; i < wordsCount; ++i) {
 
-                    /* 当前处理单位：词 */
+                    /* 当前Process单位：Word */
 
                     List<Integer> agents = new ArrayList<Integer>();
                     List<Integer> objects = new ArrayList<Integer>();
                     Word copWord = null; // cop关系
-                    Word prepWord = null; // 前缀词
-                    Word negWord = null; // 否定词
+                    Word prepWord = null; // 前缀Word
+                    Word negWord = null; // 否定Word
 
                     for (int j = 0; j < wordsCount; ++j) {
 
@@ -527,7 +528,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                         if ("prep".equals(edges[i][j]) || "prepc".equals(edges[i][j])) {
                             prepWord = wordsInSentence.get(j);
                             if (!POS_NOUN.contains(prepWord.getPos()) && "O".equals(prepWord.getNer()))
-                            // 如果不是名词或命名实体，则过滤掉
+                            // Filter out if not a noun or named entity
                             {
                                 prepWord = null;
                             }
@@ -567,12 +568,12 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
 
                             if (copWord != null) {
                                 /**
-                                 * 如果存在依存关系cop，则用cop关系将二元事件补全为三元事件
+                                 * If cop dependency exists, use it to complete binary event to ternary event
                                  */
                                 eventsInSentence.add(new EventWithWord(leftWord, negWord, copWord, middleWord, filename));
                             } else {
                                 /**
-                                 * 不存在cop关系的词
+                                 * Words without cop dependency
                                  */
                                 eventsInSentence.add(new EventWithWord(leftWord, negWord, middleWord, null, filename));
                             }
@@ -588,12 +589,12 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                             Word rightWord = wordsInSentence.get(object);
                             if (prepWord != null) {
                                 /**
-                                 * 用前缀词做补全主语
+                                 * Use prefix word to complete subject
                                  */
                                 eventsInSentence.add(new EventWithWord(prepWord, negWord, middleWord, rightWord, filename));
                             } else {
                                 /**
-                                 * 不存在符合要求的前缀词
+                                 * No qualifying prefix word found
                                  */
                                 eventsInSentence.add(new EventWithWord(null, negWord, middleWord, rightWord, filename));
                             }
@@ -607,11 +608,11 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
     }
 
     /**
-     * 将事件中的词扩充成短语<br>
-     * 按行处理
+     * 将Event中的Word扩充成短语<br>
+     * 按行Process
      *
-     * @param events 由词构成的事件
-     * @param words 当前句子中的词语
+     * @param events 由Word构成的Event
+     * @param words Current sentence子中的Word语
      * @return
      * @throws Exception
      */
@@ -625,7 +626,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
             /* 利用open nlp进行chunk */
             List<ChunkPhrase> phrases = OpenNLPTools.chunk(words);
 
-            /* chunk 中间结果记录 */
+            /* chunk 中间Result记录 */
             StringBuilder sb_chunk = new StringBuilder();
 
             for (ChunkPhrase chunkPhrase : phrases) {
@@ -643,9 +644,9 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
             FileUtils.writeStringToFile(FileUtils.getFile(this.eventExtractWorkDir + "/" + TEXT + "/" + DIR_CHUNKSIMPILY + "/" + this.topicName, events.get(0).getFilename()), sb_chunk.toString() + LINE_SPLITER, DEFAULT_CHARSET, true);
 
             for (EventWithPhrase eventWithPhrase : events) {
-                // 谓语中第一个单词的序号
+                // 谓语中第一个Word的序号
                 int leftVerbIndex = eventWithPhrase.getMiddlePhrases().get(0).getNumInLine();
-                // 谓语中第二个单词的序号
+                // 谓语中第二个Word的序号
                 int rightVerbIndex = eventWithPhrase.getMiddlePhrases().get(eventWithPhrase.getMiddlePhrases().size() - 1).getNumInLine();
 
                 List<Word> leftPhrase = eventWithPhrase.getLeftPhrases();
@@ -653,7 +654,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
 
                 if (leftPhrase.size() == 1 || rightPhrase.size() == 1) {
                     /**
-                     * 只处理主语或宾语为单词的情形
+                     * 只Process主语或宾语为Word的情形
                      */
                     if (leftPhrase.size() == 1) {
                         // 主语扩充
@@ -702,7 +703,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
     }
 
     /**
-     * 事件完善
+     * Event完善
      *
      * @param eventWithPhrases
      * @param words
@@ -714,9 +715,9 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
         List<EventWithPhrase> result = eventWithPhrases;
 
         /**
-         * 1.如果两个事件，一个是三元事件，一个是二元事件，<br>
-         * 如果三元事件的宾语是二元事件的谓语，同时该词不是名词和命名实体，<br>
-         * 则将这两个事件合为一个事件
+         * 1.如果两个Event，一个是Ternary event，一个是二元Event，<br>
+         * 如果Ternary event的宾语是二元Event的谓语，同时该Word不是名Word和命名实体，<br>
+         * 则将这两个Event合为一个Event
          */
 
         int i = 0, j = 0;
@@ -727,7 +728,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                 continue;
             }
             if (t_event.getRightPhrases().size() > 1) {
-                // 过滤掉宾语为短语的事件
+                // 过滤掉宾语为短语的Event
                 continue;
             }
             Word t_event_right_word = t_event.getRightPhrases().get(0);
@@ -739,18 +740,18 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                 }
 
                 if (b_event.getMiddlePhrases().size() > 1) {
-                    // 过滤掉谓语为短语的事件
+                    // 过滤掉谓语为短语的Event
                     continue;
                 }
 
                 Word b_event_middle_word = b_event.getMiddlePhrases().get(0);
                 if (t_event_right_word.equals(b_event_middle_word)) {
                     /**
-                     * 三元事件的宾语与二元事件的谓语相同，可以合并为一个事件 合并规则：
-                     * 将三元事件的宾语与谓语合并为谓语，将二元事件的宾语作为新事件的宾语 删除原先的二元事件
+                     * Ternary event的宾语与二元Event的谓语相同，可以合并为一个Event 合并规则：
+                     * 将Ternary event的宾语与谓语合并为谓语，将二元Event的宾语作为新Event的宾语 Delete原先的二元Event
                      */
                     t_event.getMiddlePhrases().add(t_event_right_word);
-                    // 组合成新的事件
+                    // 组合成新的Event
                     newEvent = new EventWithPhrase(t_event.getLeftPhrases(), t_event.getMiddlePhrases(), b_event.getRightPhrases(), t_event.getSentNum(), b_event.getFilename());
                     break;
                 }
@@ -760,7 +761,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
             }
         }
 
-        // 更新事件
+        // UpdateEvent
         if (newEvent != null) {
             result.set(i, newEvent);
             result.remove(j);
@@ -768,35 +769,35 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
 
         /**
          *
-         * 2.如果一个事件的主语或者宾语是限定词，<br>
-         * 则将该词替换成向后距离最近（不超过标点范围）的名词或命名实体
+         * 2.如果一个Event的主语或者宾语是限定Word，<br>
+         * 则将该Word替换成向后距离最近（不超过标点范围）的名Word或命名实体
          *
-         * 3.如果一个事件的主语或者宾语是WP或者WP$,<br>
+         * 3.如果一个Event的主语或者宾语是WP或者WP$,<br>
          * 则往前寻找最近的人名
          *
-         * 4.如果一个事件缺失主语或者宾语，<br>
-         * 则向前向后找最近（不超过标点范围）的名词或命名实体进行补全
+         * 4.如果一个Event缺失主语或者宾语，<br>
+         * 则向前向后找最近（不超过标点范围）的名Word或命名实体进行补全
          *
          */
         for (int k = 0; k < eventWithPhrases.size(); k++) {
             EventWithPhrase eventWithPhrase = eventWithPhrases.get(k);
 
-            // 谓语中第一个单词的序号
+            // 谓语中第一个Word的序号
             int leftVerbIndex = eventWithPhrase.getMiddlePhrases().get(0).getNumInLine();
-            // 谓语中第二个单词的序号
+            // 谓语中第二个Word的序号
             int rightVerbIndex = eventWithPhrase.getMiddlePhrases().get(eventWithPhrase.getMiddlePhrases().size() - 1).getNumInLine();
 
             if (CollectionUtils.isNotEmpty(eventWithPhrase.getLeftPhrases())) {
                 // 存在主语
                 if (eventWithPhrase.getLeftPhrases().size() == 1) {
-                    // 主语是词语
+                    // 主语是Word语
                     Word leftWord = eventWithPhrase.getLeftPhrases().get(0);
                     if (leftWord.getSentenceNum() == sentNum) {
                         if ("DT".equals(leftWord.getPos())) {
                             for (int n = leftWord.getNumInLine() + 1; n < leftVerbIndex; n++) {
                                 Word word = words.get(n);
                                 if (POS_NOUN.contains(word.getPos()) || !"O".equals(word.getNer())) {
-                                    // 利用名词或命名实体来替换限定词
+                                    // Replace determiner word with noun or named entity
                                     eventWithPhrase.getLeftPhrases().set(0, word);
                                     break;
                                 }
@@ -806,11 +807,11 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                                 }
                             }
                         } else if ("WDT".equals(leftWord.getPos())) {
-                            // WDT关系
+                            // WDT relation
                             for (int n = leftWord.getNumInLine() - 1; n > 0; n--) {
                                 Word word = words.get(n);
                                 if (POS_NOUN.contains(word.getPos()) || !"O".equals(word.getNer())) {
-                                    // 利用名词或命名实体来替换限定词
+                                    // Replace determiner word with noun or named entity
                                     eventWithPhrase.getLeftPhrases().set(0, word);
                                     break;
                                 }
@@ -820,7 +821,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                                 }
                             }
                         } else if (POS_PRP.contains(leftWord.getPos())) {
-                            // 往前寻找最近的人名来替换当前词
+                            // Search forward for nearest person name to replace current word
                             for (int n = leftWord.getNumInLine() - 1; n > 0; n--) {
                                 Word word = words.get(n);
                                 if ("person".equalsIgnoreCase(word.getNer())) {
@@ -833,7 +834,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
 
                 }
             } else {
-                // 主语缺失，向前找标点范围内的最近的名词或命名实体
+                // 主语缺失，向前找标点范围内的最近的名Word或命名实体
                 for (int n = leftVerbIndex - 1; n > 0; n--) {
                     Word word = words.get(n);
                     if (POS_NOUN.contains(word.getPos()) || !"O".equals(word.getNer())) {
@@ -846,7 +847,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
             if (CollectionUtils.isNotEmpty(eventWithPhrase.getRightPhrases())) {
                 // 宾语存在
                 if (eventWithPhrase.getRightPhrases().size() == 1) {
-                    // 宾语为单词
+                    // 宾语为Word
                     Word rightWord = eventWithPhrase.getRightPhrases().get(0);
 
                     if (rightWord.getSentenceNum() == sentNum) {
@@ -855,7 +856,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                             for (int n = rightWord.getNumInLine() + 1; n < words.size(); n++) {
                                 Word word = words.get(n);
                                 if (POS_NOUN.contains(word.getPos()) || !"O".equals(word.getNer())) {
-                                    // 利用名词或命名实体来替换限定词
+                                    // Replace determiner word with noun or named entity
                                     eventWithPhrase.getRightPhrases().set(0, word);
                                     break;
                                 }
@@ -868,7 +869,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                             for (int n = rightWord.getNumInLine() - 1; n > rightVerbIndex; n--) {
                                 Word word = words.get(n);
                                 if (POS_NOUN.contains(word.getPos()) || !"O".equals(word.getNer())) {
-                                    // 利用名词或命名实体来替换限定词
+                                    // Replace determiner word with noun or named entity
                                     eventWithPhrase.getRightPhrases().set(0, word);
                                     break;
                                 }
@@ -878,7 +879,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
                                 }
                             }
                         } else if (POS_PRP.contains(rightWord.getPos())) {
-                            // 往前寻找最近的人名来替换当前词
+                            // Search forward for nearest person name to replace current word
                             for (int n = rightWord.getNumInLine() - 1; n > rightVerbIndex; n--) {
                                 Word word = words.get(n);
                                 if ("person".equalsIgnoreCase(word.getNer())) {
@@ -891,7 +892,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
 
                 }
             } else {
-                // 宾语缺失，向后找标点范围内最近的名词或命名实体
+                // 宾语缺失，向后找标点范围内最近的名Word或命名实体
                 for (int n = rightVerbIndex + 1; n < words.size(); n++) {
                     Word word = words.get(n);
                     if (POS_NOUN.contains(word.getPos()) || !"O".equals(word.getNer())) {
@@ -907,7 +908,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
     }
 
     /**
-     * 事件过滤函数，对于不符合要求的事件，返回null
+     * Event filteringFunction，Pairs于不符合要求的Event，返回null
      *
      * @param event
      * @return
@@ -919,12 +920,12 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
             return null;
         }
 
-        /* 过滤谓词为say的事件 */
+        /* 过滤谓Word为say的Event */
         if ("say".equalsIgnoreCase(event.getMiddlePhrases().get(0).getLemma())) {
             return null;
         }
 
-        /* 过滤回文事件 */
+        /* 过滤回文Event */
         if (event.isPalindromicEvent()) {
             return null;
         }
@@ -933,7 +934,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
     }
 
     /**
-     * 将词语集合转换成句子，
+     * 将Word语CollectionConvert成句子，
      *
      * @param words
      * @return
@@ -948,7 +949,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
     }
 
     /**
-     * 将词语集合转换成句子，
+     * 将Word语CollectionConvert成句子，
      *
      * @param words
      * @return
@@ -963,7 +964,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
     }
 
     /**
-     * 将事件以精简的形式转化成字符串
+     * 将Event以精简的形式转化成String
      *
      * @param events
      * @return
@@ -981,7 +982,7 @@ public class EventsExtractBasedOnGraphV2 implements Constants, Callable<Boolean>
     }
 
     /**
-     * 事件抽取测试
+     * Event extraction测试
      *
      * @param args
      * @throws Exception
