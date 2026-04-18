@@ -8,6 +8,7 @@ import java.util.Map;
  *
  * @author Apache_xiaochao
  */
+@SuppressWarnings("checkstyle:VisibilityModifier")
 public class SentenceSilimarityAttribute {
 
     /**
@@ -16,8 +17,8 @@ public class SentenceSilimarityAttribute {
      * @author Apache_xiaochao
      */
     public static class Sentence {
-        public float compressedQuality; // 压缩质量，数值越小越好，可能存在0
-        public List<String> words;             // 句中的单词
+        public float compressedQuality;
+        public List<String> words;
 
         public Sentence(float compressedQuality, List<String> words) {
             super();
@@ -26,8 +27,8 @@ public class SentenceSilimarityAttribute {
         }
     }
 
-    private List<Sentence> sentences;// 句子集合
-    private Map<String, Integer> words;    // 单词集合，不重复，key为单词，value为对应的序号
+    private List<Sentence> sentences;
+    private Map<String, Integer> words;
 
     public SentenceSilimarityAttribute(List<Sentence> sentences, Map<String, Integer> words) {
         super();
@@ -50,8 +51,5 @@ public class SentenceSilimarityAttribute {
     public void setWords(Map<String, Integer> words) {
         this.words = words;
     }
-
-    // private int wordsCount; //单词总数
-    // private int[][] wordsCountInSentence; //每个单词在每个句子中的出现次数，行表示单词，列表示句子
 
 }

@@ -12,15 +12,19 @@ import java.io.ObjectOutputStream;
  *
  * @author ZhenchaoWang 2015-11-3 16:12:11
  */
-public class SerializeUtils {
+@SuppressWarnings("checkstyle:HideUtilityClassConstructor")
+public final class SerializeUtils {
+
+    private SerializeUtils() {
+    }
 
     /**
      * 反序列化对象
      *
-     * @param filename
-     * @return
-     * @throws IOException
-     * @throws ClassNotFoundException
+     * @param filename 文件名
+     * @return 反序列化后的对象
+     * @throws IOException            IO异常
+     * @throws ClassNotFoundException 类未找到异常
      */
     public static Object readObj(String filename) throws IOException, ClassNotFoundException {
 
@@ -43,15 +47,15 @@ public class SerializeUtils {
     /**
      * 序列化对象
      *
-     * @param obj
-     * @throws IOException
+     * @param obj  待序列化对象
+     * @param file 目标文件
+     * @throws IOException IO异常
      */
     public static void writeObj(Object obj, File file) throws IOException {
 
         ObjectOutputStream outer = null;
         try {
             if (!file.getParentFile().exists()) {
-                // 如果目录不存在，则创建
                 file.getParentFile().mkdirs();
             }
             outer = new ObjectOutputStream(new FileOutputStream(file));

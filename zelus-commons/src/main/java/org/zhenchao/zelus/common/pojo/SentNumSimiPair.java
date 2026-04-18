@@ -1,14 +1,17 @@
 package org.zhenchao.zelus.common.pojo;
 
 /**
- * 记录当前句子的编号，以及与问句的相似度 实现了Comparable接口，按照相似度由小到大进行排序
+ * 记录当前句子的编号，以及与问句的相似度
+ * 实现了Comparable接口，按照相似度由小到大进行排序
  *
  * @author Apache_xiaochao
  */
 public class SentNumSimiPair implements Comparable<SentNumSimiPair> {
 
-    private int sentNum;    // 句子序号
-    private double similarity; // 与问句的相似度
+    private static final int NEGATIVE_ONE = -1;
+
+    private int sentNum;
+    private double similarity;
 
     public SentNumSimiPair(int sentNum, double similarity) {
         super();
@@ -23,9 +26,8 @@ public class SentNumSimiPair implements Comparable<SentNumSimiPair> {
         } else if (this.similarity == sentNumSimiPair.similarity) {
             return 0;
         } else {
-            return -1;
+            return NEGATIVE_ONE;
         }
-        // return this.similarity - similarity;
     }
 
     public int getSentNum() {

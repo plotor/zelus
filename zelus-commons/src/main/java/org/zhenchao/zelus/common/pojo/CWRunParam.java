@@ -5,21 +5,24 @@ package org.zhenchao.zelus.common.pojo;
  *
  * @author Apache_xiaochao
  */
+@SuppressWarnings("checkstyle:MagicNumber")
 public class CWRunParam {
 
-    private String jarPath;                    // jar文件所在路径
-    private String nodeFilePath;               // nodes文件所在路径
-    private String edgeFilePath;               // edges文件所在路径
-    private String algorithm_opt = "dist_log"; // 节点之间近似度计算模式
-    private int edgeWeightThreshold;        // 边入选聚类的权值
-    private float keepClassRate;
-    private String mutation_mode = "constant";
-    private float mutation_rate;
-    private int iterCount = 100;        // 迭代次数
-    private String resultFilePath;             // 结果文件存放路径
+    private static final int DEFAULT_ITER_COUNT = 100;
 
-    public String getAlgorithm_opt() {
-        return this.algorithm_opt;
+    private String jarPath;
+    private String nodeFilePath;
+    private String edgeFilePath;
+    private String algorithmOpt = "dist_log";
+    private int edgeWeightThreshold;
+    private float keepClassRate;
+    private String mutationMode = "constant";
+    private float mutationRate;
+    private int iterCount = DEFAULT_ITER_COUNT;
+    private String resultFilePath;
+
+    public String getAlgorithmOpt() {
+        return this.algorithmOpt;
     }
 
     public String getEdgeFilePath() {
@@ -42,12 +45,12 @@ public class CWRunParam {
         return this.keepClassRate;
     }
 
-    public String getMutation_mode() {
-        return this.mutation_mode;
+    public String getMutationMode() {
+        return this.mutationMode;
     }
 
-    public float getMutation_rate() {
-        return this.mutation_rate;
+    public float getMutationRate() {
+        return this.mutationRate;
     }
 
     public String getNodeFilePath() {
@@ -58,8 +61,8 @@ public class CWRunParam {
         return this.resultFilePath;
     }
 
-    public void setAlgorithm_opt(String algorithm_opt) {
-        this.algorithm_opt = algorithm_opt;
+    public void setAlgorithmOpt(String algorithmOpt) {
+        this.algorithmOpt = algorithmOpt;
     }
 
     public void setEdgeFilePath(String edgeFilePath) {
@@ -82,12 +85,12 @@ public class CWRunParam {
         this.keepClassRate = keepClassRate;
     }
 
-    public void setMutation_mode(String mutation_mode) {
-        this.mutation_mode = mutation_mode;
+    public void setMutationMode(String mutationMode) {
+        this.mutationMode = mutationMode;
     }
 
-    public void setMutation_rate(float mutation_rate) {
-        this.mutation_rate = mutation_rate;
+    public void setMutationRate(float mutationRate) {
+        this.mutationRate = mutationRate;
     }
 
     public void setNodeFilePath(String nodeFilePath) {
@@ -100,9 +103,16 @@ public class CWRunParam {
 
     @Override
     public String toString() {
-        return "java -jar " + this.jarPath + " -F -i " + this.nodeFilePath + " " + this.edgeFilePath + " -a " + this.algorithm_opt + " -t "
-                + this.edgeWeightThreshold + " -k " + this.keepClassRate + " -m " + this.mutation_mode + " " + this.mutation_rate + " -d "
-                + this.iterCount + " -o " + this.resultFilePath;
+        return "java -jar " + this.jarPath
+                + " -F -i " + this.nodeFilePath
+                + " " + this.edgeFilePath
+                + " -a " + this.algorithmOpt
+                + " -t " + this.edgeWeightThreshold
+                + " -k " + this.keepClassRate
+                + " -m " + this.mutationMode
+                + " " + this.mutationRate
+                + " -d " + this.iterCount
+                + " -o " + this.resultFilePath;
     }
 
 }

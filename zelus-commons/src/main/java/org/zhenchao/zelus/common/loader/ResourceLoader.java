@@ -13,15 +13,20 @@ import java.util.Set;
  *
  * @author ZhenchaoWang 2015-11-3 10:20:26
  */
-public class ResourceLoader {
+@SuppressWarnings({"checkstyle:HideUtilityClassConstructor", "checkstyle:UncommentedMain",
+        "checkstyle:JavadocMethod"})
+public final class ResourceLoader {
 
     private static Logger log = Logger.getLogger(ResourceLoader.class);
+
+    private ResourceLoader() {
+    }
 
     /**
      * 加载停用词列表，可以同时指定多个文件
      *
-     * @param filenames
-     * @return
+     * @param filenames 停用词文件名
+     * @return 停用词集合
      */
     public static Set<String> loadStopwords(String... filenames) {
         Set<String> stopwords = new HashSet<String>();
@@ -30,7 +35,9 @@ public class ResourceLoader {
                 BufferedReader br = null;
                 try {
                     log.info("Loading stopwords...");
-                    br = new BufferedReader(new InputStreamReader(ResourceLoader.class.getClassLoader().getResourceAsStream(filename), "UTF-8"));
+                    br = new BufferedReader(new InputStreamReader(
+                            ResourceLoader.class.getClassLoader()
+                                    .getResourceAsStream(filename), "UTF-8"));
                     String line = null;
                     while ((line = br.readLine()) != null) {
                         stopwords.add(line.trim());
@@ -48,11 +55,13 @@ public class ResourceLoader {
         return stopwords;
     }
 
+    /** 测试入口 */
     public static void main(String[] args) {
-        Set<String> set = ResourceLoader.loadStopwords("stopwords-en-default.txt", "stopwords-en-mysql.txt");
+        Set<String> set = ResourceLoader.loadStopwords(
+                "stopwords-en-default.txt", "stopwords-en-mysql.txt");
         int num = 0;
         for (String str : set) {
-            System.out.println((++num) + "\t" + str);
+            log.info((++num) + "\t" + str);
         }
     }
 

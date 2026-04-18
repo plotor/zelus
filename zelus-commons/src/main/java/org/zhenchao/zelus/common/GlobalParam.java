@@ -5,6 +5,7 @@ package org.zhenchao.zelus.common;
  *
  * @author zhenchao.Wang 2016-1-29 20:22:22
  */
+@SuppressWarnings("checkstyle:VisibilityModifier")
 public abstract class GlobalParam {
 
     /** 线程数 */

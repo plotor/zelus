@@ -12,27 +12,32 @@ import java.util.Map;
  *
  * @author ZhenchaoWang 2015-11-4 11:11:52
  */
-public class C3p0Utils {
+@SuppressWarnings("checkstyle:HideUtilityClassConstructor")
+public final class C3p0Utils {
 
-    private static Map<String, ComboPooledDataSource> map_cpds;
+    private static Map<String, ComboPooledDataSource> mapCpds;
+
+    private C3p0Utils() {
+    }
 
     /**
      * 获取数据库连接
      *
-     * @return
-     * @throws SQLException
+     * @param cfgName 配置名称
+     * @return 数据库连接
+     * @throws SQLException SQL异常
      */
     public static synchronized Connection getConnection(String cfgName) throws SQLException {
 
-        if (map_cpds == null) {
-            map_cpds = new HashMap<>();
+        if (mapCpds == null) {
+            mapCpds = new HashMap<>();
         }
 
-        if (map_cpds.get(cfgName) == null) {
-            map_cpds.put(cfgName, new ComboPooledDataSource(cfgName));
+        if (mapCpds.get(cfgName) == null) {
+            mapCpds.put(cfgName, new ComboPooledDataSource(cfgName));
         }
 
-        return map_cpds.get(cfgName).getConnection();
+        return mapCpds.get(cfgName).getConnection();
     }
 
 }

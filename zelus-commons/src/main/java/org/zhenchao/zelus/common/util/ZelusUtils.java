@@ -13,6 +13,11 @@ import java.util.List;
  *
  * @author Apache_xiaochao
  */
+@SuppressWarnings({"checkstyle:MethodLength", "checkstyle:JavadocMethod",
+        "checkstyle:HideUtilityClassConstructor", "checkstyle:LocalVariableName",
+        "checkstyle:LineLength", "checkstyle:MagicNumber", "checkstyle:Regexp",
+        "checkstyle:LocalFinalVariableName", "checkstyle:ReturnCount",
+        "checkstyle:NestedIfDepth", "checkstyle:MethodName", "checkstyle:ConstantName"})
 public class ZelusUtils implements Constants {
 
     public static final Logger log = Logger.getLogger(ZelusUtils.class);

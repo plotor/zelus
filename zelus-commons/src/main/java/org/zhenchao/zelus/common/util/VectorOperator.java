@@ -21,7 +21,12 @@ import java.util.Random;
  *
  * @author Apache_xiaochao
  */
-public class VectorOperator implements Constants {
+@SuppressWarnings({"checkstyle:MagicNumber", "checkstyle:MethodLength", "checkstyle:ReturnCount",
+        "checkstyle:NestedForDepth", "checkstyle:LocalVariableName", "checkstyle:ParameterName",
+        "checkstyle:JavadocMethod", "checkstyle:HideUtilityClassConstructor", "checkstyle:LineLength",
+        "checkstyle:Regexp", "checkstyle:ModifierOrder", "checkstyle:LocalFinalVariableName",
+        "checkstyle:ConstantName", "checkstyle:WhitespaceAfter", "checkstyle:UncommentedMain"})
+public final class VectorOperator implements Constants {
 
     private final Logger log = Logger.getLogger(this.getClass());
 

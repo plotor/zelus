@@ -31,7 +31,9 @@ public class NumedEventWithPhrase implements Serializable {
 
     @Override
     public String toString() {
-        return "NumedEventWithPhrase [num=" + this.num + ", event=" + this.event + ", vec=" + Arrays.toString(this.vec) + "]";
+        return "NumedEventWithPhrase [num=" + this.num
+                + ", event=" + this.event
+                + ", vec=" + Arrays.toString(this.vec) + "]";
     }
 
     public Integer getNum() {

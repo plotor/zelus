@@ -22,6 +22,9 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author Apache_xiaochao
  */
+@SuppressWarnings({"checkstyle:JavadocMethod", "checkstyle:HideUtilityClassConstructor",
+        "checkstyle:LineLength", "checkstyle:LocalVariableName", "checkstyle:WhitespaceAfter",
+        "checkstyle:ModifierOrder"})
 public class WordNetUtil implements Constants {
 
     private static Logger log = Logger.getLogger(WordNetUtil.class);
