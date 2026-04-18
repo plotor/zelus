@@ -6,9 +6,9 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * 类别实体增强版
+ * Class别实体增强版
  *
- * @author zhenchao.Wang 2016-1-28 17:24:02
+ * @author zhenchao 2016-1-28 17:24:02
  */
 public class ClustItemPlus implements Serializable, Comparable<ClustItemPlus> {
 
@@ -17,10 +17,10 @@ public class ClustItemPlus implements Serializable, Comparable<ClustItemPlus> {
     /** clust名称 */
     private String name;
 
-    /** clust下面的句子集合 */
+    /** clust下面的句子Collection */
     private List<Pair<Float, String>> sentences;
 
-    /** 当前类别大小 */
+    /** 当前Class别大小 */
     private int size;
 
     /** 多样性（包含的文件数） */

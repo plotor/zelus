@@ -21,26 +21,27 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
- * 采用口哨算法对事件进行聚类
+ * 采用Chinese Whispers algorithmCluster events
  *
- * @author Apache_xiaochao
+ * @author zhenchao
  */
 @Deprecated
+@SuppressWarnings("checkstyle:Regexp")
 public class ClusterByChineseWhispers implements Constants {
 
     private final Logger log = Logger.getLogger(this.getClass());
 
     private final String nodesDir; // 存放node文件的目录
     private final String edgeDir; // 存放edge文件的目录
-    private final String resultDir; // 存放聚类结果的目录
+    private final String resultDir; // 存放ClusteringResult的目录
     private final String textDir; // 按行分割之后的文本所在路径
     private final String extractedSentencesSaveDir; // 抽取的句子文件存放的目录
-    private final String moduleFilePath;  //词性标注工具模型所在路径
-    private int threadNum = 1;  //线程数，默认为1
+    private final String moduleFilePath;  //POS tagging工具模型所在路径
+    private int threadNum = 1;  //Thread count，默认为1
     private final float edgeSelectedWeight;
     private final boolean isPret;
     private final boolean isClust;
-    private final String dictPath;  //WordNet词典路径
+    private final String dictPath;  //WordNetWord典路径
 
     public ClusterByChineseWhispers(String nodesDir, String edgeDir,
                                     String resultDir, String textDir, String extractedSentencesSaveDir,
@@ -61,7 +62,7 @@ public class ClusterByChineseWhispers implements Constants {
     }
 
     /**
-     * 根据边的权重信息来计算口哨算法参数中的边的阈值
+     * 根据边的权重Information来CalculateChinese Whispers algorithmParameter中的边的阈值
      *
      * @param filepath
      * @return
@@ -95,24 +96,24 @@ public class ClusterByChineseWhispers implements Constants {
     }
 
     /**
-     * 聚类函数
+     * ClusteringFunction
      *
-     * @param cwRunParam 口哨算法运行参数封装对象：
-     * 其中edgeWeightThreshold，nodeFileName，edgeFileName，resultFilePath在函数内部自动设置
+     * @param cwRunParam Chinese Whispers algorithmRun parameters封装Pairs象：
+     * 其中edgeWeightThreshold，nodeFileName，edgeFileName，resultFilePath在Function内部自动设置
      * @throws IOException
      * @throws InterruptedException
      */
     public void doCluster(CWRunParam cwRunParam) throws IOException, InterruptedException {
 
         if (this.isPret) {
-            // 对文本进行预处理
-            this.log.info("正在对文本进行预处理，以满足口哨算法的输入要求...");
+            // Pairs文本进行Preprocessing
+            this.log.info("正在Pairs文本进行Preprocessing，以满足Chinese Whispers algorithm的Input要求...");
             final Pretreatment pretreatment = new Pretreatment();
             pretreatment.pretreatment4ChineseWHispers(this.edgeDir);
         }
 
         if (this.isClust) {
-            this.log.info("正在对事件进行聚类...");
+            this.log.info("正在Cluster events...");
             final File nodeFile = new File(this.nodesDir);
             final String[] filenames = nodeFile.list(new FilenameFilter() {
 
@@ -128,14 +129,14 @@ public class ClusterByChineseWhispers implements Constants {
             for (final String filename : filenames) {
                 final String nodeFileName = this.nodesDir + "/" + filename;
                 final String edgeFileName = this.edgeDir + "/" + DIR_CW_PRETREAT + "/" + filename.replace(".node", ".edge");
-                // 计算边的阈值
+                // Calculate边的阈值
                 final int edgeThreshHole = this.calculateThreshold4edgeweight(edgeFileName);
                 cwRunParam.setEdgeWeightThreshold(edgeThreshHole);
                 cwRunParam.setNodeFilePath(nodeFileName);
                 cwRunParam.setEdgeFilePath(edgeFileName);
                 cwRunParam.setResultFilePath(this.resultDir + "/" + filename.replace(".node", ""));
                 final String command = cwRunParam.toString();
-                this.log.info("正在用口哨算法对" + filename.replace(".node", "") + "进行聚类...");
+                this.log.info("正在用Chinese Whispers algorithmPairs" + filename.replace(".node", "") + "进行Clustering...");
                 final Process process = Runtime.getRuntime().exec(command);
                 process.waitFor();
                 final BufferedReader read = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -151,13 +152,13 @@ public class ClusterByChineseWhispers implements Constants {
     }
 
     /**
-     * 按照事件聚类的结果来对文本中的句子进行聚类
+     * 按照Event clustering的Result来Pairs文本中的句子进行Clustering
      *
      * @throws IOException
      */
     public void clusterSentencesByEvents() throws IOException {
         final File clusterResultDir = new File(this.resultDir);
-        // 获取所有的事件聚类结果文件（.read）
+        // 获取所有的Event clusteringResult文件（.read）
         final String[] filenames_cluster_read = clusterResultDir.list(new FilenameFilter() {
 
             @Override
@@ -169,10 +170,10 @@ public class ClusterByChineseWhispers implements Constants {
             }
         });
 
-        // 加载词性标注模型
+        // 加载POS tagging模型
         OpenNlpPOSTagger.getInstance(this.moduleFilePath);
 
-        //加载依存分析模型
+        //加载Dependency parsing模型
         final String grammar = "edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz";
         final String[] options = {"-maxLength", "80", "-retainTmpSubcategories"};
         final LexicalizedParser lp = LexicalizedParser.loadModel(grammar, options);
@@ -182,14 +183,14 @@ public class ClusterByChineseWhispers implements Constants {
         final ExecutorService executorService = Executors.newFixedThreadPool(this.threadNum);
         final List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
         for (final String filename_cluster_read : filenames_cluster_read) {
-            //添加任务到任务列表
+            //添加任务到任务List
             tasks.add(new SentenceExtractThread(
                     this.resultDir, filename_cluster_read, this.extractedSentencesSaveDir, this.textDir, lp, this.dictPath));
         }
 
         if (tasks.size() > 0) {
             try {
-                //执行任务组，所有任务执行完毕之前，主线程阻塞
+                //Execute任务组，所有任务Execute完毕之前，主线程阻塞
                 final List<Future<Boolean>> futures = executorService.invokeAll(tasks);
                 executorService.shutdown();
                 if (futures != null) {
@@ -198,7 +199,7 @@ public class ClusterByChineseWhispers implements Constants {
                     }
                 }
             } catch (InterruptedException | ExecutionException e) {
-                this.log.error("执行任务组出错！", e);
+                this.log.error("Execute任务组error！", e);
                 //e.printStackTrace();
             }
         }
@@ -207,7 +208,7 @@ public class ClusterByChineseWhispers implements Constants {
     //测试
     public static void main(String[] args) throws IOException {
         final File clusterResultDir = new File("src/tmp");
-        // 获取所有的事件聚类结果文件（.read）
+        // 获取所有的Event clusteringResult文件（.read）
         final String[] filenames_cluster_read = clusterResultDir.list(new FilenameFilter() {
 
             @Override
@@ -220,10 +221,10 @@ public class ClusterByChineseWhispers implements Constants {
             }
         });
 
-        // 加载词性标注模型
+        // 加载POS tagging模型
         OpenNlpPOSTagger.getInstance("src/en-pos-maxent.bin");
 
-        //加载依存分析模型
+        //加载Dependency parsing模型
         final String grammar = "edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz";
         final String[] options = {"-maxLength", "80", "-retainTmpSubcategories"};
         final LexicalizedParser lp = LexicalizedParser.loadModel(grammar, options);
@@ -233,14 +234,14 @@ public class ClusterByChineseWhispers implements Constants {
         final ExecutorService executorService = Executors.newFixedThreadPool(2);
         final List<Callable<Boolean>> tasks = new ArrayList<Callable<Boolean>>();
         for (final String filename_cluster_read : filenames_cluster_read) {
-            //添加任务到任务列表
+            //添加任务到任务List
             tasks.add(new SentenceExtractThread(
                     "src/tmp", filename_cluster_read, "src/tmp/extract_sent", "src/tmp/text_dir", lp, "D:/WordNet/2.1/dict"));
         }
 
         if (tasks.size() > 0) {
             try {
-                //执行任务组，所有任务执行完毕之前，主线程阻塞
+                //Execute任务组，所有任务Execute完毕之前，主线程阻塞
                 final List<Future<Boolean>> futures = executorService.invokeAll(tasks);
                 executorService.shutdown();
                 if (futures != null) {
@@ -249,7 +250,7 @@ public class ClusterByChineseWhispers implements Constants {
                     }
                 }
             } catch (InterruptedException | ExecutionException e) {
-                //log.error("执行任务组出错！", e);
+                //log.error("Execute任务组error！", e);
                 e.printStackTrace();
             }
         }

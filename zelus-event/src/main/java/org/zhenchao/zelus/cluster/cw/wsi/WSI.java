@@ -38,6 +38,7 @@ import java.util.Set;
  *
  * Run main method without arguments to see list of command line parameters.
  */
+@SuppressWarnings({"checkstyle:ArrayTypeStyle", "checkstyle:MissingSwitchDefault", "checkstyle:Regexp", "checkstyle:UncommentedMain"})
 public class WSI {
     protected Graph<Integer, Float> graph;
     protected StringIndexGraphWrapper<Float> graphWrapper;

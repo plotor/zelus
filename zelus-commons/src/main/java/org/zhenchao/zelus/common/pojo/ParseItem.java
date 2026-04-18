@@ -1,15 +1,15 @@
 package org.zhenchao.zelus.common.pojo;
 
 /**
- * 依存分析原子结果
+ * Dependency parsing原子Result
  *
- * @author Apache_xiaochao
+ * @author zhenchao
  */
 public class ParseItem {
 
-    private String dependencyType; // 依存类型
-    private Word leftWord;       // 左边的词
-    private Word rightWord;      // 右边的词
+    private String dependencyType; // 依存Class型
+    private Word leftWord;       // 左边的Word
+    private Word rightWord;      // 右边的Word
 
     public ParseItem() {
         super();

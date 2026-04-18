@@ -25,6 +25,7 @@ import java.util.Set;
  * Map&lt;Integer, Set&lt;Integer&gt;&gt; clusters = cw.findClusters(graph);<br/>
  * </code>
  */
+@SuppressWarnings("checkstyle:Regexp")
 public class CW<N> {
     // Copy of node list is used shuffling order of nodes
     protected List<N> nodes;

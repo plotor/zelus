@@ -17,9 +17,9 @@ import java.util.Map;
 import java.util.Random;
 
 /**
- * 向量操作相关类
+ * Vector operation related class
  *
- * @author Apache_xiaochao
+ * @author zhenchao
  */
 @SuppressWarnings({"checkstyle:MagicNumber", "checkstyle:MethodLength", "checkstyle:ReturnCount",
         "checkstyle:NestedForDepth", "checkstyle:LocalVariableName", "checkstyle:ParameterName",
@@ -43,7 +43,7 @@ public final class VectorOperator implements Constants {
     }
 
     /**
-     * 根据事件中三个词的已知向量，来计算对应事件的向量
+     * Calculate the corresponding event vector based on the known vectors of three words in the event
      *
      * @param vecs_left
      * @param vecs_middle
@@ -57,8 +57,8 @@ public final class VectorOperator implements Constants {
         for (Float[] f_v_left : vecs_left) {
             for (Float[] f_v_middle : vecs_middle) {
                 for (Float[] f_v_right : vecs_right) {
-                    double[][] kronecker_left_right = new double[DIMENSION][DIMENSION];  //存储主语为宾语的克罗内克积
-                    //计算主语和宾语的克罗内卡积
+                    double[][] kronecker_left_right = new double[DIMENSION][DIMENSION];  //Store Kronecker product of subject and object
+                    //Calculate Kronecker product of subject and object
                     for (int i = 0; i < DIMENSION; ++i) {
                         for (int j = 0; j < DIMENSION; ++j) {
                             kronecker_left_right[i][j] = f_v_right[i] * f_v_left[j];
@@ -83,7 +83,7 @@ public final class VectorOperator implements Constants {
     }
 
     /**
-     * 利用组合语义得到事件向量
+     * Get event vector using compositional semantics
      *
      * @param leftVec
      * @param middleVec
@@ -96,8 +96,8 @@ public final class VectorOperator implements Constants {
             return null;
         }
 
-        double[][] kronecker = new double[DIMENSION][DIMENSION];  //存储主语为宾语的克罗内克积
-        //计算主语和宾语的克罗内卡积
+        double[][] kronecker = new double[DIMENSION][DIMENSION];  //Store Kronecker product of subject and object
+        //Calculate Kronecker product of subject and object
         for (int i = 0; i < DIMENSION; ++i) {
             for (int j = 0; j < DIMENSION; ++j) {
                 kronecker[i][j] = rightVec[i] * leftVec[j];
@@ -119,7 +119,7 @@ public final class VectorOperator implements Constants {
     }
 
     /**
-     * 将事件转化成向量
+     * Convert event to vector
      * @param event
      * @return
      * @throws SQLException
@@ -129,7 +129,7 @@ public final class VectorOperator implements Constants {
         List<Double[]> eventVecs = new ArrayList<Double[]>();
 
         if(event != null){
-            //创建一个值全为1的词向量
+            //Create a word vector with all values set to 1
             Float[] all_1_vec = new Float[DIMENSION];
             Arrays.fill(all_1_vec, 1f);
 
@@ -154,13 +154,13 @@ public final class VectorOperator implements Constants {
 
                 }else{
 
-                    this.log.warn("当前事件中存在未知的词向量：" + event);
+                    this.log.warn("当前Event中存在未知的WordVector：" + event);
 
                 }
 
             } else if(EventType.RIGHT_MISSING.equals(event.eventType())) {
 
-                //主-谓，将宾语的向量全部用1代替
+                //Subject-verb: replace object vector with all 1s
                 List<Float[]> vecs_left = null;
                 List<Float[]> vecs_middle = null;
                 List<Float[]> vecs_right = new ArrayList<Float[]>();
@@ -180,13 +180,13 @@ public final class VectorOperator implements Constants {
 
                 }else{
 
-                    this.log.warn("当前事件中存在未知的词向量：" + event);
+                    this.log.warn("当前Event中存在未知的WordVector：" + event);
 
                 }
 
             } else if(EventType.LEFT_MISSING.equals(event.eventType())){
 
-                //谓-宾，将主语的向量全部用1代替
+                //Verb-object: replace subject vector with all 1s
                 List<Float[]> vecs_left = new ArrayList<Float[]>();
                 vecs_left.add(all_1_vec);
                 List<Float[]> vecs_middle = null;
@@ -206,13 +206,13 @@ public final class VectorOperator implements Constants {
 
                 }else{
 
-                    this.log.warn("当前事件中存在未知的词向量：" + event);
+                    this.log.warn("当前Event中存在未知的WordVector：" + event);
 
                 }
 
             }else{
 
-                this.log.info("不支持该事件类型：" + event);
+                this.log.info("不支持该EventClass型：" + event);
 
             }
         }
@@ -220,7 +220,7 @@ public final class VectorOperator implements Constants {
     }*/
 
     /**
-     * 将事件转化成向量
+     * Convert event to vector
      *
      * @param eventWithPhrase
      * @return
@@ -240,7 +240,7 @@ public final class VectorOperator implements Constants {
 
         } else if (EventType.RIGHT_MISSING.equals(eventWithPhrase.eventType())) {
 
-            //主-谓，将宾语的向量全部用1代替
+            //Subject-verb: replace object vector with all 1s
             Float[] leftVec = this.phraseVector(eventWithPhrase.getLeftPhrases(), true);
             Float[] middleVec = this.phraseVector(eventWithPhrase.getMiddlePhrases(), false);
             Float[] rightVec = new Float[Constants.DIMENSION];
@@ -250,7 +250,7 @@ public final class VectorOperator implements Constants {
 
         } else if (EventType.LEFT_MISSING.equals(eventWithPhrase.eventType())) {
 
-            //谓-宾，将主语的向量全部用1代替
+            //Verb-object: replace subject vector with all 1s
             Float[] leftVec = new Float[Constants.DIMENSION];
             Arrays.fill(leftVec, 1.0f);
             Float[] middleVec = this.phraseVector(eventWithPhrase.getMiddlePhrases(), false);
@@ -260,7 +260,7 @@ public final class VectorOperator implements Constants {
 
         } else {
 
-            this.log.warn("不支持该事件类型：" + eventWithPhrase);
+            this.log.warn("不支持该EventClass型：" + eventWithPhrase);
 
         }
 
@@ -269,8 +269,8 @@ public final class VectorOperator implements Constants {
     }
 
     /**
-     * 计算事件向量<br>
-     * 相对于eventToVec的区别在于，如果某个短语的向量不存在，则随机生成一个向量，而不是用1代替
+     * Calculate event vector<br>
+     * Differs from eventToVec: if a phrase vector does not exist, generate a random vector instead of using all 1s
      *
      * @param eventWithPhrase
      * @return
@@ -278,7 +278,7 @@ public final class VectorOperator implements Constants {
     public Double[] eventToVecPlus(EventWithPhrase eventWithPhrase) {
 
         if (EventType.ERROR.equals(eventWithPhrase.eventType())) {
-            this.log.error("不支持该事件类型：" + eventWithPhrase);
+            this.log.error("不支持该EventClass型：" + eventWithPhrase);
             return null;
         }
 
@@ -289,7 +289,7 @@ public final class VectorOperator implements Constants {
         int randomCount = 0;
 
         if (middleVec == null) {
-            // 对于谓语，如果不存在向量，则直接忽略该事件
+            // For predicate, if vector does not exist, skip this event
             //middleVec = this.randomWordVec();
             //randomCount++;
             this.log.warn("The middle vector is null, ignore this event:" + eventWithPhrase);
@@ -309,7 +309,7 @@ public final class VectorOperator implements Constants {
         }
 
         if (randomCount > 1) {
-            // 对于一个事件，如果存在两次以上的随机向量生成，则忽略该事件
+            // For an event, if random vector generation occurs more than twice, skip the event
             return null;
         }
 
@@ -318,17 +318,17 @@ public final class VectorOperator implements Constants {
     }
 
     /**
-     * 计算事件向量<br>
-     * 相对于eventToVec的区别在于，如果某个短语的向量不存在，则随机生成一个向量，而不是用1代替
+     * Calculate event vector<br>
+     * Differs from eventToVec: if a phrase vector does not exist, generate a random vector instead of using all 1s
      *
      * @param eventWithPhrase
-     * @param wordvecsInTopic 词向量字典
+     * @param wordvecsInTopic Word vector dictionary
      * @return
      */
     public Double[] eventToVecPlus(EventWithPhrase eventWithPhrase, Map<String, Vector> wordvecsInTopic) {
 
         if (EventType.ERROR.equals(eventWithPhrase.eventType())) {
-            this.log.error("不支持该事件类型：" + eventWithPhrase);
+            this.log.error("不支持该EventClass型：" + eventWithPhrase);
             return null;
         }
 
@@ -338,7 +338,7 @@ public final class VectorOperator implements Constants {
         }
 
         /*
-         * 计算短语的最佳向量
+         * Calculate the best vector for a phrase
          */
         Float[] leftVec = this.phraseVector(eventWithPhrase.getLeftPhrases(), true, wordvecsInTopic);
         Float[] middleVec = this.phraseVector(eventWithPhrase.getMiddlePhrases(), false, wordvecsInTopic);
@@ -347,7 +347,7 @@ public final class VectorOperator implements Constants {
         int randomCount = 0;
 
         if (middleVec == null) {
-            // 对于谓语，如果不存在向量，则直接忽略该事件
+            // For predicate, if vector does not exist, skip this event
             //middleVec = this.randomWordVec();
             //randomCount++;
             this.log.warn("The middle vector is null, ignore this event:" + eventWithPhrase);
@@ -367,7 +367,7 @@ public final class VectorOperator implements Constants {
         }
 
         if (randomCount > 1) {
-            // 对于一个事件，如果存在两次以上的随机向量生成，则忽略该事件
+            // For an event, if random vector generation occurs more than twice, skip the event
             return null;
         }
 
@@ -376,8 +376,8 @@ public final class VectorOperator implements Constants {
     }
 
     /**
-     * 计算两个向量之间的余弦值<br>
-     * 如果小于0，则说明计算出错
+     * Calculate cosine similarity between two vectors<br>
+     * If less than 0, calculation error occurred
      *
      * @param vec1
      * @param vec2
@@ -391,9 +391,9 @@ public final class VectorOperator implements Constants {
             return value;
         }
 
-        //利用向量余弦值来计算事件之间的相似度
-        double scalar = 0;  //两个向量的内积
-        double module_1 = 0, module_2 = 0;  //向量vec_1和vec_2的模
+        //Calculate event similarity using vector cosine
+        double scalar = 0;  //Inner product of two vectors
+        double module_1 = 0, module_2 = 0;  //Magnitudes of vec1 and vec2
         for (int i = 0; i < DIMENSION; ++i) {
             scalar += vec1[i] * vec2[i];
             module_1 += vec1[i] * vec1[i];
@@ -409,8 +409,8 @@ public final class VectorOperator implements Constants {
     }
 
     /**
-     * 计算两个向量之间的欧式距离<br>
-     * 如果返回结果小于0，则说明计算出错
+     * Calculate Euclidean distance between two vectors<br>
+     * If result is less than 0, calculation error occurred
      *
      * @param vec1
      * @param vec2
@@ -439,12 +439,12 @@ public final class VectorOperator implements Constants {
      * @return
      */
     public double standardizedEuclideanDistance(Double[] vec1, Double[] vec2) {
-        // TODO 完成标准欧式距离的计算，2015-11-10 11:14:28
+        // TODO Complete standard Euclidean distance calculation，2015-11-10 11:14:28
         return 0;
     }
 
     /**
-     * 计算输入向量集合的中心向量
+     * CalculateInputVectorCollection的中心Vector
      *
      * @param vectors
      * @return
@@ -474,7 +474,7 @@ public final class VectorOperator implements Constants {
     }
 
     /**
-     * 随机生成一个维度向量，每一维的值在-1.5~1.5之间
+     * Generate a random dimension vector with each dimension value between -1.5 and 1.5
      *
      * @return
      */
@@ -488,19 +488,19 @@ public final class VectorOperator implements Constants {
     }
 
     /**
-     * 计算两个事件之间的近似度
+     * Calculate两个Event之间的近似度
      * 策略三：
-     * 采用“Experimental Support for a Categorical Compositional Distributional Model of Meaning.pdf”中的方法
-     * 采用数据库+缓存框架
+     * 采用“Experimental Support for a Categorical Compositional Distributional Model of Meaning.pdf”中的Method
+     * 采用Data库+缓存框架
      * @param event1
      * @param event2
      * @return
      * @throws SQLException
      */
     /*public double eventsApproximationDegree(EventWithWord event1, EventWithWord event2) throws SQLException{
-        double approx = 0;  //默认以最大值来表示两个事件之间的最大值
+        double approx = 0;  //默认以最大值来表示两个Event之间的最大值
         if(event1 != null && event2 != null){
-            //计算得到两个事件的向量
+            //Calculate得到两个Event的Vector
             final List<Double[]> event_vecs_1 = this.eventToVecs(event1);
             final List<Double[]> event_vecs_2 = this.eventToVecs(event2);
             if(event_vecs_1.size() > 0 && event_vecs_2.size() > 0){
@@ -522,9 +522,9 @@ public final class VectorOperator implements Constants {
                             return Double.MAX_VALUE;
                         }
                     }
-                    //利用向量余弦值来计算事件之间的相似度
-                    double scalar = 0;  //两个向量的内积
-                    double module_1 = 0, module_2 = 0;  //向量vec_1和vec_2的模
+                    //Calculate event similarity using vector cosine
+                    double scalar = 0;  //Inner product of two vectors
+                    double module_1 = 0, module_2 = 0;  //Magnitudes of vec1 and vec2
                     for(int i = 0; i < DIMENSION; ++i){
                         scalar += event_vec_1[i] * event_vec_2[i];
                         module_1 += event_vec_1[i] * event_vec_1[i];
@@ -535,13 +535,13 @@ public final class VectorOperator implements Constants {
                     }
                 }else{
                     //选择最大值作为相似度
-                    double max_approxs = 0;  //记录计算过程中的最大相似度
+                    double max_approxs = 0;  //记录Calculate过程中的最大相似度
                     double approxTmp = max_approxs;
                     for (final Double[] event_vec_1 : event_vecs_1) {
                         for (final Double[] event_vec_2 : event_vecs_2) {
-                            //利用向量余弦值来计算事件之间的相似度
-                            double scalar = 0;  //两个向量的内积
-                            double module_1 = 0, module_2 = 0;  //向量vec_1和vec_2的模
+                            //Calculate event similarity using vector cosine
+                            double scalar = 0;  //Inner product of two vectors
+                            double module_1 = 0, module_2 = 0;  //Magnitudes of vec1 and vec2
                             for(int i = 0; i < DIMENSION; ++i){
                                 scalar += event_vec_1[i] * event_vec_2[i];
                                 module_1 += event_vec_1[i] * event_vec_1[i];
@@ -564,10 +564,10 @@ public final class VectorOperator implements Constants {
     }*/
 
     /**
-     * 计算两个事件之间的近似度
+     * Calculate两个Event之间的近似度
      * 策略三：
-     * 采用“Experimental Support for a Categorical Compositional Distributional Model of Meaning.pdf”中的方法
-     * 采用数据库+缓存框架
+     * 采用“Experimental Support for a Categorical Compositional Distributional Model of Meaning.pdf”中的Method
+     * 采用Data库+缓存框架
      *
      * @param event_vecs_1
      * @param event_vecs_2
@@ -575,11 +575,11 @@ public final class VectorOperator implements Constants {
      * @throws SQLException
      */
     public double eventsApproximationDegree(List<Double[]> event_vecs_1, List<Double[]> event_vecs_2) throws SQLException {
-        double approx = 0;  //默认以最大值来表示两个事件之间的最大值
+        double approx = 0;  //默认以最大值来表示两个Event之间的最大值
         if (event_vecs_1 == null || event_vecs_2 == null) {
             return approx;
         }
-        //计算得到两个事件的向量
+        //Calculate得到两个Event的Vector
         if (event_vecs_1.size() > 0 && event_vecs_2.size() > 0) {
             final Random random = new Random(System.currentTimeMillis());
             final int r_value = random.nextInt(100);
@@ -599,9 +599,9 @@ public final class VectorOperator implements Constants {
                         return Double.MAX_VALUE;
                     }
                 }
-                //利用向量余弦值来计算事件之间的相似度
-                double scalar = 0;  //两个向量的内积
-                double module_1 = 0, module_2 = 0;  //向量vec_1和vec_2的模
+                //Calculate event similarity using vector cosine
+                double scalar = 0;  //Inner product of two vectors
+                double module_1 = 0, module_2 = 0;  //Magnitudes of vec1 and vec2
                 for (int i = 0; i < DIMENSION; ++i) {
                     scalar += event_vec_1[i] * event_vec_2[i];
                     module_1 += event_vec_1[i] * event_vec_1[i];
@@ -612,13 +612,13 @@ public final class VectorOperator implements Constants {
                 }
             } else {
                 //选择最大值作为相似度
-                double max_approxs = 0;  //记录计算过程中的最大相似度
+                double max_approxs = 0;  //记录Calculate过程中的最大相似度
                 double approxTmp = max_approxs;
                 for (final Double[] event_vec_1 : event_vecs_1) {
                     for (final Double[] event_vec_2 : event_vecs_2) {
-                        //利用向量余弦值来计算事件之间的相似度
-                        double scalar = 0;  //两个向量的内积
-                        double module_1 = 0, module_2 = 0;  //向量vec_1和vec_2的模
+                        //Calculate event similarity using vector cosine
+                        double scalar = 0;  //Inner product of two vectors
+                        double module_1 = 0, module_2 = 0;  //Magnitudes of vec1 and vec2
                         for (int i = 0; i < DIMENSION; ++i) {
                             scalar += event_vec_1[i] * event_vec_2[i];
                             module_1 += event_vec_1[i] * event_vec_1[i];
@@ -640,7 +640,7 @@ public final class VectorOperator implements Constants {
     }
 
     /**
-     * 计算一个短语的向量
+     * Calculate一个短语的Vector
      *
      * @param phrase
      * @param ignoreStopwords
@@ -657,8 +657,8 @@ public final class VectorOperator implements Constants {
         }
 
         /**
-         * 计算策略:<br>
-         * 对短语中的非停用词的向量进行累加取平均
+         * Calculate策略:<br>
+         * Pairs短语中的非停用Word的Vector进行累加取平均
          */
         phraseVec = new Float[DIMENSION];
         Arrays.fill(phraseVec, 0.0f);  // 初始以0填充
@@ -666,12 +666,12 @@ public final class VectorOperator implements Constants {
         for (Word word : phrase) {
 
             if (word.getName().equals(word.getPos())) {
-                // 跳过标点符号
+                // Skip punctuation符号
                 continue;
             }
 
             if (ignoreStopwords && STOPWORDS.contains(word.getLemma())) {
-                // 跳过停用词
+                // Skip stopwords
                 continue;
             }
 
@@ -682,7 +682,7 @@ public final class VectorOperator implements Constants {
                     int min = Integer.MAX_VALUE;
                     Float[] vec = null;
                     for (Vector vector : vecs) {
-                        // 以最相近的单词的向量作为当前词的词向量
+                        // 以最相近的Word的Vector作为当前Word的WordVector
                         int dis = ZelusUtils.strDistance(word.getName(), vector.getWord());
                         if(dis < min) {
                             min = dis;
@@ -727,11 +727,11 @@ public final class VectorOperator implements Constants {
     }
 
     /**
-     * 计算一个短语的向量
+     * Calculate一个短语的Vector
      *
      * @param phrase
      * @param ignoreStopwords
-     * @param wordvecsInTopic 词向量字典
+     * @param wordvecsInTopic Word vector dictionary
      * @return
      */
     private Float[] phraseVector(List<Word> phrase, boolean ignoreStopwords, Map<String, Vector> wordvecsInTopic) {
@@ -745,8 +745,8 @@ public final class VectorOperator implements Constants {
         }
 
         /**
-         * 计算策略:<br>
-         * 对短语中的非停用词的向量进行累加取平均
+         * Calculate策略:<br>
+         * Pairs短语中的非停用Word的Vector进行累加取平均
          */
         phraseVec = new Float[DIMENSION];
         Arrays.fill(phraseVec, 0.0f);  // 初始以0填充
@@ -754,12 +754,12 @@ public final class VectorOperator implements Constants {
         for (Word word : phrase) {
 
             if (word.getName().equals(word.getPos())) {
-                // 跳过标点符号
+                // Skip punctuation符号
                 continue;
             }
 
             if (ignoreStopwords && STOPWORDS.contains(word.getLemma())) {
-                // 跳过停用词
+                // Skip stopwords
                 continue;
             }
 

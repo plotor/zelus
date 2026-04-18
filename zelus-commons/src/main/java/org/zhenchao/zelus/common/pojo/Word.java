@@ -5,9 +5,9 @@ import org.zhenchao.zelus.common.Constants;
 import java.io.Serializable;
 
 /**
- * 单词
+ * Word
  *
- * @author Apache_xiaochao
+ * @author zhenchao
  */
 public class Word implements Serializable, Cloneable {
 
@@ -40,9 +40,9 @@ public class Word implements Serializable, Cloneable {
     }
 
     /**
-     * 词向量字典的key
+     * Key for word vector dictionary
      *
-     * @return 字典key
+     * @return dictionary key
      */
     public String dictKey() {
 
@@ -161,9 +161,9 @@ public class Word implements Serializable, Cloneable {
     }
 
     /**
-     * 返回简短字符串表示
+     * 返回简短String表示
      *
-     * @return 简短字符串
+     * @return 简短String
      */
     public String toShortString() {
         return this.name + Constants.WORD_ATTRBUTE_CONNECTOR + this.numInLine;
@@ -180,9 +180,9 @@ public class Word implements Serializable, Cloneable {
     }
 
     /**
-     * 仅打印词性
+     * 仅打印Word性
      *
-     * @return 词/词性
+     * @return Word/Word性
      */
     public String wordWithPOS() {
         return this.name + "/" + this.pos;

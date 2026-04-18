@@ -4,9 +4,9 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 /**
- * 封装已编号的事件，及其向量
+ * Numbered event with its vector
  *
- * @author ZhenchaoWang 2015-11-4 13:16:50
+ * @author zhenchao 2015-11-4 13:16:50
  */
 public class NumedEventWithPhrase implements Serializable {
 

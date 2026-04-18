@@ -1,9 +1,9 @@
 package org.zhenchao.zelus.tfidf;
 
 /**
- * TF-IDF计算器
+ * TF-IDF calculator
  *
- * @author ZhenchaoWang
+ * @author zhenchao
  */
 public class TfIdfCalculator {
 

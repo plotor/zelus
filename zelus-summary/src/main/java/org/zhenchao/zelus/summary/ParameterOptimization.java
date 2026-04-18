@@ -24,16 +24,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 参数优化
+ * Parameter optimization
  *
- * @author Apache_xiaochao
+ * @author zhenchao
  */
 public class ParameterOptimization implements Constants {
 
     private static Logger log = Logger.getLogger(ParameterOptimization.class);
 
     /**
-     * 执行命令过程中的输出处理
+     * Process output from command execution
      *
      * @param in
      * @return
@@ -47,7 +47,7 @@ public class ParameterOptimization implements Constants {
             String line = null;
             while ((line = br.readLine()) != null) {
                 sb_tmp.append(line + "\n");
-                //System.out.println(line);
+                //log.debug(line);
             }
             br.close();
             if (sb_tmp.length() > 0) {
@@ -59,14 +59,14 @@ public class ParameterOptimization implements Constants {
 
     public static void main(String[] args) throws IOException, SQLException {
         if (args.length == 0) {
-            System.err.println("请指定配置文件！");
+            log.error("Please specify a configuration file！");
             return;
         }
 
-        final String propFilePath = args[0];  //配置文件所在路径
+        final String propFilePath = args[0];  //Configuration file path
         final ParameterOptimization po = new ParameterOptimization();
         /*
-         * 加载配置文件
+         * Load configuration file
          */
         final Properties properties = new Properties();
         try {
@@ -76,15 +76,15 @@ public class ParameterOptimization implements Constants {
             //e.printStackTrace();
         }
 
-        //获取线程数
+        //Get thread count
         final int threadNum = Integer.parseInt(properties.getProperty("threadNum", "2"));
         final String textDir = properties.getProperty("textDir");
         final String workDir = properties.getProperty("workDir");
         final String msc_py_path = properties.getProperty("msc_py");
 
         final String attribute = "keepClassRate";
-        //获取当前数据库中的记录的最后一次的权值
-        final float edgeSelectedWeight = 3.2f;  //边阈值增加权重，已经证明3.2是最优值
+        //Get the latest weight from database records
+        final float edgeSelectedWeight = 3.2f;  //Edge threshold weight, 3.2 is proven optimal
         float keepClassRate = 0.00f;
         float mutationRate = 0.00f;
         Connection connection = null;
@@ -101,7 +101,7 @@ public class ParameterOptimization implements Constants {
             }
         } catch (final SQLException e) {
             // TODO Auto-generated catch block
-            throw new SQLException("获取最新的权值异常！", e);
+            throw new SQLException("Exception getting latest weight！", e);
         } finally {
             if (rs != null) {
                 rs.close();
@@ -116,17 +116,17 @@ public class ParameterOptimization implements Constants {
 
         while (keepClassRate < 1) {
             while (mutationRate < 1) {
-                log.info("优化参数：kc=" + keepClassRate + "\tmt=" + mutationRate);
-                /*对事件进行聚类，同时按类别抽取时间所在子句*/
-                log.info("正在进行事件聚类和子句抽取...");
-                //nodes存放文件夹
+                log.info("Optimizing parameters：kc=" + keepClassRate + "\tmt=" + mutationRate);
+                /*Cluster events，同时按Class别抽取时间所在子句*/
+                log.info("Performing event clustering and sub-sentence extraction...");
+                //Nodes directory
                 final String nodesDir = workDir + "/" + DIR_NODES;
-                //对上面文件夹中的文件进行清理
+                //Clean up files in the above directory
                 final File fileNodes = new File(nodesDir);
                 if (!fileNodes.exists()) {
-                    log.error(nodesDir + "不存在！");
+                    log.error(nodesDir + "does not exist！");
                 } else {
-                    //删除所有聚类算法产生的中间文件
+                    //Delete all intermediate files from clustering algorithm
                     final String[] filenames = fileNodes.list((dir, name) -> name.contains("renumbered"));
                     if (filenames != null && filenames.length > 0) {
                         for (final String filename : filenames) {
@@ -138,15 +138,15 @@ public class ParameterOptimization implements Constants {
                     }
                 }
 
-                //edges存放文件夹
+                //Edges directory
                 final String edgeDir = workDir + "/" + DIR_EDGES;
-                //对上面的文件夹进行清理
+                //Clean up the above directory
                 final File fileEdgesCW = new File(edgeDir + "/" + DIR_CW_PRETREAT);
                 if (fileEdgesCW.exists()) {
                     fileEdgesCW.delete();
                 }
 
-                //聚类结果存放文件夹
+                //Clustering results directory
                 final String clustResultDir = workDir + "/" + DIR_EVENTS_CLUST;
                 final File fileClustResult = new File(clustResultDir);
                 if (fileClustResult.exists()) {
@@ -154,7 +154,7 @@ public class ParameterOptimization implements Constants {
                 }
                 fileClustResult.mkdirs();
 
-                //句子抽取结果存放的文件夹
+                //Sentence extraction results directory
                 final String sentencesSaveDir = workDir + "/" + DIR_SUB_SENTENCES_EXTRACTED;
                 final File fileSentences = new File(sentencesSaveDir);
                 if (fileSentences.exists()) {
@@ -162,7 +162,7 @@ public class ParameterOptimization implements Constants {
                 }
                 fileSentences.mkdirs();
 
-                //句子压缩结果存放的文件夹
+                //Sentence compression results directory
                 final String sentencesCompressDir = workDir + "/" + DIR_SENTENCES_COMPRESSION;
                 final File fileSentencesCompress = new File(sentencesCompressDir);
                 if (fileSentencesCompress.exists()) {
@@ -178,22 +178,22 @@ public class ParameterOptimization implements Constants {
                                 nodesDir, edgeDir, clustResultDir, textDir,
                                 sentencesSaveDir, moduleFilePath, threadNum, edgeSelectedWeight, true, true, dictPath);
                 try {
-                    //对事件进行聚类
-                    //构建口哨算法运行参数
+                    //Cluster events
+                    //Build Chinese Whispers algorithm parameters
                     final CWRunParam cwRunParam = new CWRunParam();
                     cwRunParam.setJarPath(properties.getProperty("cwjarPath"));
                     cwRunParam.setKeepClassRate(keepClassRate);
                     cwRunParam.setMutationRate(mutationRate);
                     cwRunParam.setIterationCount(100);
                     cluster.doCluster(cwRunParam);
-                    //获取事件对应的句子，所有子句抽取结束之前，主线程阻塞
+                    //Get sentences for events, main thread blocks until all sub-sentence extraction completes
                     cluster.clusterSentencesByEvents();
                 } catch (IOException | InterruptedException e) {
-                    log.error("事件聚类出错！", e);
+                    log.error("Event clustering error！", e);
                     //e.printStackTrace();
                 }
 
-                /*多句子压缩*/
+                /*Multi-sentence compression*/
                 final String commond_msc = "python " + msc_py_path;
                 try {
                     final Process process = Runtime.getRuntime().exec(commond_msc);
@@ -201,38 +201,38 @@ public class ParameterOptimization implements Constants {
                     final BufferedReader read = new BufferedReader(new InputStreamReader(process.getInputStream()));
                     String line = null;
                     while ((line = read.readLine()) != null) {
-                        System.out.println(line);
+                        log.info(line);
                     }
                     if (read != null) {
                         read.close();
                     }
                 } catch (IOException | InterruptedException e) {
-                    log.error("多语句压缩出错！", e);
+                    log.error("Multi-sentence compression error！", e);
                     //e.printStackTrace();
                 }
 
-                /*对结果进行评估*/
-                //将压缩生成的文件复制到评估程序的peers目录下
+                /*Evaluate results*/
+                //Copy compressed files to the peers directory of the evaluation program
                 final String rougePath = properties.getProperty("rouge_path");
                 final String commond_cp_peers = "\\cp " + sentencesCompressDir + "/* " + rougePath + "/peers";
-                final String[] cp_command = {"/bin/sh", "-c", commond_cp_peers};  //不进行这样的封装会出错哦
+                final String[] cp_command = {"/bin/sh", "-c", commond_cp_peers};  //Will fail without this wrapper
                 try {
                     final Process process = Runtime.getRuntime().exec(cp_command);
                     process.waitFor();
                     final BufferedReader read = new BufferedReader(new InputStreamReader(process.getInputStream()));
                     String line = null;
                     while ((line = read.readLine()) != null) {
-                        System.out.println(line);
+                        log.info(line);
                     }
                     if (read != null) {
                         read.close();
                     }
                 } catch (IOException | InterruptedException e) {
-                    log.error("复制压缩后文件到peers文件出错！", e);
+                    log.error("Error copying compressed files to peers directory！", e);
                     //e.printStackTrace();
                 }
 
-                //执行rouge
+                //Executerouge
                 final String commond = "perl ROUGE-1.5.5.pl -e /home/eventChain/rouge_eval/data"
                         + " -a -n 2 -x -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0"
                         + " -d /home/eventChain/rouge_eval/rougejk.in"
@@ -249,14 +249,14 @@ public class ParameterOptimization implements Constants {
                         log.info(outMsg);
                     }
                     if (process.waitFor() != 0) {
-                        log.error("评估命令返回状态不正常！");
+                        log.error("Abnormal return status from evaluation command！");
                     }
                 } catch (IOException | InterruptedException e) {
-                    log.error("执行rouge出错，当前工作路径：" + System.getProperty("user.dir"), e);
+                    log.error("ROUGE execution error，当前工作路径：" + System.getProperty("user.dir"), e);
                     //e.printStackTrace();
                 }
 
-                /*获取评估结果*/
+                /*Get evaluation results*/
                 final String regex = "3\\s+(ROUGE-[SU124]+)\\s+(Average_[RPF]):\\s+([\\w\\.]+)\\s+\\([\\s\\S]*?\\)";
                 BufferedReader br = null;
                 try {
@@ -278,14 +278,14 @@ public class ParameterOptimization implements Constants {
                                 try {
                                     po.orm2db(rougeAvg, keepClassRate, mutationRate, edgeSelectedWeight);
                                 } catch (final SQLException e) {
-                                    log.error("持久化数据出错：" + rouge.toString() + "\t" + keepClassRate + "\t" + attribute, e);
+                                    log.error("Data persistence error：" + rouge.toString() + "\t" + keepClassRate + "\t" + attribute, e);
                                     //e.printStackTrace();
                                 }
                             }
                         }
                     }
                 } catch (final IOException e) {
-                    log.error("解析评估结果文件出错：", e);
+                    log.error("Error parsing evaluation results file：", e);
                     //e.printStackTrace();
                 } finally {
                     if (br != null) {
@@ -294,14 +294,14 @@ public class ParameterOptimization implements Constants {
                 }
                 mutationRate += 0.01f;
             }
-            //参数递增
+            //Parameter递增
             keepClassRate += 0.01f;
         }
 
     }
 
     /**
-     * 将结果持久化
+     * Persist results
      *
      * @param rougeAvg
      * @throws SQLException

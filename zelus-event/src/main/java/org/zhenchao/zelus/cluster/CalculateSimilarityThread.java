@@ -25,9 +25,9 @@ import java.util.TreeMap;
 import java.util.concurrent.Callable;
 
 /**
- * 计算事件之间的相似度
+ * Calculate similarity between events
  *
- * @author Apache_xiaochao
+ * @author zhenchao
  */
 public class CalculateSimilarityThread implements Callable<Boolean>, Constants {
 
@@ -53,7 +53,7 @@ public class CalculateSimilarityThread implements Callable<Boolean>, Constants {
         String textBaseDir = GlobalParam.workDir + "/" + DIR_EVENTS_CLUST + "/" + TEXT;
 
         /*
-         * 加载当前主题下的词向量字典
+         * 加载Current topic下的Word vector dictionary
          */
         int index = Math.max(this.topicDir.lastIndexOf("/"), this.topicDir.lastIndexOf("\\"));
         String topicName = this.topicDir.substring(index);
@@ -71,9 +71,9 @@ public class CalculateSimilarityThread implements Callable<Boolean>, Constants {
             return false;
         }
 
-        int num = 0; // 事件编号
+        int num = 0; // Event编号
 
-        /*存放所有事件及其对应的序号*/
+        /*存放所有Event及其Pairs应的序号*/
         Map<Integer, NumedEventWithPhrase> eventWithNums = new TreeMap<Integer, NumedEventWithPhrase>();
 
         Collection<File> eventFiles = FileUtils.listFiles(FileUtils.getFile(this.topicDir), null, false);
@@ -84,10 +84,10 @@ public class CalculateSimilarityThread implements Callable<Boolean>, Constants {
                 @SuppressWarnings("unchecked")
                 Map<Integer, List<EventWithPhrase>> eventsInFile = (Map<Integer, List<EventWithPhrase>>) SerializeUtils.readObj(eventFile.getAbsolutePath());
 
-                //对事件进行编号
+                //Perform event 编号
                 for (Entry<Integer, List<EventWithPhrase>> event : eventsInFile.entrySet()) {
 
-                    //对事件进行编号，然后封装成对象存储
+                    //Perform event 编号，然后封装成Pairs象存储
                     for (EventWithPhrase eventWithPhrase : event.getValue()) {
 
                         Double[] eventVec = this.vectorOperator.eventToVecPlus(eventWithPhrase, wordvecsInTopic);
@@ -99,7 +99,7 @@ public class CalculateSimilarityThread implements Callable<Boolean>, Constants {
                         NumedEventWithPhrase numedEventWithPhrase = new NumedEventWithPhrase();
                         numedEventWithPhrase.setNum(num);
                         numedEventWithPhrase.setEvent(eventWithPhrase);
-                        // 事件对应的向量
+                        // EventPairs应的Vector
                         numedEventWithPhrase.setVec(eventVec);
                         eventWithNums.put(num, numedEventWithPhrase);
                         ++num;
@@ -108,12 +108,12 @@ public class CalculateSimilarityThread implements Callable<Boolean>, Constants {
                 }
 
             } catch (IOException e) {
-                log.error("操作文件出错：" + eventFile.getAbsolutePath(), e);
+                log.error("操作文件error：" + eventFile.getAbsolutePath(), e);
             }
 
         }
 
-        //将编号的事件保存
+        //将编号的Event保存
         if (eventWithNums.size() > 0) {
             File nodeFile = FileUtils.getFile(objBaseDir + "/" + DIR_NODES, topicName + ".node.obj");
             try {
@@ -126,7 +126,7 @@ public class CalculateSimilarityThread implements Callable<Boolean>, Constants {
             log.error("Can't find any event in[" + this.topicDir + "]");
         }
 
-        // 计算事件之间的相似度，并保存成文件
+        // Calculate similarity between events，并保存成文件
         List<CWEdge> cwEdges = new ArrayList<CWEdge>();
         StringBuilder sb_nodes = new StringBuilder();
         StringBuilder sb_edges = new StringBuilder();
@@ -134,10 +134,10 @@ public class CalculateSimilarityThread implements Callable<Boolean>, Constants {
             sb_nodes.append(i + "\t" + eventWithNums.get(i).getEvent().toShortString() + "\n");
             for (int j = i + 1; j < num; ++j) {
                 try {
-                    // 计算向量的余弦值
+                    // CalculateVector的余弦值
                     double approx = VectorOperator.cosineDistence(eventWithNums.get(i).getVec(), eventWithNums.get(j).getVec());
 
-                    // 计算向量的欧式距离
+                    // CalculateVector的欧式距离
                     //double approx = this.vectorOperator.euclideanDistance(eventWithNums.get(i).getVec(), eventWithNums.get(j).getVec());
 
                     approx = Float.parseFloat(DECIMAL_FORMAT.format(approx));
@@ -158,7 +158,7 @@ public class CalculateSimilarityThread implements Callable<Boolean>, Constants {
                     cwEdges.add(cwEdge);
 
                 } catch (Exception e) {
-                    log.error("计算事件相似度出错，事件1：" + eventWithNums.get(i).getEvent() + "， 事件2：" + eventWithNums.get(j).getEvent(), e);
+                    log.error("CalculateEvent相似度error，Event1：" + eventWithNums.get(i).getEvent() + "， Event2：" + eventWithNums.get(j).getEvent(), e);
                 }
             }
         }

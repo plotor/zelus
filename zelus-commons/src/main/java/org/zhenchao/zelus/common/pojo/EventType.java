@@ -1,25 +1,25 @@
 package org.zhenchao.zelus.common.pojo;
 
 /**
- * 事件所属类型
+ * Event type enum
  *
- * @author ZhenchaoWang 2015-10-27 11:31:59
+ * @author zhenchao 2015-10-27 11:31:59
  */
 public enum EventType {
     /**
-     * 三元事件
+     * Ternary event
      */
     TERNARY,
     /**
-     * 二元事件：主语缺失
+     * Binary event: missing subject
      */
     LEFT_MISSING,
     /**
-     * 二元事件：宾语缺失
+     * Binary event: missing object
      */
     RIGHT_MISSING,
     /**
-     * 不是事件
+     * Not an event
      */
     ERROR;
 }

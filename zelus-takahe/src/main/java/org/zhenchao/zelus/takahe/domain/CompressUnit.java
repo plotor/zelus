@@ -8,9 +8,9 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * 压缩输出语句单元
+ * 压缩Output语句单元
  *
- * @author ZhenchaoWang 2015-11-12 16:08:46
+ * @author zhenchao 2015-11-12 16:08:46
  */
 public class CompressUnit implements Comparable<CompressUnit>, Serializable {
 
@@ -18,7 +18,7 @@ public class CompressUnit implements Comparable<CompressUnit>, Serializable {
 
     /** 压缩得分，可能为0 */
     private float score;
-    /** 压缩输出句子 */
+    /** 压缩Output句子 */
     /*private String sentence;*/
 
     private List<Word> sentence;
@@ -35,7 +35,7 @@ public class CompressUnit implements Comparable<CompressUnit>, Serializable {
     }
 
     /**
-     * 当前句子单词数，不包含标点
+     * Current sentence子Word count，不包含标点
      *
      * @return
      */

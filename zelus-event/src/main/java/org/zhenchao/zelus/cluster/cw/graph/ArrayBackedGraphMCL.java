@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+@SuppressWarnings("checkstyle:ModifierOrder")
 public class ArrayBackedGraphMCL extends CW<Integer> {
     final static MarkovClustering2 mcl = new MarkovClustering2();
 

@@ -8,165 +8,165 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * 全局常量
+ * Global constants
  *
- * @author zhenchao.wang 2016-1-29 20:16:24
+ * @author zhenchao 2016-1-29 20:16:24
  */
 public interface Constants {
 
-    /** 系统默认字符编码 */
+    /** System default charset */
     Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
-    /** 系统默认字符编码 */
+    /** System default charset */
     String DEFAULT_ENCODING = DEFAULT_CHARSET.toString();
 
-    /** 统一换行符，采用linux风格 */
+    /** Unified line separator, Linux style */
     String LINE_SPLITER = "\n";
 
-    /** 一个单词中所有属性的连接符，用于打印时进行组织 */
+    /** Connector between all attributes in a word, used for organizing output */
     String WORD_ATTRBUTE_CONNECTOR = "__";
 
-    /** 目录名：事件抽取 */
+    /** Directory name: event extraction */
     String DIR_EVENTS_EXTRACT = "event-extract";
 
-    /** 文本结果上层路径 */
+    /** Top-level path for text results */
     String TEXT = "text";
 
-    /** 序列化文件上层路径 */
+    /** Top-level path for serialized files */
     String OBJ = "obj";
 
-    /** 语料文件所在路径 */
+    /** Path for corpus files */
     String DIR_CORPUS = "corpus";
 
-    /** 目录名：原文本 */
+    /** Directory name: original text */
     String DIR_TEXT = "text";
 
-    /** 目录名：句子切分 */
+    /** Directory name: sentence segmentation */
     String DIR_SEG_TEXT = "text_seg";
 
-    /** 目录名：句子切分（详细） */
+    /** Directory name: sentence segmentation (detailed) */
     String DIR_SEGDETAIL_TEXT = "text_seg-detail";
 
-    /** 目录名：存放序列化的词集合 */
+    /** Directory name: serialized word sets */
     String DIR_WORDS_OBJ = "words";
 
-    /** 目录名：当前专题词向量字典 */
+    /** Directory name: topic word vector dictionary */
     String DIR_WORDS_VECTOR = "word-vector-dict";
 
-    /** 目录名：依存分析 */
+    /** Directory name: dependency parsing */
     String DIR_PARSE_TEXT = "text_parse";
 
-    /** 目录名：句法树 */
+    /** Directory name: syntactic trees */
     String DIR_SYNTACTICTREES_OBJ = "syntactic-trees";
 
-    /** 目录名：依存分析 */
+    /** Directory name: dependency parsing */
     String DIR_PARSE_OBJ = "parse-results";
 
-    /** 目录名：依存分析（简版） */
+    /** Directory name: dependency parsing (simplified) */
     String DIR_PARSESIMPLIFY = "text_parse-simplify";
 
-    /** 目录名：事件抽取 */
+    /** Directory name: event extraction */
     String DIR_EVENTS = "events";
 
-    /** 目录名：事件抽取（简版） */
+    /** Directory name: event extraction (simplified) */
     String DIR_EVENTSSIMPLIFY = "events-simplify";
 
-    /** 目录名：指代消解 */
+    /** Directory name: coreference resolution */
     String DIR_CR_EVENTS = "events_cr";
 
-    /** 目录名：指代消解（简版） */
+    /** Directory name: coreference resolution (simplified) */
     String DIR_CR_EVENTSSIMPLIFY = "events_cr-simplify";
 
-    /** 目录名：事件修复 */
+    /** Directory name: event repair */
     String DIR_CR_RP_EVENTS = "events_cr_rp";
 
-    /** 目录名：事件修复（简版） */
+    /** Directory name: event repair (simplified) */
     String DIR_CR_RP_EVENTSSIMPLIFY = "events_cr_rp-simplify";
 
-    /** 目录名：短语扩充 */
+    /** Directory name: phrase expansion */
     String DIR_CR_RP_PE_EVENTS = "events_cr_rp_pe";
 
-    /** 目录名：短语扩充（简版） */
+    /** Directory name: phrase expansion (simplified) */
     String DIR_CR_RP_PE_EVENTSSIMPLIFY = "events_cr_rp_pe-simplify";
 
-    /** 目录名：事件过滤 */
+    /** Directory name: event filtering */
     String DIR_CR_RP_PE_EF_EVENTS = "events_cr_rp_pe_ef";
 
-    /** 目录名：事件过滤（简版） */
+    /** Directory name: event filtering (simplified) */
     String DIR_CR_RP_PE_EF_EVENTSSIMPLIFY = "events_cr_rp_pe_ef-simplify";
 
-    /** 目录名：node文件 */
+    /** Directory name: node files */
     String DIR_NODES = "nodes";
 
-    /** 目录名：edge文件 */
+    /** Directory name: edge files */
     String DIR_EDGES = "edges";
 
-    /** 目录名：词性标注 */
+    /** Directory name: POS tagging */
     String DIR_TAGGED = "tagged";
 
-    /** 目录名：事件聚类 */
+    /** Directory name: event clustering */
     String DIR_EVENTS_CLUST = "events-clust";
 
-    /** 目录名：类别权重 */
+    /** Directory name: cluster weights */
     String DIR_CLUSTER_WEIGHT = "cluster-weights";
 
-    /** 目录名：IDF值 */
+    /** Directory name: IDF values */
     String DIR_IDF_FILE = "idf-value";
 
-    /** 目录名：词向量 */
+    /** Directory name: word vectors */
     String DIR_VEC_FILE = "word-vec";
 
-    /** 目录名：子句抽取 */
+    /** Directory name: sub-sentence extraction */
     String DIR_SUB_SENTENCES_EXTRACTED = "sub-sentences";
 
-    /** 目录名：事件权值 */
+    /** Directory name: event weights */
     String DIR_EVENT_WEIGHT = "event-weights";
 
-    /** 目录名：口哨算法预处理 */
+    /** Directory name: Chinese Whispers preprocessing */
     String DIR_CW_PRETREAT = "cw_pretreat";
 
-    /** 目录名：多语句压缩 */
+    /** Directory name: multi-sentence compression */
     String DIR_SENTENCES_COMPRESSION = "compressed-results";
 
-    /** 目录名：经过重新打分之后的多语句压缩结果 */
+    /** Directory name: re-scored multi-sentence compression results */
     String DIR_RERANKED_SENTENCES_COMPRESSION = "reranked-compressed-results";
 
-    /** 目录名：chunk处理得到的短语集合（简版） */
+    /** Directory name: chunk phrases (simplified) */
     String DIR_CHUNKSIMPILY = "chunk-simpily";
 
-    /** 目录名：摘要结果 */
+    /** Directory name: summary results */
     String DIR_SUMMARY_RESULTS = "summary-results";
 
-    /** 目录名：原始摘要结果 */
+    /** Directory name: original summary results */
     String DIR_SUMMARIES_V1 = "v1";
 
-    /** 目录名：采用子模函数的摘要结果 */
+    /** Directory name: submodular function summary results */
     String DIR_SUMMARIES_V2 = "v2";
 
-    /** 事件中词之间的连接符 */
+    /** Connector between words in an event */
     String WORD_CONNECTOR_IN_EVENTS = "#";
 
-    /** 事件所在文件名标记符：左 */
+    /** Filename marker for event location: left */
     String FILENAME_REST_LEFT = "[$";
 
-    /** 事件所在文件名标记符：右 */
+    /** Filename marker for event location: right */
     String FILENAME_REST_RIGHT = "$]";
 
-    /** 选择非最大相似度的权值 */
+    /** Weight for selecting non-maximum similarity */
     int VARIATION_WEIGHT = 80;
 
     /**
-     * 句子数阈值，当类别中的句子数要大于等于该阈值才能进入压缩
+     * Sentence count threshold: a cluster must have at least this many sentences to be compressed
      */
     int MIN_SENTENCE_COUNT_FOR_COMPRESS = 3;
 
     /**
-     * 最大摘要总词数
+     * Maximum total word count in a summary
      */
     int MAX_SUMMARY_WORDS_COUNT = 250;
 
     /**
-     * 人称代词 + 所有格代词
+     * Personal pronouns + possessive pronouns
      */
     Set<String> POS_PRP = new HashSet<String>() {
         private static final long serialVersionUID = 3536875708378397981L;
@@ -180,7 +180,7 @@ public interface Constants {
     };
 
     /**
-     * 指示代词集合，后续根据实际情况进行补充
+     * Demonstrative pronoun set, to be supplemented as needed
      */
     Set<String> DEMONSTRACTIVE_PRONOUN = new HashSet<String>() {
 
@@ -210,7 +210,7 @@ public interface Constants {
     };
 
     /**
-     * 不希望被指代的词集合，后续根据实际情况进行补充
+     * Words excluded from coreference resolution, to be supplemented as needed
      */
     Set<String> EXCEPTED_DEMONSTRACTIVE_PRONOUN = new HashSet<String>() {
 
@@ -245,7 +245,7 @@ public interface Constants {
     };
 
     /**
-     * 词性标签-名词
+     * POS tags - nouns
      */
     Set<String> POS_NOUN = new HashSet<String>() {
         private static final long serialVersionUID = -4215344365700028825L;
@@ -259,7 +259,7 @@ public interface Constants {
     };
 
     /**
-     * 词性标签-动词
+     * POS tags - verbs
      */
     Set<String> POS_VERB = new HashSet<String>() {
         private static final long serialVersionUID = 92436997464208966L;
@@ -275,7 +275,7 @@ public interface Constants {
     };
 
     /**
-     * 词性标签-副词
+     * POS tags - adverbs
      */
     Set<String> POS_ADVERB = new HashSet<String>() {
         private static final long serialVersionUID = -4717718652903957444L;
@@ -288,7 +288,7 @@ public interface Constants {
     };
 
     /**
-     * 词性标签-形容词
+     * POS tags - adjectives
      */
     Set<String> POS_ADJ = new HashSet<String>() {
         private static final long serialVersionUID = 1739698370056824950L;
@@ -301,7 +301,7 @@ public interface Constants {
     };
 
     /**
-     * 依存关系：施事
+     * Dependency relations: agents (subjects)
      */
     Set<String> DEPENDENCY_AGENT = new HashSet<String>() {
         private static final long serialVersionUID = -4819853309587426759L;
@@ -315,7 +315,7 @@ public interface Constants {
     };
 
     /**
-     * 依存关系：受事
+     * Dependency relations: objects
      */
     Set<String> DEPENDENCY_OBJECT = new HashSet<String>() {
         private static final long serialVersionUID = -4819853309587426759L;
@@ -328,19 +328,19 @@ public interface Constants {
         }
     };
 
-    /** 序列化文件后缀 */
+    /** Serialized file suffix */
     String SUFFIX_SERIALIZE_FILE = ".obj";
 
-    /** 目录名：序列化的文件 */
+    /** Directory name: serialized files */
     String DIR_SERIALIZE_EVENTS = "serializable-events";
 
-    /** 词向量维度 */
+    /** Word vector dimension */
     Integer DIMENSION = 300;
 
-    /** 停用词列表 */
+    /** Stopwords list */
     Set<String> STOPWORDS = ResourceLoader.loadStopwords("stopwords-en-default.txt");
 
-    /** 排除的标点 */
+    /** Excluded punctuation */
     Set<String> EXCLUDE_PUNCTUATION = new HashSet<String>() {
 
         private static final long serialVersionUID = 8560383953434971371L;
@@ -354,7 +354,7 @@ public interface Constants {
         }
     };
 
-    /** 英文标点集 */
+    /** English punctuation set */
     Set<String> PUNCT_EN = new HashSet<String>() {
 
         private static final long serialVersionUID = -5498481342248064994L;
@@ -434,7 +434,7 @@ public interface Constants {
         }
     };
 
-    /** 最大迭代次数 */
+    /** Maximum iteration count */
     int MAX_ITERATIONS = 5;
 
 }

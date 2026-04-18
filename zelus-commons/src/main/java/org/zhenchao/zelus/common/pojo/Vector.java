@@ -6,9 +6,9 @@ import org.zhenchao.zelus.common.Constants;
 import java.io.Serializable;
 
 /**
- * 词向量实体
+ * WordVector实体
  *
- * @author ZhenchaoWang 2015-11-4 11:18:18
+ * @author zhenchao 2015-11-4 11:18:18
  */
 public class Vector implements Serializable {
 
@@ -19,9 +19,9 @@ public class Vector implements Serializable {
     private String vec;
 
     /**
-     * 将字符串表示的向量转换成对应的Float类型数组
+     * 将String表示的VectorConvert成Pairs应的FloatClass型Array
      *
-     * @return Float类型向量数组
+     * @return FloatClass型VectorArray
      */
     public Float[] floatVecs() {
 
@@ -40,9 +40,9 @@ public class Vector implements Serializable {
     }
 
     /**
-     * 将字符串表示的向量转换成对应的Double类型数组
+     * 将String表示的VectorConvert成Pairs应的DoubleClass型Array
      *
-     * @return Double类型向量数组
+     * @return DoubleClass型VectorArray
      */
     public Double[] doubleVecs() {
 

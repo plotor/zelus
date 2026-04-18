@@ -1,9 +1,9 @@
 package org.zhenchao.zelus.common.pojo;
 
 /**
- * 封装事件及其对应的编号
+ * Event with its corresponding ID
  *
- * @author Apache_xiaochao
+ * @author zhenchao
  */
 public class EventWithWordToId {
 

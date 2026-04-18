@@ -7,6 +7,7 @@ import org.zhenchao.zelus.cluster.cw.CW;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+@SuppressWarnings("checkstyle:Regexp")
 public class ArrayBackedGraphCW extends CW<Integer> {
     ArrayBackedGraph<Float> graph;
 
@@ -39,8 +40,8 @@ public class ArrayBackedGraphCW extends CW<Integer> {
 
     @Override
     protected void relabelNode(Integer node) {
-        //		System.out.println("+++ relabel " + node);
-        //		System.out.println("BEFORE: " + nodeLabels);
+        //        System.out.println("+++ relabel " + node);
+        //        System.out.println("BEFORE: " + nodeLabels);
         Integer oldLabel = this.nodeLabels[node];
         ArrayList<Integer> edges = this.graph.edgeSources[node];
         ArrayList<Float> weights = this.graph.edgeWeights[node];

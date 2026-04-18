@@ -35,7 +35,7 @@ import java.util.Arrays;
  * mantissa-exponent format or indicating overflow or underflow. Although the
  * class does not yield separator-aligned numbers, it yields a readable output.
  *
- * @author heinrich
+ * @author zhenchao
  */
 public class DoubleFormat {
 

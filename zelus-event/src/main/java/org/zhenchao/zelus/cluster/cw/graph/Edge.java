@@ -48,26 +48,26 @@ public class Edge<N, E> {
         result = prime * result + ((weight == null) ? 0 : weight.hashCode());
         return result;
     }
-	/*
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Edge other = (Edge) obj;
-		if (target == null) {
-			if (other.target != null)
-				return false;
-		} else if (!target.equals(other.target))
-			return false;
-		if (weight == null) {
-			if (other.weight != null)
-				return false;
-		} else if (!weight.equals(other.weight))
-			return false;
-		return true;
-	}*/
+    /*
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Edge other = (Edge) obj;
+        if (target == null) {
+            if (other.target != null)
+                return false;
+        } else if (!target.equals(other.target))
+            return false;
+        if (weight == null) {
+            if (other.weight != null)
+                return false;
+        } else if (!weight.equals(other.weight))
+            return false;
+        return true;
+    }*/
 }

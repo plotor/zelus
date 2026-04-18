@@ -7,10 +7,10 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * 原子事件
- * 2.0版本中将主谓宾由单词扩充成短语
+ * Atomic event
+ * In version 2.0, subject-verb-object are expanded from words to phrases
  *
- * @author ZhenchaoWang 2015-10-27 11:27:26
+ * @author zhenchao 2015-10-27 11:27:26
  * @version 2.0
  */
 @SuppressWarnings("checkstyle:ReturnCount")
@@ -39,9 +39,9 @@ public class EventWithPhrase extends Event implements Serializable {
     }
 
     /**
-     * 事件类型：3表示三元组事件，2表示主-谓事件，1表示谓-宾事件，-1表示异常事件
+     * Event type: 3=ternary, 2=subject-verb, 1=verb-object, -1=abnormal
      *
-     * @return 事件类型
+     * @return event type
      */
     @Override
     public EventType eventType() {
@@ -63,9 +63,9 @@ public class EventWithPhrase extends Event implements Serializable {
     }
 
     /**
-     * 判断当前事件是不是回文事件，即主语和宾语相同
+     * Check if the current event is a palindrome event (subject equals object)
      *
-     * @return 是否为回文事件
+     * @return true if palindrome event
      */
     public boolean isPalindromicEvent() {
         boolean isPalindromic = false;
@@ -82,9 +82,9 @@ public class EventWithPhrase extends Event implements Serializable {
     }
 
     /**
-     * 返回事件的简要形式
+     * Return the brief form of the event
      *
-     * @return 事件的简要形式
+     * @return brief form of the event
      */
     @Override
     public String toShortString() {

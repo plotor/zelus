@@ -8,7 +8,7 @@ import java.io.Serializable;
 /**
  * Ngram model item
  *
- * @author ZhenchaoWang 2015-11-20 14:52:44
+ * @author zhenchao 2015-11-20 14:52:44
  */
 public class NGramScore implements Serializable {
 

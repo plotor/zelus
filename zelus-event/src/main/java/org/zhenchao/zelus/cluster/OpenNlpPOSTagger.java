@@ -14,10 +14,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * OpenNLP词性标注工具类
+ * OpenNLPPOS tagging工具Class
  *
- * @author Apache_xiaochao
+ * @author zhenchao
  */
+@SuppressWarnings({"checkstyle:FinalClass", "checkstyle:ArrayTypeStyle"})
 public class OpenNlpPOSTagger {
 
     private static POSModel model;
@@ -57,7 +58,7 @@ public class OpenNlpPOSTagger {
     }
 
     /**
-     * 对输入的句子进行词性标注
+     * PairsInput的句子进行POS tagging
      *
      * @param sentence
      * @return

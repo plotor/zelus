@@ -1,11 +1,11 @@
 package org.zhenchao.zelus.common.pojo;
 
 /**
- * Pair类型
+ * PairClass型
  *
  * @param <L>
  * @param <R>
- * @author ZhenchaoWang 2015-11-18 20:48:32
+ * @author zhenchao 2015-11-18 20:48:32
  */
 public class Pair<L, R> {
 

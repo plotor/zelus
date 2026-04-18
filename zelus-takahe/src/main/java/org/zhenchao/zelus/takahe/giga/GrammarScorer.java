@@ -15,13 +15,13 @@ import java.util.Scanner;
 /**
  * 语言模型打分器
  *
- * @author ZhenchaoWang 2015-11-20 14:53:59
+ * @author zhenchao 2015-11-20 14:53:59
  */
 public class GrammarScorer {
 
     private final Logger log = Logger.getLogger(this.getClass());
 
-    private volatile static HashMap<String, NGramScore> models;
+    private static volatile HashMap<String, NGramScore> models;
 
     /**
      * 加载 NGram model
@@ -85,7 +85,7 @@ public class GrammarScorer {
     }
 
     /**
-     * 计算语句的语言模型得分
+     * Calculate语句的语言模型得分
      *
      * @param sentence
      * @param model
@@ -162,18 +162,20 @@ public class GrammarScorer {
 
     }
 
+    // Test entry point
     public static void main(String[] args) throws IOException {
 
         String modelpath = args[0];
         GrammarScorer gs = new GrammarScorer();
         HashMap<String, NGramScore> model = gs.loadNgramModel(modelpath);
 
-        System.out.println("Please input a setence:(bank string exit)");
+        Logger mainLog = Logger.getLogger(GrammarScorer.class);
+        mainLog.info("Please input a setence:(bank string exit)");
         Scanner sc = new Scanner(System.in);
         String sentence = sc.nextLine();
         while (StringUtils.isNotBlank(sentence)) {
-            System.out.println("language score:\t" + gs.calculateFluency(sentence, model));
-            System.out.println("Please input a setence:(bank string exit)");
+            mainLog.info("language score:\t" + gs.calculateFluency(sentence, model));
+            mainLog.info("Please input a setence:(bank string exit)");
             sentence = sc.nextLine();
         }
 

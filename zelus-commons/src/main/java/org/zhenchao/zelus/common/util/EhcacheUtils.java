@@ -16,9 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 缓存框架工具类
+ * 缓存框架工具Class
  *
- * @author Apache_xiaochao
+ * @author zhenchao
  */
 @SuppressWarnings({"checkstyle:MagicNumber", "checkstyle:MethodLength", "checkstyle:JavadocMethod",
         "checkstyle:HideUtilityClassConstructor", "checkstyle:LineLength",
@@ -42,7 +42,7 @@ public class EhcacheUtils {
     }
 
     /**
-     * 从缓存中获取当前word对应的向量<br>
+     * 从缓存中获取当前wordPairs应的Vector<br>
      *
      * @param word
      * @return
@@ -57,7 +57,7 @@ public class EhcacheUtils {
             return vecs;
         }
 
-        // 获取指定word对应的词向量
+        // 获取指定wordPairs应的WordVector
         Cache cache = cacheManager.getCache(this.cacheName);
         Element element = cache.get(word.getName().toLowerCase());
         if (element != null) {
@@ -77,27 +77,27 @@ public class EhcacheUtils {
 
                 QueryRunner queryRunner = new QueryRunner();
 
-                // 利用Name查询
+                // 利用NameQuery
                 List<Vector> vectors = queryRunner.query(connection, sql, new BeanListHandler<>(Vector.class),
                         word.getName());
 
                 if (CollectionUtils.isEmpty(vectors)) {
 
-                    // 利用Lemma查询
+                    // 利用LemmaQuery
                     vectors = queryRunner.query(connection, sql, new BeanListHandler<>(Vector.class),
                             word.getLemma());
 
                     if (CollectionUtils.isEmpty(vectors)) {
 
                         if (!"O".equalsIgnoreCase(word.getNer())) {
-                            // 利用命名实体进行查询
+                            // Query using named entities
                             vectors = queryRunner.query(connection, sql, new BeanListHandler<>(Vector.class),
                                     word.getNer());
 
                         }
                     }
                 }
-                // 缓存当前得到的词向量
+                // 缓存当前得到的WordVector
                 cache.put(new Element(word.getName().toLowerCase(), vectors));
                 if (CollectionUtils.isNotEmpty(vectors)) {
                     vecs = vectors;
@@ -110,7 +110,7 @@ public class EhcacheUtils {
     }
 
     /**
-     * 从缓存中获取当前word对应的最接近的向量<br>
+     * 从缓存中获取当前wordPairs应的最接近的Vector<br>
      *
      * @param word
      * @return
@@ -124,7 +124,7 @@ public class EhcacheUtils {
             return vector;
         }
 
-        // 获取指定word对应的词向量
+        // 获取指定wordPairs应的WordVector
         Cache cache = null;
         try {
             cache = cacheManager.getCache(this.cacheName);
@@ -147,16 +147,16 @@ public class EhcacheUtils {
             String queryType = null;
             try (Connection connection = C3p0Utils.getConnection(this.datasource)) {
                 QueryRunner queryRunner = new QueryRunner();
-                // 利用Name查询
+                // 利用NameQuery
                 List<Vector> vectors = queryRunner.query(connection, sql, new BeanListHandler<>(Vector.class), word.getName());
                 queryType = word.getName();
                 if (CollectionUtils.isEmpty(vectors)) {
-                    // 利用Lemma查询
+                    // 利用LemmaQuery
                     vectors = queryRunner.query(connection, sql, new BeanListHandler<>(Vector.class), word.getLemma());
                     queryType = word.getLemma();
                     if (CollectionUtils.isEmpty(vectors)) {
                         if (!"O".equalsIgnoreCase(word.getNer())) {
-                            // 利用命名实体进行查询
+                            // Query using named entities
                             vectors = queryRunner.query(connection, sql, new BeanListHandler<>(Vector.class), word.getNer());
                             if (CollectionUtils.isNotEmpty(vectors)) {
                                 queryType = word.getNer();
@@ -166,7 +166,7 @@ public class EhcacheUtils {
                 }
 
                 if (null != queryType) {
-                    // 计算得到最相近的向量
+                    // Calculate得到最相近的Vector
                     vector = this.mostSimilarVec(queryType, vectors);
                 }
 
@@ -174,7 +174,7 @@ public class EhcacheUtils {
                 log.error("Get word[" + word.getName() + "] vector from database error!", e);
                 throw e;
             }
-            // 缓存当前得到的词向量
+            // 缓存当前得到的WordVector
             cache.put(new Element(word.getName().toLowerCase(), vector));
         }
 
@@ -182,7 +182,7 @@ public class EhcacheUtils {
     }
 
     /**
-     * 关闭缓存
+     * Close cache
      */
     public static void close() {
         if (cacheManager != null) {
@@ -192,7 +192,7 @@ public class EhcacheUtils {
     }
 
     /**
-     * 获取与查询词距离最近的向量
+     * 获取与QueryWord距离最近的Vector
      *
      * @param queryKey
      * @param vecs

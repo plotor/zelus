@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import org.zhenchao.zelus.cluster.cw.graph.ArrayBackedGraph;
 import org.zhenchao.zelus.cluster.cw.graph.StringIndexGraphWrapper;
 
+@SuppressWarnings({"checkstyle:HideUtilityClassConstructor", "checkstyle:ModifierOrder", "checkstyle:Regexp"})
 public class GraphReader {
     final static Charset UTF_8 = Charset.forName("UTF-8");
 

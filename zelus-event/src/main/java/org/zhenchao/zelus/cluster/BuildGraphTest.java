@@ -23,10 +23,11 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 /**
- * 口哨算法聚类，用于构图测试
+ * Chinese Whispers algorithmClustering，用于构图测试
  *
- * @author ZhenchaoWang 2015-11-10 14:23:27
+ * @author zhenchao 2015-11-10 14:23:27
  */
+@SuppressWarnings("checkstyle:Regexp")
 public class BuildGraphTest implements Constants {
 
     private final Logger log = Logger.getLogger(this.getClass());
@@ -40,17 +41,17 @@ public class BuildGraphTest implements Constants {
         decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
 
         /**
-         * 加载词向量字典文件
+         * Load word vectors字典文件
          */
         Map<String, Vector> vecDict = (Map<String, Vector>) SerializeUtils.readObj("E:/workspace/test/example/word-vector-dict/text.obj");
 
         /**
-         * 加载当前主题下所有的文本
+         * 加载Current topic下所有的文本
          */
         List<List<Word>> words = (List<List<Word>>) SerializeUtils.readObj("E:/workspace/test/example/text/obj/words/f16su24.obj");
 
         /**
-         * 加载事件集合
+         * 加载EventCollection
          */
         Map<Integer, List<EventWithPhrase>> eventsMap = (Map<Integer, List<EventWithPhrase>>) SerializeUtils.readObj("E:/workspace/test/example/serializable-events/text/f16su24.obj");
 
@@ -60,22 +61,22 @@ public class BuildGraphTest implements Constants {
             events.addAll(entry.getValue());
         }
 
-        // 计算每个事件的向量
+        // Calculate每个Event的Vector
         List<Double[]> eventVecs = new ArrayList<Double[]>();
         for (EventWithPhrase eventWithPhrase : events) {
             eventVecs.add(this.vo.eventToVecPlus(eventWithPhrase, vecDict));
         }
 
-        // 计算事件的中心向量
+        // CalculateEvent的中心Vector
         Double[] centralVec = VectorOperator.centralVector(eventVecs);
 
         List<Double> eventsWeight = new ArrayList<Double>();
-        // 计算每个事件的权重
+        // Calculate每个Event的权重
         for (Double[] eventvec : eventVecs) {
             eventsWeight.add(VectorOperator.cosineDistence(centralVec, eventvec));
         }
 
-        // 句子中每个词的权重
+        // 句子中每个Word的权重
         for (List<Word> list : words) {
             StringBuilder inner = new StringBuilder();
             StringBuilder tagged = new StringBuilder();
@@ -84,9 +85,9 @@ public class BuildGraphTest implements Constants {
                 if ("root".equalsIgnoreCase(word.getName())) {
                     continue;
                 }
-                /* 计算当前词与当前类别中事件的加权距离
-                 * 计算方式：
-                 *     当前词与每个事件的距离*事件的权值，然后取平均
+                /* Calculate当前Word与当前Class别中Event的加权距离
+                 * Calculate方式：
+                 *     当前Word与每个Event的距离*Event的权值，然后取平均
                  */
                 Vector wordVec = vecDict.get(word.dictKey());
                 double wordWeight = 0.0D;
@@ -112,10 +113,10 @@ public class BuildGraphTest implements Constants {
     }
 
     /**
-     * 事件到子句的映射
+     * Event到子句的Map
      *
      * @param eventWithPhrase
-     * @param subSentList 当前事件所在句子的子句集合
+     * @param subSentList 当前Event所在句子的子句Collection
      * @return
      */
     private String eventToSubSentence(EventWithPhrase eventWithPhrase, List<String> subSentList) {
@@ -171,7 +172,7 @@ public class BuildGraphTest implements Constants {
     }
 
     /**
-     * 获取一句话中的所有子句集合
+     * 获取一句话中的所有子句Collection
      *
      * @param tree
      * @param subSentList
@@ -214,7 +215,7 @@ public class BuildGraphTest implements Constants {
     }
 
     /**
-     * 将字符串组织的句子替换成{@link Word}组织的句子
+     * 将String组织的句子替换成{@link Word}组织的句子
      *
      * @param strSentence
      * @param words

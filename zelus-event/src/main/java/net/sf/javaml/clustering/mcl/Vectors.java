@@ -33,7 +33,7 @@ import java.util.Vector;
  * analoguous to IntMatrix that allows performing search and indexing
  * operations, such as views, etc.
  *
- * @author heinrich
+ * @author zhenchao
  */
 public class Vectors {
 

@@ -9,10 +9,10 @@ import java.net.URISyntaxException;
 import java.util.Properties;
 
 /**
- * 模型加载器
+ * Model loader
  * 单例模式，线程安全
  *
- * @author Apache_xiaochao
+ * @author zhenchao
  */
 @SuppressWarnings({"checkstyle:HideUtilityClassConstructor", "checkstyle:ModifierOrder",
         "checkstyle:UncommentedMain", "checkstyle:JavadocMethod"})
@@ -30,10 +30,10 @@ public final class ModelLoader {
     }
 
     /**
-     * 加载stanford指代消解模型
+     * 加载stanfordCoreference resolution模型
      * 单例模式，线程安全
      *
-     * @return StanfordCoreNLP实例
+     * @return StanfordCoreNLPInstance
      */
     public static StanfordCoreNLP getPipeLine() {
         if (pipeline4wordseg == null) {
@@ -49,10 +49,10 @@ public final class ModelLoader {
     }
 
     /**
-     * 加载stanford分词模型
+     * 加载stanford分Word模型
      * 单例模式，线程安全
      *
-     * @return StanfordCoreNLP实例
+     * @return StanfordCoreNLPInstance
      */
     public static StanfordCoreNLP getWordSegPipeLine() {
         if (pipeline == null) {
@@ -71,7 +71,7 @@ public final class ModelLoader {
      * 获取open nlp chunk模型
      * 单例模式，线程安全
      *
-     * @return ChunkerModel实例
+     * @return ChunkerModelInstance
      * @throws IOException          IO异常
      * @throws URISyntaxException   URI异常
      */
@@ -90,7 +90,7 @@ public final class ModelLoader {
         return chunkerModel;
     }
 
-    /** 测试入口 */
+    /** Test entry point */
     public static void main(String[] args) throws Exception {
         Logger.getLogger(ModelLoader.class).info(String.valueOf(ModelLoader.getChunkerModel()));
     }

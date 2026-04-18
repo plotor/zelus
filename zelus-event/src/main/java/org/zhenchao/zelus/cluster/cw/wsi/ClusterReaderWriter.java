@@ -20,6 +20,7 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 
+@SuppressWarnings({"checkstyle:HideUtilityClassConstructor", "checkstyle:ModifierOrder", "checkstyle:Regexp", "checkstyle:EmptyBlock"})
 public class ClusterReaderWriter {
     final static Charset UTF_8 = StandardCharsets.UTF_8;
     final static Random r = new Random();
@@ -95,33 +96,33 @@ public class ClusterReaderWriter {
                         break;
                     }
                     String[] featureArr = splitNCols(featureScorePair, ":", 8);
-//					String[] featureArr = featureScorePair.split(":");
+//                    String[] featureArr = featureScorePair.split(":");
                     // TODO: remove isEmpty() check
                     if (featureArr.length == 8) {
                         try {
                             N feature = index.getIndex(featureArr[0]);
-//							float lmi = Float.parseFloat(featureArr[1]);
+//                            float lmi = Float.parseFloat(featureArr[1]);
                             float avgProb = Float.parseFloat(featureArr[2]);
                             float avgCov = Float.parseFloat(featureArr[3]);
                             long wc = Long.parseLong(featureArr[4]);
                             long fc = Long.parseLong(featureArr[5]);
-//							long wfc = Long.parseLong(featureArr[6]);
+//                            long wfc = Long.parseLong(featureArr[6]);
                             float avgWc = (float) wc / m;
-//							float avgWfc = (float)wfc / m;
+//                            float avgWfc = (float)wfc / m;
                             long n = Long.parseLong(featureArr[7]);
                             float normalizedAvgWfc = avgCov * avgWc;
-//							float normalizedAvgProb = normalizedAvgWfc / fc;
-//							float normalizedAvgCov = normalizedAvgWfc / fc;
-//							float score = normalizedAvgProb * avgCov;
+//                            float normalizedAvgProb = normalizedAvgWfc / fc;
+//                            float normalizedAvgCov = normalizedAvgWfc / fc;
+//                            float score = normalizedAvgProb * avgCov;
                             float score = (float) (normalizedAvgWfc * normalizedAvgWfc) / (avgWc * fc);
-//							float normalizedLmi = normalizedAvgWfc*(float)(Math.log(n*normalizedAvgWfc) - Math.log(avgWc*fc));
-//							float pmi = normalizedP_AB / (wc * fc);
+//                            float normalizedLmi = normalizedAvgWfc*(float)(Math.log(n*normalizedAvgWfc) - Math.log(avgWc*fc));
+//                            float pmi = normalizedP_AB / (wc * fc);
                             float pmi = avgProb * n / (float) wc;
                             if (pmi > 10.0f) {
                                 clusterFeatureProbs.put(feature, avgProb);
                                 clusterFeatureScores.put(feature, score);
                             } else {
-//								System.out.println("foo");
+//                                System.out.println("foo");
                             }
                         } catch (NumberFormatException e) {
                             System.err.println("Error (1): malformatted feature-count pair: " + featureScorePair);

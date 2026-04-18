@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * 公共工具
  *
- * @author Apache_xiaochao
+ * @author zhenchao
  */
 @SuppressWarnings({"checkstyle:MethodLength", "checkstyle:JavadocMethod",
         "checkstyle:HideUtilityClassConstructor", "checkstyle:LocalVariableName",
@@ -40,7 +40,7 @@ public class ZelusUtils implements Constants {
     }
 
     /**
-     * 将多层List转化成字符串
+     * 将多层List转化成String
      *
      * @param <T>
      * @param lists
@@ -61,7 +61,7 @@ public class ZelusUtils implements Constants {
     }
 
     /**
-     * 将List转化成字符串
+     * 将List转化成String
      *
      * @param <T>
      * @return
@@ -77,7 +77,7 @@ public class ZelusUtils implements Constants {
     }
 
     /**
-     * 将输入的字符封装成对象
+     * 将Input的字符封装成Pairs象
      *
      * @return
      */
@@ -97,7 +97,7 @@ public class ZelusUtils implements Constants {
     }
 
     /**
-     * 将words转换成sentence
+     * 将wordsConvert成sentence
      *
      * @param words
      * @return
@@ -124,7 +124,7 @@ public class ZelusUtils implements Constants {
     }
 
     /**
-     * 对输入文本按行切分，然后存入List集合
+     * PairsInput文本按行切分，然后存入ListCollection
      *
      * @param input
      * @return
@@ -142,7 +142,7 @@ public class ZelusUtils implements Constants {
     }
 
     /**
-     * 将字符串形式的详细词信息，转化成对象进行存储
+     * 将String形式的详细WordInformation，转化成Pairs象进行存储
      *
      * @param wordStr
      * @return
@@ -160,7 +160,7 @@ public class ZelusUtils implements Constants {
                 word.setSentenceNum(Integer.parseInt(attrs[4]));
                 word.setNumInLine(Integer.parseInt(attrs[5]));
             } catch (Exception e) {
-                log.error("解析词失败：" + wordStr, e);
+                log.error("ParseWordFailure：" + wordStr, e);
                 word = new Word();
                 word.setName("");
                 word.setLemma("");
@@ -175,8 +175,8 @@ public class ZelusUtils implements Constants {
     }
 
     /**
-     * 计算两个字符串之间的距离<br>
-     * 如果两个字符串在长度上不相同则距离为无穷大
+     * Calculate两个String之间的距离<br>
+     * 如果两个String在长度上不相同则距离为无穷大
      *
      * @param str1
      * @param str2
@@ -207,7 +207,7 @@ public class ZelusUtils implements Constants {
     }
 
     /**
-     * 判断一个词是不是标点
+     * Determine一个Word是不是标点
      *
      * @param word
      * @return
@@ -233,7 +233,7 @@ public class ZelusUtils implements Constants {
     }
 
     /**
-     * 判断包含的单词数是否小于8
+     * Determine包含的Word count是否小于8
      *
      * @param words
      * @return

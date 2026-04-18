@@ -29,7 +29,7 @@ import java.util.Arrays;
  * exponent and the number of digits in the mantissa, in order to allow
  * formatting of the represented double.
  *
- * @author gregor
+ * @author zhenchao
  */
 public class ExpDouble {
 

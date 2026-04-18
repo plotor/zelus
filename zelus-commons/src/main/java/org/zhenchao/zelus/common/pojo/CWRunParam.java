@@ -1,9 +1,9 @@
 package org.zhenchao.zelus.common.pojo;
 
 /**
- * 口哨算法运行参数bean
+ * Chinese Whispers algorithm parameters bean
  *
- * @author Apache_xiaochao
+ * @author zhenchao
  */
 @SuppressWarnings("checkstyle:MagicNumber")
 public class CWRunParam {

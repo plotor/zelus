@@ -9,9 +9,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * 资源加载器
+ * Resource loader
  *
- * @author ZhenchaoWang 2015-11-3 10:20:26
+ * @author zhenchao 2015-11-3 10:20:26
  */
 @SuppressWarnings({"checkstyle:HideUtilityClassConstructor", "checkstyle:UncommentedMain",
         "checkstyle:JavadocMethod"})
@@ -23,10 +23,10 @@ public final class ResourceLoader {
     }
 
     /**
-     * 加载停用词列表，可以同时指定多个文件
+     * 加载Stopwords list，可以同时指定多个文件
      *
-     * @param filenames 停用词文件名
-     * @return 停用词集合
+     * @param filenames 停用Word文件名
+     * @return 停用WordCollection
      */
     public static Set<String> loadStopwords(String... filenames) {
         Set<String> stopwords = new HashSet<String>();
@@ -55,7 +55,7 @@ public final class ResourceLoader {
         return stopwords;
     }
 
-    /** 测试入口 */
+    /** Test entry point */
     public static void main(String[] args) {
         Set<String> set = ResourceLoader.loadStopwords(
                 "stopwords-en-default.txt", "stopwords-en-mysql.txt");

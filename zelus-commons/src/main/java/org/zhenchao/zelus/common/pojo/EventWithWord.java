@@ -5,9 +5,9 @@ import org.zhenchao.zelus.common.Constants;
 import java.io.Serializable;
 
 /**
- * 原子事件
+ * Atomic event
  *
- * @author Apache_xiaochao
+ * @author zhenchao
  */
 @SuppressWarnings("checkstyle:ReturnCount")
 public class EventWithWord extends Event implements Serializable {
@@ -30,9 +30,9 @@ public class EventWithWord extends Event implements Serializable {
     }
 
     /**
-     * 事件类型：3表示三元组事件，2表示主-谓事件，1表示谓-宾事件，-1表示异常事件
+     * Event type: 3=ternary, 2=subject-verb, 1=verb-object, -1=abnormal
      *
-     * @return 事件类型
+     * @return event type
      */
     @Override
     public EventType eventType() {
@@ -96,9 +96,9 @@ public class EventWithWord extends Event implements Serializable {
     }
 
     /**
-     * 返回事件的简要形式
+     * Return the brief form of the event
      *
-     * @return 事件的简要形式
+     * @return brief form of the event
      */
     @Override
     public String toShortString() {
@@ -111,9 +111,9 @@ public class EventWithWord extends Event implements Serializable {
     }
 
     /**
-     * 返回事件的详细形式
+     * Return the detailed form of the event
      *
-     * @return 事件的详细形式
+     * @return detailed form of the event
      */
     @Override
     public String toString() {

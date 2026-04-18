@@ -6,7 +6,7 @@ import org.zhenchao.zelus.common.pojo.Word;
 import java.util.List;
 
 /**
- * @author: zhenchao.Wang
+ * @author zhenchao
  * @date: 2016/5/21 15:00
  */
 public class StanfordNLPToolsTest {

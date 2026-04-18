@@ -1,6 +1,7 @@
 package org.zhenchao.zelus.summary;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
 import org.zhenchao.zelus.common.nlp.StanfordNLPTools;
 import org.zhenchao.zelus.common.pojo.Vector;
 import org.zhenchao.zelus.common.pojo.Word;
@@ -13,8 +14,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class CalculateWordvec {
+public final class CalculateWordvec {
 
+    private static final Logger log = Logger.getLogger(CalculateWordvec.class);
+
+    private CalculateWordvec() {
+    }
+
+    /** Word vector calculation tool */
     public static void main(String[] args) {
 
         String filepath = "E:/dev_workspace/experiment/nlp/event-guided-mts/corpus/duc2005_docs/duc2005_docs";
@@ -31,7 +38,7 @@ public class CalculateWordvec {
             File innerFile = new File(file + "/" + dir);
             File[] files = innerFile.listFiles();
             for (File ff : files) {
-                System.out.println("正在处理：" + ff.getAbsolutePath());
+                log.info("Processing：" + ff.getAbsolutePath());
                 try {
                     String text = FileUtils.readFileToString(ff, "UTF-8");
                     List<Word> words = StanfordNLPTools.segmentWord(text);
@@ -52,7 +59,7 @@ public class CalculateWordvec {
             }
         }
 
-        System.out.println("序列化...");
+        log.info("Serializing...");
         File savefile = new File("E:/dev_workspace/experiment/nlp/event-guided-mts/corpus/duc2005_docs/duc2005.vec");
 
         try {

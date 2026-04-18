@@ -66,7 +66,7 @@ package net.sf.javaml.clustering.mcl;
  * Clustering by Flow Simulation (2000); for a mathematical treatment of the
  * algorithm and the associated MCL process, see there.
  *
- * @author gregor :: arbylon . net
+ * @author zhenchao
  */
 public class MarkovClustering2 {
 
